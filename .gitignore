@@ -1,2 +1,29 @@
 data/
 __pycache__/
+
+# entornos virtuales
+.venv/
+*/.venv/
+
+# logs temporales
+*.log
+
+# artefactos de modelos
+*.keras
+*.pt
+*.ptl
+*.tflite
+*.torchscript.pt
+
+# figuras generadas por los scripts (NO ignorar las del repo original como Figure_1.png)
+training_curves.png
+confusion_matrix.png
+roc_curves.png
+grad_cam_output.png
+curvas_v1.png
+
+# salida del conversor (mantener la estructura con .gitkeep)
+unsorted/*
+!unsorted/.gitkeep
+raw_decks/*
+!raw_decks/.gitkeep

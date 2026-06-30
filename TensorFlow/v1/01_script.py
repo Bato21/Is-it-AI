@@ -9,9 +9,12 @@ Sin augmentation, sin dropout, sin regularización, sin transfer learning.
 
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # --- 1. Parámetros ---
-DATA_DIR = "../data"
+# DATA_DIR se resuelve a la carpeta data/ en la RAÍZ del repo, sin importar
+# desde dónde se ejecute el script (raiz_repo/data). Antes era "../data".
+DATA_DIR = str(Path(__file__).resolve().parents[2] / "data")
 IMG_SIZE = (180, 180)
 BATCH_SIZE = 32
 SEED = 123

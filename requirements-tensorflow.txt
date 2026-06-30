@@ -1,0 +1,6 @@
+# venv TensorFlow (CPU). Python 3.11.
+# Stack del curso: TF 2.16 · NumPy 1.26 · matplotlib 3.8 (probado también en 2.15).
+tensorflow>=2.15,<2.17
+numpy<2.0
+matplotlib>=3.8
+pillow>=10.0

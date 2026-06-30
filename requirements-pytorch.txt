@@ -1,0 +1,7 @@
+# venv PyTorch (CPU). Python 3.11.
+# torch 2.2.x mantiene el export móvil (lite interpreter) de exportar_movil.py.
+torch==2.2.2
+torchvision==0.17.2
+numpy<2.0
+matplotlib>=3.8
+pillow>=10.0
