@@ -4,14 +4,14 @@ por diapositiva.
 
 Uso
 ---
-    # convierte todo lo que haya en raw_decks/ -> unsorted/
-    python tools/deck_a_imagenes.py
+    # convierte todo lo que haya en presentaciones_fuente/ -> sin_clasificar/
+    python herramientas/deck_a_imagenes.py
 
     # convierte un archivo puntual
-    python tools/deck_a_imagenes.py "C:/ruta/a/presentacion.pptx"
+    python herramientas/deck_a_imagenes.py "C:/ruta/a/presentacion.pptx"
 
     # mayor resolución y carpeta de salida distinta
-    python tools/deck_a_imagenes.py --dpi 200 --out unsorted
+    python herramientas/deck_a_imagenes.py --dpi 200 --out sin_clasificar
 
 Cómo funciona
 -------------
@@ -42,11 +42,11 @@ except Exception:
 try:
     import fitz  # PyMuPDF
 except ImportError:
-    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r requirements-tools.txt")
+    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r requerimientos/herramientas.txt")
 
 ROOT = Path(__file__).resolve().parents[1]
-ENTRADA_DEF = ROOT / "raw_decks"
-SALIDA_DEF = ROOT / "unsorted"
+ENTRADA_DEF = ROOT / "presentaciones_fuente"
+SALIDA_DEF = ROOT / "sin_clasificar"
 
 
 # --------------------------------------------------------------------------- #
@@ -128,7 +128,7 @@ def convertir(src: Path, out_dir: Path, dpi: int) -> int:
             if pdf is None:
                 print(
                     "  No se pudo convertir el PPTX. Instala Microsoft PowerPoint o\n"
-                    "  LibreOffice, o exporta la presentación a PDF a mano y déjala en raw_decks/."
+                    "  LibreOffice, o exporta la presentación a PDF a mano y déjala en presentaciones_fuente/."
                 )
                 return 0
             return pdf_a_pngs(pdf, out_dir, src.stem, dpi)
@@ -138,7 +138,7 @@ def convertir(src: Path, out_dir: Path, dpi: int) -> int:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Convierte PDF/PPTX en PNG por diapositiva.")
-    ap.add_argument("entradas", nargs="*", help="Archivos. Por defecto: todo lo de raw_decks/")
+    ap.add_argument("entradas", nargs="*", help="Archivos. Por defecto: todo lo de presentaciones_fuente/")
     ap.add_argument("--out", default=str(SALIDA_DEF), help="Carpeta de salida de los PNG.")
     ap.add_argument("--dpi", type=int, default=150, help="Resolución de render (def 150).")
     args = ap.parse_args()
@@ -166,7 +166,7 @@ def main() -> None:
         total += convertir(deck, out_dir, args.dpi)
 
     print(f"\nListo. {total} imagen(es) de diapositiva escritas en {out_dir}")
-    print("Siguiente: clasifícalas en data/{0_sin_ia, 1_rastro_ia, 2_saturada_ia}/")
+    print("Siguiente: clasifícalas en dataset/{0_sin_ia, 1_rastro_ia, 2_saturada_ia}/")
 
 
 if __name__ == "__main__":

@@ -13,29 +13,75 @@ Construido **dos veces** — en **TensorFlow** y en **PyTorch** — para compara
 ambos frameworks (objetivo del curso) y con **MobileNetV3Large (transfer
 learning)** para poder correr en **Android** más adelante.
 
-## Estructura
+## Estructura del repositorio
 
 ```
 Is-it-AI/
-├── data/                       # dataset (gitignored). SOLO las 3 clases:
-│   ├── 0_sin_ia/  1_rastro_ia/  2_saturada_ia/
-├── raw_decks/                  # deja aquí las presentaciones .pdf / .pptx
-├── unsorted/                   # el conversor deja aquí los PNG; tú los clasificas
-├── tools/                      # conversor deck->imágenes y utilidades
-│   ├── deck_a_imagenes.py · crear_datos_prueba.py · dividir_dataset.py
+├── README.md
+├── setup_envs.ps1                  # crea los 3 entornos virtuales
+├── requerimientos/                 # dependencias (una por framework)
+│   ├── tensorflow.txt
+│   ├── pytorch.txt
+│   └── herramientas.txt
+├── dataset/                        # imágenes etiquetadas (gitignored). SOLO 3 clases:
+│   ├── 0_sin_ia/
+│   ├── 1_rastro_ia/
+│   └── 2_saturada_ia/
+├── presentaciones_fuente/          # aquí dejas los .pdf / .pptx de origen
+├── sin_clasificar/                 # el conversor deja aquí los PNG; tú los clasificas
+├── herramientas/                   # conversor y utilidades de dataset
+│   ├── deck_a_imagenes.py          # PDF/PPTX -> 1 PNG por diapositiva
+│   ├── crear_datos_prueba.py       # imágenes sintéticas para probar el flujo
+│   └── dividir_dataset.py          # reporte de balance de clases
 ├── TensorFlow/
-│   ├── v1/01_script.py         # baseline CNN (sobreajusta a propósito)
-│   └── v2/                     # transfer MobileNetV3Large
+│   ├── v1/01_script.py             # baseline CNN (sobreajusta a propósito)
+│   └── v2/                         # transfer learning MobileNetV3Large
 │       ├── entrenar.py · consumidor.py · exportar_tflite.py · grad_cam.py
 ├── PyTorch/
-│   ├── v1/01_script.py         # espejo del baseline en PyTorch
+│   ├── v1/01_script.py             # espejo del baseline en PyTorch
 │   └── v2/
 │       ├── entrenar.py · consumidor.py · exportar_movil.py
-└── docs/                       # guía de etiquetado, setup, prompt presentación
+└── documentacion/
+    ├── SETUP.md                    # instalación detallada de los entornos
+    ├── guia_etiquetado.md          # rúbrica de las 3 clases
+    └── prompt_faces_presentacion.md# prompt para armar la presentación
 ```
 
-Cada framework tiene **su propio entorno virtual** (TF y PyTorch chocan si se
-mezclan). Ver `docs/SETUP.md`.
+## Requerimientos
+
+Cada framework usa **su propio entorno virtual** (TensorFlow y PyTorch fijan
+versiones en conflicto de `numpy`/`protobuf` y no pueden convivir). Base común:
+**Python 3.11**. Los archivos están en `requerimientos/`.
+
+**TensorFlow** (`requerimientos/tensorflow.txt`)
+```
+tensorflow>=2.15,<2.17
+numpy<2.0
+matplotlib>=3.8
+pillow>=10.0
+```
+
+**PyTorch** (`requerimientos/pytorch.txt`)
+```
+torch==2.2.2
+torchvision==0.17.2
+numpy<2.0
+matplotlib>=3.8
+pillow>=10.0
+```
+
+**Herramientas / conversor** (`requerimientos/herramientas.txt`)
+```
+PyMuPDF>=1.24
+pillow>=10.0
+pywin32>=306 ; Windows (para convertir PPTX con PowerPoint)
+```
+
+Instalación de los tres entornos en un solo paso:
+```powershell
+./setup_envs.ps1
+```
+Detalle y activación de cada venv: `documentacion/SETUP.md`.
 
 ## Flujo de trabajo
 
@@ -43,15 +89,15 @@ mezclan). Ver `docs/SETUP.md`.
 # 0. (una vez) crear los 3 venvs e instalar dependencias
 ./setup_envs.ps1
 
-# 1. convertir presentaciones -> imágenes (venv tools)
-python tools\deck_a_imagenes.py        # PDF/PPTX en raw_decks -> unsorted\
+# 1. convertir presentaciones -> imágenes (venv herramientas)
+python herramientas\deck_a_imagenes.py     # PDF/PPTX de presentaciones_fuente -> sin_clasificar\
 
-# 2. clasificar los PNG de unsorted\ en data\{0_sin_ia,1_rastro_ia,2_saturada_ia}
-#    (rúbrica: docs\guia_etiquetado.md)
+# 2. clasificar los PNG de sin_clasificar\ en dataset\{0_sin_ia,1_rastro_ia,2_saturada_ia}
+#    (rúbrica: documentacion\guia_etiquetado.md)
 
 # 3. entrenar
-python TensorFlow\v2\entrenar.py       # venv TensorFlow
-python PyTorch\v2\entrenar.py          # venv PyTorch
+python TensorFlow\v2\entrenar.py           # venv TensorFlow
+python PyTorch\v2\entrenar.py              # venv PyTorch
 #    -> cada uno genera: training_curves.png, confusion_matrix.png, roc_curves.png
 
 # 4. predecir una diapositiva
@@ -65,9 +111,9 @@ python PyTorch\v2\exportar_movil.py
 
 ### Probar el flujo sin datos reales
 ```powershell
-python tools\crear_datos_prueba.py --por-clase 30   # imágenes sintéticas por clase
-python PyTorch\v2\entrenar.py                        # corre todo el pipeline
-python tools\crear_datos_prueba.py --limpiar         # borra las de prueba
+python herramientas\crear_datos_prueba.py --por-clase 30   # imágenes sintéticas
+python PyTorch\v2\entrenar.py                               # corre todo el pipeline
+python herramientas\crear_datos_prueba.py --limpiar        # borra las de prueba
 ```
 
 ## Versiones (pedagogía del curso)

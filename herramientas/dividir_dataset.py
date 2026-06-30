@@ -18,7 +18,7 @@ except Exception:
     pass
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data"
+DATA = ROOT / "dataset"
 CLASES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]
 EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
 

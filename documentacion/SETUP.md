@@ -13,16 +13,16 @@ El repo trae un script que crea los tres: `setup_envs.ps1`.
 
 Crea:
 
-| venv               | para           | requirements                  |
-|--------------------|----------------|-------------------------------|
-| `tools/.venv`      | conversor      | `requirements-tools.txt`      |
-| `PyTorch/.venv`    | modelo PyTorch | `requirements-pytorch.txt`    |
-| `TensorFlow/.venv` | modelo TF      | `requirements-tensorflow.txt` |
+| venv                  | para           | requerimiento                    |
+|-----------------------|----------------|----------------------------------|
+| `herramientas/.venv`  | conversor      | `requerimientos/herramientas.txt`|
+| `PyTorch/.venv`       | modelo PyTorch | `requerimientos/pytorch.txt`     |
+| `TensorFlow/.venv`    | modelo TF      | `requerimientos/tensorflow.txt`  |
 
 ## Activar un venv (PowerShell)
 
 ```powershell
-tools\.venv\Scripts\Activate.ps1        # conversor
+herramientas\.venv\Scripts\Activate.ps1 # conversor
 PyTorch\.venv\Scripts\Activate.ps1      # PyTorch
 TensorFlow\.venv\Scripts\Activate.ps1   # TensorFlow
 deactivate                              # salir

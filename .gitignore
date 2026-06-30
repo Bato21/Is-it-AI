@@ -1,4 +1,4 @@
-data/
+dataset/
 __pycache__/
 
 # entornos virtuales
@@ -23,7 +23,7 @@ grad_cam_output.png
 curvas_v1.png
 
 # salida del conversor (mantener la estructura con .gitkeep)
-unsorted/*
-!unsorted/.gitkeep
-raw_decks/*
-!raw_decks/.gitkeep
+sin_clasificar/*
+!sin_clasificar/.gitkeep
+presentaciones_fuente/*
+!presentaciones_fuente/.gitkeep

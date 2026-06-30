@@ -42,7 +42,7 @@ import matplotlib.gridspec as gridspec
 
 # ── 1. CONFIGURACIÓN ──────────────────────────────────────────────────
 RAIZ          = Path(__file__).resolve().parents[2]
-DATA_DIR      = str(RAIZ / "data")
+DATA_DIR      = str(RAIZ / "dataset")
 IMG_SIZE      = (224, 224)     # entrada nativa de MobileNetV3Large
 BATCH_SIZE    = 32
 EPOCHS_FASE1  = 15             # cabeza — base congelada

@@ -33,4 +33,4 @@ Señales (varias, no solo una):
   moderado. Calidad + balance > cantidad.
 - Variedad de fuentes importa: muchas presentaciones distintas > muchas
   diapositivas de una sola.
-- Revisa el balance con `python tools/dividir_dataset.py`.
+- Revisa el balance con `python herramientas/dividir_dataset.py`.

@@ -28,7 +28,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # --- 1. Parámetros ---
-DATA_DIR = str(Path(__file__).resolve().parents[2] / "data")
+DATA_DIR = str(Path(__file__).resolve().parents[2] / "dataset")
 IMG_SIZE = (180, 180)
 BATCH_SIZE = 32
 SEED = 123
