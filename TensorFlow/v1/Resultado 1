@@ -1,0 +1,61 @@
+(tensorflow-ia) bato@bato-mint:~/Escritorio/Is-it-AI/TensorFlow$ ls
+01_script.py
+(tensorflow-ia) bato@bato-mint:~/Escritorio/Is-it-AI/TensorFlow$ python 01_script.py 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1782836992.075986    9797 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1782836992.080462    9797 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+I0000 00:00:1782836992.583255    9797 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1782836994.904701    9797 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1782836994.908061    9797 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+Found 67 files belonging to 3 classes.
+Using 54 files for training.
+E0000 00:00:1782836996.657224    9797 cuda_platform.cc:52] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+Found 67 files belonging to 3 classes.
+Using 13 files for validation.
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+Model: "sequential"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ rescaling (Rescaling)           │ (None, 180, 180, 3)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d (Conv2D)                 │ (None, 178, 178, 16)   │           448 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d (MaxPooling2D)    │ (None, 89, 89, 16)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d_1 (Conv2D)               │ (None, 87, 87, 32)     │         4,640 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_1 (MaxPooling2D)  │ (None, 43, 43, 32)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ flatten (Flatten)               │ (None, 59168)          │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense (Dense)                   │ (None, 64)             │     3,786,816 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_1 (Dense)                 │ (None, 3)              │           195 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 3,792,099 (14.47 MB)
+ Trainable params: 3,792,099 (14.47 MB)
+ Non-trainable params: 0 (0.00 B)
+Epoch 1/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 2s 359ms/step - accuracy: 0.4444 - loss: 3.1774 - val_accuracy: 0.3077 - val_loss: 1.7493
+Epoch 2/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 203ms/step - accuracy: 0.5556 - loss: 2.1452 - val_accuracy: 0.4615 - val_loss: 1.2821
+Epoch 3/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 1s 213ms/step - accuracy: 0.5556 - loss: 1.5496 - val_accuracy: 0.6923 - val_loss: 2.1059
+Epoch 4/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 1s 226ms/step - accuracy: 0.6667 - loss: 2.0056 - val_accuracy: 0.6923 - val_loss: 1.3263
+Epoch 5/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 199ms/step - accuracy: 0.6667 - loss: 0.9594 - val_accuracy: 0.9231 - val_loss: 0.2687
+Epoch 6/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 199ms/step - accuracy: 0.9630 - loss: 0.2713 - val_accuracy: 1.0000 - val_loss: 0.2466
+Epoch 7/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 184ms/step - accuracy: 0.9815 - loss: 0.2052 - val_accuracy: 0.8462 - val_loss: 0.3842
+Epoch 8/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 218ms/step - accuracy: 0.8704 - loss: 0.2172 - val_accuracy: 1.0000 - val_loss: 0.2798
+Epoch 9/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 1s 217ms/step - accuracy: 1.0000 - loss: 0.1263 - val_accuracy: 1.0000 - val_loss: 0.1295
+Epoch 10/10
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 194ms/step - accuracy: 1.0000 - loss: 0.0968 - val_accuracy: 1.0000 - val_loss: 0.0654
+
