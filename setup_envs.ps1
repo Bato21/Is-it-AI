@@ -30,9 +30,9 @@ function New-Venv {
 $py = Resolve-Python $Python
 Write-Host "Usando Python: $py"
 
-# Un venv por carpeta de framework + uno para herramientas. Cada uno lee su requerimiento.
-New-Venv -dir (Join-Path $root "herramientas") -reqs (Join-Path $root "requerimientos\herramientas.txt") -py $py
-New-Venv -dir (Join-Path $root "PyTorch")      -reqs (Join-Path $root "requerimientos\pytorch.txt")      -py $py
-New-Venv -dir (Join-Path $root "TensorFlow")   -reqs (Join-Path $root "requerimientos\tensorflow.txt")   -py $py
+# Un venv por carpeta de framework + uno para herramientas. Cada carpeta trae su requirements.txt.
+New-Venv -dir (Join-Path $root "herramientas") -reqs (Join-Path $root "herramientas\requirements.txt") -py $py
+New-Venv -dir (Join-Path $root "PyTorch")      -reqs (Join-Path $root "PyTorch\requirements.txt")      -py $py
+New-Venv -dir (Join-Path $root "TensorFlow")   -reqs (Join-Path $root "TensorFlow\requirements.txt")   -py $py
 
 Write-Host "`nListo. Activa con, por ejemplo:  PyTorch\.venv\Scripts\Activate.ps1" -ForegroundColor Green

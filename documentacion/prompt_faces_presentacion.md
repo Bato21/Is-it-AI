@@ -94,9 +94,9 @@ Incluye 3 métricas destacadas tipo tarjeta: "224² entrada", "3 clases",
 ```
 Crea la diapositiva 6. Título: "De presentaciones a diapositivas etiquetadas".
 Muestra un flujo horizontal de 4 pasos con flechas:
-1) Dejar .pdf/.pptx en presentaciones_fuente/  ->
-2) Conversor: 1 PNG por diapositiva  ->
-3) Clasificar en 0_sin_ia / 1_rastro_ia / 2_saturada_ia (rúbrica)  ->
+1) Dejar .pdf/.pptx en herramientas/presentaciones_fuente/  ->
+2) Conversor: 1 PNG por diapositiva (herramientas/sin_clasificar/)  ->
+3) Clasificar en dataset/ {0_sin_ia / 1_rastro_ia / 2_saturada_ia} (rúbrica)  ->
 4) Revisar balance + split 70/15/15.
 Nota: "Sin capturas manuales. Una rúbrica escrita mantiene etiquetas consistentes
 (40-80 por clase, balanceadas, de presentaciones variadas)".

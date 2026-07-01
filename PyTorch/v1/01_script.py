@@ -15,15 +15,16 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")   # consola UTF-8 en Windows
+    sys.stdout.reconfigure(encoding="utf-8")  # consola UTF-8 en Windows
 except Exception:
     pass
 
+import matplotlib
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
-import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -37,10 +38,12 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # --- 2. Carga de datos ---
 torch.manual_seed(SEED)
-transform = transforms.Compose([
-    transforms.Resize(IMG_SIZE),
-    transforms.ToTensor(),          # 0-255 -> 0-1 (equivale al Rescaling 1/255 de Keras)
-])
+transform = transforms.Compose(
+    [
+        transforms.Resize(IMG_SIZE),
+        transforms.ToTensor(),  # 0-255 -> 0-1 (equivale al Rescaling 1/255 de Keras)
+    ]
+)
 
 dataset = datasets.ImageFolder(DATA_DIR, transform=transform)
 print("Orden de clases:", dataset.classes)
@@ -49,31 +52,39 @@ num_classes = len(dataset.classes)
 
 n_val = max(1, int(len(dataset) * 0.2))
 n_train = len(dataset) - n_val
-train_ds, val_ds = random_split(dataset, [n_train, n_val],
-                                generator=torch.Generator().manual_seed(SEED))
+train_ds, val_ds = random_split(
+    dataset, [n_train, n_val], generator=torch.Generator().manual_seed(SEED)
+)
 train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE)
+
 
 # --- 3. Modelo baseline ---
 class BaselineCNN(nn.Module):
     def __init__(self, num_clases: int):
         super().__init__()
         self.red = nn.Sequential(
-            nn.Conv2d(3, 16, 3), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(3, 16, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(32 * 43 * 43, 64), nn.ReLU(),
+            nn.Linear(32 * 43 * 43, 64),
+            nn.ReLU(),
             nn.Linear(64, num_clases),
         )
 
     def forward(self, x):
         return self.red(x)
 
+
 modelo = BaselineCNN(num_classes).to(DEVICE)
 print(f"Parámetros: {sum(p.numel() for p in modelo.parameters()):,}")
 
 # --- 4. Compilación (optimizador + pérdida) ---
-criterion = nn.CrossEntropyLoss()       # incluye softmax internamente
+criterion = nn.CrossEntropyLoss()  # incluye softmax internamente
 optimizer = torch.optim.Adam(modelo.parameters())
 
 
@@ -101,15 +112,20 @@ hist_acc, hist_val_acc = [], []
 for epoch in range(1, EPOCHS + 1):
     tr_loss, tr_acc = correr_epoca(train_dl, True)
     va_loss, va_acc = correr_epoca(val_dl, False)
-    hist_acc.append(tr_acc); hist_val_acc.append(va_acc)
-    print(f"Época {epoch:2d}/{EPOCHS}  loss={tr_loss:.4f} acc={tr_acc:.4f}  "
-          f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}")
+    hist_acc.append(tr_acc)
+    hist_val_acc.append(va_acc)
+    print(
+        f"Época {epoch:2d}/{EPOCHS}  loss={tr_loss:.4f} acc={tr_acc:.4f}  "
+        f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}"
+    )
 
 # --- 6. Curvas train vs val (acá se ve el sobreajuste) ---
 plt.figure(figsize=(8, 4))
 plt.plot(range(1, EPOCHS + 1), hist_acc, label="train")
 plt.plot(range(1, EPOCHS + 1), hist_val_acc, label="val")
-plt.legend(); plt.title("Accuracy: train vs val")
-plt.xlabel("época"); plt.ylabel("accuracy")
+plt.legend()
+plt.title("Accuracy: train vs val")
+plt.xlabel("época")
+plt.ylabel("accuracy")
 plt.savefig(Path(__file__).resolve().parent / "curvas_v1.png", dpi=150, bbox_inches="tight")
 print("Guardado curvas_v1.png")

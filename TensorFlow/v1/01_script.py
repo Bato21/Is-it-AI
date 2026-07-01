@@ -7,9 +7,11 @@ que sobreajuste. Ver ese sobreajuste es lo que motiva la v2.
 Sin augmentation, sin dropout, sin regularización, sin transfer learning.
 """
 
-import tensorflow as tf
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
 
 # --- 1. Parámetros ---
 # DATA_DIR se resuelve a la carpeta dataset/ en la RAÍZ del repo, sin importar
@@ -51,17 +53,19 @@ train_ds = train_ds.prefetch(AUTOTUNE)
 val_ds = val_ds.prefetch(AUTOTUNE)
 
 # --- 4. Modelo baseline ---
-model = tf.keras.Sequential([
-    tf.keras.Input(shape=(*IMG_SIZE, 3)),
-    tf.keras.layers.Rescaling(1. / 255),       # normaliza píxeles 0-255 -> 0-1
-    tf.keras.layers.Conv2D(16, 3, activation="relu"),
-    tf.keras.layers.MaxPooling2D(),
-    tf.keras.layers.Conv2D(32, 3, activation="relu"),
-    tf.keras.layers.MaxPooling2D(),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(64, activation="relu"),
-    tf.keras.layers.Dense(num_classes, activation="softmax"),
-])
+model = tf.keras.Sequential(
+    [
+        tf.keras.Input(shape=(*IMG_SIZE, 3)),
+        tf.keras.layers.Rescaling(1.0 / 255),  # normaliza píxeles 0-255 -> 0-1
+        tf.keras.layers.Conv2D(16, 3, activation="relu"),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(32, 3, activation="relu"),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dense(num_classes, activation="softmax"),
+    ]
+)
 
 # --- 5. Compilación ---
 model.compile(

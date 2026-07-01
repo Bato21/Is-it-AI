@@ -1,4 +1,0 @@
-# venv tools - conversor de presentaciones + utilidades de dataset
-PyMuPDF>=1.24
-pillow>=10.0
-pywin32>=306; platform_system == "Windows"

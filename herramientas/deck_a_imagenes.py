@@ -4,7 +4,7 @@ por diapositiva.
 
 Uso
 ---
-    # convierte todo lo que haya en presentaciones_fuente/ -> sin_clasificar/
+    # convierte presentaciones_fuente/ -> sin_clasificar/ (ambas bajo herramientas/)
     python herramientas/deck_a_imagenes.py
 
     # convierte un archivo puntual
@@ -25,6 +25,7 @@ PPTX -> primero se convierte a PDF y luego se renderiza. Para el paso PPTX->PDF
 Las imágenes se nombran  <nombre_deck>__slide_03.png  para poder rastrear cada
 diapositiva hasta su presentación de origen mientras las clasificas.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,18 +36,18 @@ import tempfile
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")   # consola UTF-8 en Windows
+    sys.stdout.reconfigure(encoding="utf-8")  # consola UTF-8 en Windows
 except Exception:
     pass
 
 try:
     import fitz  # PyMuPDF
 except ImportError:
-    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r requerimientos/herramientas.txt")
+    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r herramientas/requirements.txt")
 
-ROOT = Path(__file__).resolve().parents[1]
-ENTRADA_DEF = ROOT / "presentaciones_fuente"
-SALIDA_DEF = ROOT / "sin_clasificar"
+AQUI = Path(__file__).resolve().parent
+ENTRADA_DEF = AQUI / "presentaciones_fuente"
+SALIDA_DEF = AQUI / "sin_clasificar"
 
 
 # --------------------------------------------------------------------------- #
@@ -85,7 +86,9 @@ def pptx_a_pdf_libreoffice(src: Path, out_dir: Path) -> Path | None:
     try:
         subprocess.run(
             [soffice, "--headless", "--convert-to", "pdf", "--outdir", str(out_dir), str(src)],
-            check=True, capture_output=True, timeout=120,
+            check=True,
+            capture_output=True,
+            timeout=120,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         print(f"  LibreOffice falló: {exc}")
@@ -128,7 +131,8 @@ def convertir(src: Path, out_dir: Path, dpi: int) -> int:
             if pdf is None:
                 print(
                     "  No se pudo convertir el PPTX. Instala Microsoft PowerPoint o\n"
-                    "  LibreOffice, o exporta la presentación a PDF a mano y déjala en presentaciones_fuente/."
+                    "  LibreOffice, o exporta la presentación a PDF a mano y déjala\n"
+                    "  en herramientas/presentaciones_fuente/."
                 )
                 return 0
             return pdf_a_pngs(pdf, out_dir, src.stem, dpi)
@@ -138,7 +142,11 @@ def convertir(src: Path, out_dir: Path, dpi: int) -> int:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Convierte PDF/PPTX en PNG por diapositiva.")
-    ap.add_argument("entradas", nargs="*", help="Archivos. Por defecto: todo lo de presentaciones_fuente/")
+    ap.add_argument(
+        "entradas",
+        nargs="*",
+        help="Archivos. Por defecto: todo lo de herramientas/presentaciones_fuente/",
+    )
     ap.add_argument("--out", default=str(SALIDA_DEF), help="Carpeta de salida de los PNG.")
     ap.add_argument("--dpi", type=int, default=150, help="Resolución de render (def 150).")
     args = ap.parse_args()
@@ -149,10 +157,13 @@ def main() -> None:
     if args.entradas:
         decks = [Path(p) for p in args.entradas]
     else:
-        decks = sorted(
-            p for p in ENTRADA_DEF.iterdir()
-            if p.suffix.lower() in {".pdf", ".pptx", ".ppt"}
-        ) if ENTRADA_DEF.exists() else []
+        decks = (
+            sorted(
+                p for p in ENTRADA_DEF.iterdir() if p.suffix.lower() in {".pdf", ".pptx", ".ppt"}
+            )
+            if ENTRADA_DEF.exists()
+            else []
+        )
 
     if not decks:
         print(f"No hay presentaciones. Deja archivos .pdf / .pptx en {ENTRADA_DEF}")

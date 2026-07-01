@@ -1,9 +1,8 @@
-"""
-Grad-CAM para el modelo de diapositivas — TensorFlow v2
+"""Grad-CAM para el modelo de diapositivas — TensorFlow v2.
 
-Técnica para ver gráficamente DÓNDE mira la red dentro de la imagen al decidir
-la clase. Es la misma idea del ejemplo de clase (grad-cam.py con Xception),
-adaptada a nuestro modelo con MobileNetV3Large como base.
+Muestra DÓNDE mira la red dentro de la imagen al decidir la clase. Es la misma
+idea del ejemplo de clase (Grad-CAM con Xception), adaptada a nuestro modelo con
+MobileNetV3Large como base.
 
   python grad_cam.py una_diapositiva.png
   -> genera grad_cam_output.png (mapa de calor superpuesto)
@@ -11,60 +10,53 @@ adaptada a nuestro modelo con MobileNetV3Large como base.
 Útil para explicar el modelo: ¿se fija en el layout/plantilla, en el texto, en
 las imágenes generadas? Eso respalda el criterio de las 3 clases.
 """
+
+from __future__ import annotations
+
+import logging
 import sys
-from pathlib import Path
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8")   # consola UTF-8 en Windows
-except Exception:
-    pass
-
-import numpy as np
-import tensorflow as tf
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 
-AQUI = Path(__file__).resolve().parent
-MODELO = AQUI / "modelo_diapositivas.keras"
-IMG_SIZE = (224, 224)
-CLASES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]
+import config
+import tensorflow as tf
+from modelo import encontrar_base
 
-
-def encontrar_base(modelo):
-    """Devuelve la capa sub-modelo (MobileNetV3Large) dentro del modelo."""
-    for capa in modelo.layers:
-        if isinstance(capa, tf.keras.Model):
-            return capa
-    raise RuntimeError("No se encontró el sub-modelo base en el modelo cargado.")
+logger = logging.getLogger("tensorflow.grad_cam")
 
 
-def construir_grad_model(modelo, base):
-    """
-    Reconstruye un modelo que va de la entrada del base (0-255) a
-    [mapa de características del base, salida de clases].
+def construir_modelo_inferencia(modelo: tf.keras.Model, base: tf.keras.Model) -> tf.keras.Model:
+    """Modelo plano base→cabeza que expone el mapa de características y la salida.
 
-    No usamos modelo.inputs porque la capa 'augmentation' es un sub-modelo con su
-    propio Input y rompe el grafo (Graph disconnected). En inferencia el
-    augmentation es identidad, así que partimos directo desde base.input y
-    reaplicamos la cabeza (GAP -> Dense -> Dropout -> Softmax).
+    No se parte de ``modelo.inputs`` porque la capa 'augmentation' es un
+    sub-modelo con su propio Input y desconecta el grafo ("Graph disconnected").
+    En inferencia el augmentation es identidad, así que reusamos los tensores ya
+    construidos del base (``base.input`` / ``base.output``) y reaplicamos la
+    cabeza (GAP → Dense → Dropout → Softmax). Devuelve ``[mapa, predicciones]``.
     """
     idx = modelo.layers.index(base)
-    cabeza = modelo.layers[idx + 1:]
-    inp = tf.keras.Input(shape=base.input_shape[1:])   # entrada nueva y limpia (0-255)
-    feat = base(inp)                                    # llamar al base como capa
+    cabeza = modelo.layers[idx + 1 :]
+    feat = base.output  # mapa de características (None, 7, 7, 960)
     x = feat
     for capa in cabeza:
         x = capa(x)
-    return tf.keras.models.Model(inp, [feat, x])
+    return tf.keras.Model(base.input, [feat, x])
 
 
-def heatmap_gradcam(img_array, modelo, base, pred_index=None):
-    grad_model = construir_grad_model(modelo, base)
+def heatmap_gradcam(
+    img_array: np.ndarray,
+    grad_model: tf.keras.Model,
+    pred_index: int | None = None,
+) -> tuple[np.ndarray, int]:
+    """Calcula el mapa de calor Grad-CAM para una imagen (1, H, W, 3) en 0-255."""
     with tf.GradientTape() as tape:
         feat, preds = grad_model(img_array)
         if pred_index is None:
-            pred_index = tf.argmax(preds[0])
+            pred_index = int(tf.argmax(preds[0]))
         canal = preds[:, pred_index]
     grads = tape.gradient(canal, feat)
     pooled = tf.reduce_mean(grads, axis=(0, 1, 2))
@@ -74,7 +66,8 @@ def heatmap_gradcam(img_array, modelo, base, pred_index=None):
     return heat.numpy(), int(pred_index)
 
 
-def guardar(img_path, heat, pred, alpha=0.4, out="grad_cam_output.png"):
+def guardar(img_path: str, heat: np.ndarray, pred: int, alpha: float = 0.4) -> None:
+    """Superpone el mapa de calor sobre la imagen original y lo guarda."""
     img = tf.keras.utils.img_to_array(tf.keras.utils.load_img(img_path))
     heat = np.uint8(255 * heat)
     jet = plt.colormaps["jet"](np.arange(256))[:, :3]
@@ -82,34 +75,32 @@ def guardar(img_path, heat, pred, alpha=0.4, out="grad_cam_output.png"):
     jet_heat = tf.keras.utils.array_to_img(jet_heat).resize((img.shape[1], img.shape[0]))
     jet_heat = tf.keras.utils.img_to_array(jet_heat)
     superp = tf.keras.utils.array_to_img(jet_heat * alpha + img)
-    plt.imshow(superp); plt.axis("off")
-    plt.title(f"Grad-CAM — predicción: {CLASES[pred]}")
-    plt.savefig(out, dpi=150, bbox_inches="tight"); plt.close()
-    print(f"Grad-CAM guardado en '{out}'")
+
+    plt.imshow(superp)
+    plt.axis("off")
+    plt.title(f"Grad-CAM — predicción: {config.CLASES[pred]}")
+    plt.savefig(config.GRADCAM_PATH, dpi=150, bbox_inches="tight")
+    plt.close()
 
 
 def main() -> None:
+    config.configurar_logging()
     if len(sys.argv) < 2:
         sys.exit("Uso: python grad_cam.py <imagen.png>")
-    if not MODELO.exists():
-        sys.exit(f"No existe {MODELO}. Entrena primero: python entrenar.py")
+    if not config.MODELO_PATH.exists():
+        sys.exit(f"No existe {config.MODELO_PATH}. Entrena primero: python entrenar.py")
     img_path = sys.argv[1]
 
-    modelo = tf.keras.models.load_model(MODELO)
+    logger.info("Cargando modelo: %s", config.MODELO_PATH)
+    modelo = tf.keras.models.load_model(config.MODELO_PATH)
     base = encontrar_base(modelo)
+    grad_model = construir_modelo_inferencia(modelo, base)
 
-    img = tf.keras.utils.load_img(img_path, target_size=IMG_SIZE)
+    img = tf.keras.utils.load_img(img_path, target_size=config.IMG_SIZE)
     arr = np.expand_dims(tf.keras.utils.img_to_array(img), 0)  # 0-255
-    try:
-        heat, pred = heatmap_gradcam(arr, modelo, base)
-        guardar(img_path, heat, pred)
-    except Exception as exc:  # noqa: BLE001
-        # Grad-CAM sobre un modelo guardado con base anidada + preprocesamiento
-        # interno es delicado en TF 2.15. Extensión opcional: para una versión
-        # 100% estable, reconstruir el base con include_preprocessing=False y
-        # cargar los pesos, o usar el ejemplo de clase (grad-cam.py con Xception).
-        print(f"[Grad-CAM opcional] no se pudo generar el mapa: {exc}")
-        print("La predicción del modelo sí funciona (ver consumidor.py).")
+    heat, pred = heatmap_gradcam(arr, grad_model)
+    guardar(img_path, heat, pred)
+    print(f"Grad-CAM guardado en '{config.GRADCAM_PATH}'  (predicción: {config.CLASES[pred]})")
 
 
 if __name__ == "__main__":

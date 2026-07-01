@@ -9,12 +9,13 @@ aprender algo y confirmes que el pipeline corre de punta a punta):
   1_rastro_ia   -> base degradado + cajas de colores dispersas (mezcla)
   2_saturada_ia -> degradado suave + rectángulo "plantilla" centrado (look IA)
 
-    python tools/crear_datos_prueba.py --por-clase 30     # crear
-    python tools/crear_datos_prueba.py --limpiar          # borrar las de prueba
+    python herramientas/crear_datos_prueba.py --por-clase 30     # crear
+    python herramientas/crear_datos_prueba.py --limpiar          # borrar las de prueba
 
 Los archivos se llaman  __prueba__<clase>_<i>.png  para que --limpiar los
 encuentre y nunca se confundan con datos reales.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,7 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")   # consola UTF-8 en Windows
+    sys.stdout.reconfigure(encoding="utf-8")  # consola UTF-8 en Windows
 except Exception:
     pass
 
