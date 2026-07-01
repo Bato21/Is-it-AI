@@ -1,0 +1,19 @@
+# Configuración de tooling del repositorio (formato y linting).
+# No declara un paquete instalable: el proyecto se ejecuta como scripts dentro
+# de cada entorno virtual por framework (ver requirements.txt y setup_envs.ps1).
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E,F: pyflakes/pycodestyle · I: orden de imports · UP: pyupgrade · B: bugbear.
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# Módulos locales por carpeta (se importan por nombre desde la propia v2/).
+known-first-party = ["config", "datos", "modelo", "metricas"]

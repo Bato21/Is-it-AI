@@ -1,0 +1,8 @@
+# venv herramientas - conversor de presentaciones + utilidades de dataset.
+# Python 3.11.9.
+#
+# Versiones EXACTAS probadas (2026-06, Windows 11):
+#   PyMuPDF 1.28.0  ·  pillow 12.2.0  ·  pywin32 306+
+PyMuPDF==1.28.0
+pillow==12.2.0
+pywin32>=306; platform_system == "Windows"
