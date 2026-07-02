@@ -1,0 +1,19 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+Parámetros: 3,792,099
+Época  1/10  loss=1.4125 acc=0.4625  val_loss=0.9630 val_acc=0.4833
+Época  2/10  loss=0.9239 acc=0.5167  val_loss=0.8088 val_acc=0.5500
+Época  3/10  loss=0.8275 acc=0.5875  val_loss=0.7560 val_acc=0.5667
+Época  4/10  loss=0.7905 acc=0.5667  val_loss=0.7240 val_acc=0.6333
+Época  5/10  loss=0.7791 acc=0.6292  val_loss=0.7017 val_acc=0.6667
+Época  6/10  loss=0.7508 acc=0.6208  val_loss=0.7293 val_acc=0.6667
+Época  7/10  loss=0.7491 acc=0.6625  val_loss=0.7322 val_acc=0.6667
+Época  8/10  loss=0.7407 acc=0.6292  val_loss=0.7333 val_acc=0.6167
+Época  9/10  loss=0.7049 acc=0.6375  val_loss=0.6770 val_acc=0.7167
+Época 10/10  loss=0.6690 acc=0.7083  val_loss=0.7067 val_acc=0.7167
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[12  6  0]
+ [ 4 16  0]
+ [ 1  6 15]]
+
+Guardado Figure_1.png y Figure_2_matriz.png

@@ -1,0 +1,13 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+Parámetros: 3,792,099
+Época  1/10  loss=1.5901 acc=0.4750  val_loss=0.9757 val_acc=0.4833
+Época  2/10  loss=0.8589 acc=0.5292  val_loss=0.7379 val_acc=0.6667
+Época  3/10  loss=0.7933 acc=0.6417  val_loss=0.7429 val_acc=0.7167
+Época  4/10  loss=0.6773 acc=0.7125  val_loss=0.6208 val_acc=0.7333
+Época  5/10  loss=0.5421 acc=0.8208  val_loss=0.5827 val_acc=0.7333
+Época  6/10  loss=0.4191 acc=0.8083  val_loss=0.4296 val_acc=0.8667
+Época  7/10  loss=0.2141 acc=0.9500  val_loss=0.4095 val_acc=0.8667
+Época  8/10  loss=0.1137 acc=0.9708  val_loss=0.3945 val_acc=0.8333
+Época  9/10  loss=0.0526 acc=0.9958  val_loss=0.3633 val_acc=0.8333
+Época 10/10  loss=0.0291 acc=0.9958  val_loss=0.4064 val_acc=0.8333
+Guardado Figure_1.png
