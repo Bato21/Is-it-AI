@@ -11,7 +11,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # --- 1. Parámetros ---
-DATA_DIR = "../data"
+DATA_DIR = "../../data"
 IMG_SIZE = (180, 180)
 BATCH_SIZE = 32
 SEED = 123
