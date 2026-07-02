@@ -1,22 +1,34 @@
 """
-Clasificar un lote de imágenes con el modelo ya entrenado.
+Inferencia con el modelo TensorFlow v2 (data augmentation) ya entrenado.
+
+Carga el .keras entrenado y clasifica todas las imágenes de 'imagenes_a_probar/'
+en las 3 clases del proyecto. Las rutas se resuelven relativas a la raíz del
+repo, así que se puede ejecutar desde cualquier carpeta:
+
+    python modelos/modelotf_v2.py
 """
-import tensorflow as tf
-import numpy as np
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+
 # --- CONFIG ---
-MODEL_PATH  = "modelos/02_augmentation.keras"     # ruta a tu modelo guardado
-IMG_DIR     = "fotos_a_clasificar"                # carpeta con las imágenes a clasificar
-IMG_SIZE    = (224, 224)                          # MISMO tamaño que en entrenamiento
-CLASS_NAMES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]  # MISMO orden que train_ds.class_names
+# Raíz del repo = carpeta padre de 'modelos/'.
+ROOT = Path(__file__).resolve().parents[1]
+MODEL_PATH = ROOT / "TensorFlow" / "v2" / "modelotf_v2_augmentation.keras"
+IMG_DIR = ROOT / "imagenes_a_probar"
+IMG_SIZE = (180, 180)                         # MISMO tamaño que en entrenamiento (TF v2)
+CLASS_NAMES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]  # orden de train_ds.class_names
 
 # --- Cargar modelo ---
+if not MODEL_PATH.exists():
+    raise SystemExit(f"No encontré el modelo en '{MODEL_PATH}'. Entrená primero TF v2.")
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # --- Reunir rutas de imágenes ---
 EXTS = {".jpg", ".jpeg", ".png", ".webp"}
-rutas = sorted(p for p in Path(IMG_DIR).iterdir() if p.suffix.lower() in EXTS)
+rutas = sorted(p for p in IMG_DIR.iterdir() if p.suffix.lower() in EXTS)
 if not rutas:
     raise SystemExit(f"No encontré imágenes en '{IMG_DIR}'")
 
@@ -27,17 +39,39 @@ imgs = [
     )
     for r in rutas
 ]
-batch = tf.stack(imgs)                             # (N, 224, 224, 3)
+batch = tf.stack(imgs)                        # (N, 180, 180, 3)
 
 # --- Predecir ---
-probs = model.predict(batch, verbose=0)           
+probs = model.predict(batch, verbose=0)
 
 # --- Mostrar resultados ---
-print(f"\n{'archivo':35s}    predicción        conf     [p0 / p1 / p2]")
-print("-" * 80)
+print(f"\n{'archivo':40s}    predicción        conf     [p0 / p1 / p2]")
+print("-" * 85)
 for r, p in zip(rutas, probs):
     idx = int(np.argmax(p))
     print(
-        f"{r.name:35s} -> {CLASS_NAMES[idx]:15s} ({p[idx]:5.1%})   "
+        f"{r.name:40s} -> {CLASS_NAMES[idx]:15s} ({p[idx]:5.1%})   "
         f"[{p[0]:.2f} / {p[1]:.2f} / {p[2]:.2f}]"
     )
+
+# --- Popup: cada imagen con su clasificación en el título ---
+# Una sola ventana con una grilla de subplots (una imagen por celda).
+n = len(rutas)
+cols = min(3, n)
+filas = (n + cols - 1) // cols
+fig, axes = plt.subplots(filas, cols, figsize=(5 * cols, 5 * filas))
+axes = np.atleast_1d(axes).ravel()          # normaliza a lista aunque sea 1 sola imagen
+
+for ax, r, p in zip(axes, rutas, probs):
+    idx = int(np.argmax(p))
+    ax.imshow(tf.keras.utils.load_img(r))    # imagen original (sin resize) para verla bien
+    ax.set_title(f"{CLASS_NAMES[idx]}  ({p[idx]:.1%})", fontsize=11)
+    ax.axis("off")
+
+# Apaga celdas sobrantes si la grilla no queda exacta.
+for ax in axes[n:]:
+    ax.axis("off")
+
+fig.suptitle("Clasificación TF v2", fontsize=14)
+plt.tight_layout()
+plt.show()
