@@ -139,3 +139,5 @@ for i in range(num_classes):
                 color="white" if cm[i, j] > cm.max() / 2 else "black")
 plt.tight_layout()
 plt.show()
+
+model.save("modelotf_v2_augmentation.keras")
