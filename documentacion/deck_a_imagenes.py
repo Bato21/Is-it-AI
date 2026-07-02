@@ -4,14 +4,14 @@ por diapositiva.
 
 Uso
 ---
-    # convierte presentaciones_fuente/ -> sin_clasificar/ (ambas bajo herramientas/)
-    python herramientas/deck_a_imagenes.py
+    # convierte presentaciones_fuente/ -> sin_clasificar/ (ambas bajo documentacion/)
+    python documentacion/deck_a_imagenes.py
 
     # convierte un archivo puntual
-    python herramientas/deck_a_imagenes.py "C:/ruta/a/presentacion.pptx"
+    python documentacion/deck_a_imagenes.py "C:/ruta/a/presentacion.pptx"
 
     # mayor resolución y carpeta de salida distinta
-    python herramientas/deck_a_imagenes.py --dpi 200 --out sin_clasificar
+    python documentacion/deck_a_imagenes.py --dpi 200 --out sin_clasificar
 
 Cómo funciona
 -------------
@@ -43,7 +43,7 @@ except Exception:
 try:
     import fitz  # PyMuPDF
 except ImportError:
-    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r herramientas/requirements.txt")
+    sys.exit("Falta dependencia: PyMuPDF. Corre  pip install -r documentacion/requirements_herramientas.txt")
 
 AQUI = Path(__file__).resolve().parent
 ENTRADA_DEF = AQUI / "presentaciones_fuente"
@@ -132,7 +132,7 @@ def convertir(src: Path, out_dir: Path, dpi: int) -> int:
                 print(
                     "  No se pudo convertir el PPTX. Instala Microsoft PowerPoint o\n"
                     "  LibreOffice, o exporta la presentación a PDF a mano y déjala\n"
-                    "  en herramientas/presentaciones_fuente/."
+                    "  en documentacion/presentaciones_fuente/."
                 )
                 return 0
             return pdf_a_pngs(pdf, out_dir, src.stem, dpi)
@@ -145,7 +145,7 @@ def main() -> None:
     ap.add_argument(
         "entradas",
         nargs="*",
-        help="Archivos. Por defecto: todo lo de herramientas/presentaciones_fuente/",
+        help="Archivos. Por defecto: todo lo de documentacion/presentaciones_fuente/",
     )
     ap.add_argument("--out", default=str(SALIDA_DEF), help="Carpeta de salida de los PNG.")
     ap.add_argument("--dpi", type=int, default=150, help="Resolución de render (def 150).")

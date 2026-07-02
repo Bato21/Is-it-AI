@@ -9,8 +9,8 @@ aprender algo y confirmes que el pipeline corre de punta a punta):
   1_rastro_ia   -> base degradado + cajas de colores dispersas (mezcla)
   2_saturada_ia -> degradado suave + rectángulo "plantilla" centrado (look IA)
 
-    python herramientas/crear_datos_prueba.py --por-clase 30     # crear
-    python herramientas/crear_datos_prueba.py --limpiar          # borrar las de prueba
+    python documentacion/crear_datos_prueba.py --por-clase 30     # crear
+    python documentacion/crear_datos_prueba.py --limpiar          # borrar las de prueba
 
 Los archivos se llaman  __prueba__<clase>_<i>.png  para que --limpiar los
 encuentre y nunca se confundan con datos reales.

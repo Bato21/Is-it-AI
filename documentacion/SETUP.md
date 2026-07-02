@@ -15,14 +15,14 @@ Crea:
 
 | venv                  | para           | requerimiento                 |
 |-----------------------|----------------|-------------------------------|
-| `herramientas/.venv`  | conversor      | `herramientas/requirements.txt`|
+| `documentacion/.venv`  | conversor      | `documentacion/requirements_herramientas.txt`|
 | `PyTorch/.venv`       | modelo PyTorch | `PyTorch/requirements.txt`     |
 | `TensorFlow/.venv`    | modelo TF      | `TensorFlow/requirements.txt`  |
 
 ## Activar un venv (PowerShell)
 
 ```powershell
-herramientas\.venv\Scripts\Activate.ps1 # conversor
+documentacion\.venv\Scripts\Activate.ps1 # conversor
 PyTorch\.venv\Scripts\Activate.ps1      # PyTorch
 TensorFlow\.venv\Scripts\Activate.ps1   # TensorFlow
 deactivate                              # salir

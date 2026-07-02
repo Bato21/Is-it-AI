@@ -8,6 +8,11 @@ __pycache__/
 .venv/
 */.venv/
 
+# tooling / setup no esencial para el repo
+pyproject.toml
+setup_envs.ps1
+.mypy_cache/
+
 # logs temporales
 *.log
 
@@ -17,6 +22,8 @@ __pycache__/
 *.ptl
 *.tflite
 *.torchscript.pt
+# excepción: modelo v2 versionado para que el profe lo pueda usar (espejo del .h5 de TF)
+!PyTorch/v2/modelopt_v2_augmentation.pt
 
 # figuras generadas por los scripts (NO ignorar las del repo original como Figure_1.png)
 training_curves.png
@@ -28,7 +35,7 @@ grad_cam_output.png
 mensaje_commit.txt
 
 # entrada/salida del conversor (mantener la estructura con .gitkeep)
-herramientas/sin_clasificar/*
-!herramientas/sin_clasificar/.gitkeep
-herramientas/presentaciones_fuente/*
-!herramientas/presentaciones_fuente/.gitkeep
+documentacion/sin_clasificar/*
+!documentacion/sin_clasificar/.gitkeep
+documentacion/presentaciones_fuente/*
+!documentacion/presentaciones_fuente/.gitkeep

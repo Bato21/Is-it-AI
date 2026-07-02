@@ -1,7 +1,7 @@
 """
 dividir_dataset.py - Reporta el balance de clases del dataset.
 
-    python herramientas/dividir_dataset.py
+    python documentacion/dividir_dataset.py
 
 Los scripts de entrenamiento hacen su propia división train/val/test internamente
 (70/15/15 en la v2). Este script es solo un chequeo rápido de balance: clases muy

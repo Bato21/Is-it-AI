@@ -194,3 +194,13 @@ for i in range(num_classes):
 plt.tight_layout()
 plt.savefig(Path(__file__).resolve().parent / "Figure_2_matriz.png", dpi=150, bbox_inches="tight")
 print("\nGuardado Figure_1.png y Figure_2_matriz.png")
+
+# --- 8. Guardar el modelo entrenado (espejo del model.save de TensorFlow/v2) ---
+# Queda junto al script, igual que modelotf_v2_augmentation.keras en TensorFlow/v2/.
+# Lo consume modelos/modelopt_v2.py para que el profe pueda probarlo.
+MODEL_PATH = Path(__file__).resolve().parent / "modelopt_v2_augmentation.pt"
+torch.save(
+    {"state_dict": modelo.state_dict(), "class_names": class_names, "img_size": IMG_SIZE},
+    MODEL_PATH,
+)
+print(f"Modelo guardado en {MODEL_PATH.name}")
