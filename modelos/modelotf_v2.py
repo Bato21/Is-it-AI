@@ -1,13 +1,9 @@
 """
 Inferencia con el modelo TensorFlow v2 (data augmentation) ya entrenado.
 
-Carga el .keras entrenado y clasifica todas las imágenes de 'imagenes_a_probar/'
-en las 3 clases del proyecto. Las rutas se resuelven relativas a la raíz del
-repo, así que se puede ejecutar desde cualquier carpeta:
-
-    python modelos/modelotf_v2.py
 """
 from pathlib import Path
+from random import sample
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,6 +28,9 @@ rutas = sorted(p for p in IMG_DIR.iterdir() if p.suffix.lower() in EXTS)
 if not rutas:
     raise SystemExit(f"No encontré imágenes en '{IMG_DIR}'")
 
+# Mostrar solo un subconjunto aleatorio para que la grilla sea legible.
+rutas = sample(rutas, k=min(6, len(rutas)))
+
 # --- Cargar y apilar en un solo batch ---
 imgs = [
     tf.keras.utils.img_to_array(
@@ -55,7 +54,7 @@ for r, p in zip(rutas, probs):
     )
 
 # --- Popup: cada imagen con su clasificación en el título ---
-# Una sola ventana con una grilla de subplots (una imagen por celda).
+# Una sola ventana con una grilla pequeña y espaciada (máximo 6 imágenes).
 n = len(rutas)
 cols = min(3, n)
 filas = (n + cols - 1) // cols
@@ -73,5 +72,5 @@ for ax in axes[n:]:
     ax.axis("off")
 
 fig.suptitle("Clasificación TF v2", fontsize=14)
-plt.tight_layout()
+fig.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
