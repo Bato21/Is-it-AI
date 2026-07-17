@@ -1,0 +1,36 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+Downloading: "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth" to /home/bato/.cache/torch/hub/checkpoints/mobilenet_v3_small-047dcff4.pth
+Parámetros totales:     1,520,931
+Parámetros entrenables: 593,923  (solo la cabeza)
+Época  1/60  loss=0.9863 acc=0.4958  val_loss=0.7636 val_acc=0.6833
+Época  2/60  loss=0.7445 acc=0.7083  val_loss=0.7179 val_acc=0.6667
+Época  3/60  loss=0.5474 acc=0.7875  val_loss=0.5257 val_acc=0.7833
+Época  4/60  loss=0.4771 acc=0.8417  val_loss=0.4776 val_acc=0.8333
+Época  5/60  loss=0.4380 acc=0.8167  val_loss=0.5372 val_acc=0.7833
+Época  6/60  loss=0.3634 acc=0.8667  val_loss=0.4202 val_acc=0.8833
+Época  7/60  loss=0.3188 acc=0.8917  val_loss=0.4171 val_acc=0.9000
+Época  8/60  loss=0.2900 acc=0.9000  val_loss=0.4360 val_acc=0.8667
+Época  9/60  loss=0.2796 acc=0.8875  val_loss=0.4900 val_acc=0.8167
+Época 10/60  loss=0.2562 acc=0.9083  val_loss=0.4380 val_acc=0.9000
+Época 11/60  loss=0.2618 acc=0.9125  val_loss=0.4850 val_acc=0.8000
+Época 12/60  loss=0.2653 acc=0.8958  val_loss=0.4043 val_acc=0.9000
+Época 13/60  loss=0.2243 acc=0.9208  val_loss=0.4823 val_acc=0.8500
+Época 14/60  loss=0.1996 acc=0.9250  val_loss=0.4679 val_acc=0.8500
+Época 15/60  loss=0.1792 acc=0.9333  val_loss=0.4548 val_acc=0.8667
+Época 16/60  loss=0.1762 acc=0.9500  val_loss=0.4842 val_acc=0.8667
+Época 17/60  loss=0.1722 acc=0.9458  val_loss=0.4699 val_acc=0.8500
+Época 18/60  loss=0.1734 acc=0.9375  val_loss=0.4574 val_acc=0.8333
+Época 19/60  loss=0.1232 acc=0.9708  val_loss=0.4542 val_acc=0.8833
+Época 20/60  loss=0.1426 acc=0.9542  val_loss=0.4918 val_acc=0.8667
+
+Early stopping en la época 20: val_loss no mejora hace 8 épocas.
+
+Mejor modelo: época 12/20  val_loss=0.4043  val_acc=0.9000  (train loss=0.2653 acc=0.8958)
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[14  4  0]
+ [ 1 18  1]
+ [ 0  0 22]]
+
+Guardado Figure_1.png y Figure_2_matriz.png
+Modelo guardado en modelopt_v4_mobilenetv3.pt
