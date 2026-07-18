@@ -1,0 +1,100 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Soporte por clase:
+clase             train   val
+0_sin_ia             83    17
+1_rastro_ia          40    10
+2_saturada_ia        17     8
+
+AVISO: con 80/20 sobre ~175 imágenes, la clase 2 queda con pocos casos en val
+       (8 imágenes). Leé su recall en NÚMEROS ABSOLUTOS, no solo en %.
+
+Pesos de clase (para la variante con corrección):
+  0_sin_ia         w=0.562
+  1_rastro_ia      w=1.167
+  2_saturada_ia    w=2.745
+
+======================================================================
+VARIANTE: SIN corrección (línea base)
+======================================================================
+Época  1/60  loss=1.0327 acc=0.5571  val_loss=0.9576 val_acc=0.5429
+Época  2/60  loss=0.6379 acc=0.7571  val_loss=0.7984 val_acc=0.6286
+Época  3/60  loss=0.5369 acc=0.7857  val_loss=0.6967 val_acc=0.6857
+Época  4/60  loss=0.4168 acc=0.8429  val_loss=0.7192 val_acc=0.6571
+Época  5/60  loss=0.3582 acc=0.8714  val_loss=0.7071 val_acc=0.7143
+Época  6/60  loss=0.3014 acc=0.8786  val_loss=0.6441 val_acc=0.7714
+Época  7/60  loss=0.2695 acc=0.9286  val_loss=0.6103 val_acc=0.7714
+Época  8/60  loss=0.2408 acc=0.9071  val_loss=0.6020 val_acc=0.7429
+Época  9/60  loss=0.2043 acc=0.9429  val_loss=0.5823 val_acc=0.7714
+Época 10/60  loss=0.1894 acc=0.9571  val_loss=0.5885 val_acc=0.7714
+Época 11/60  loss=0.1828 acc=0.9357  val_loss=0.6171 val_acc=0.7714
+Época 12/60  loss=0.1489 acc=0.9643  val_loss=0.5536 val_acc=0.8286
+Época 13/60  loss=0.1510 acc=0.9500  val_loss=0.5738 val_acc=0.8286
+Época 14/60  loss=0.1572 acc=0.9429  val_loss=0.6091 val_acc=0.8000
+Época 15/60  loss=0.1333 acc=0.9571  val_loss=0.5834 val_acc=0.8571
+Época 16/60  loss=0.1036 acc=0.9786  val_loss=0.5971 val_acc=0.8286
+Época 17/60  loss=0.1120 acc=0.9571  val_loss=0.6204 val_acc=0.8286
+Época 18/60  loss=0.1279 acc=0.9643  val_loss=0.6216 val_acc=0.8000
+Época 19/60  loss=0.1072 acc=0.9714  val_loss=0.5831 val_acc=0.8571
+Época 20/60  loss=0.0798 acc=0.9857  val_loss=0.6078 val_acc=0.8571
+Early stopping en la época 20.
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[16  1  0]
+ [ 3  7  0]
+ [ 2  0  6]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.762    0.941  0.842       17
+1_rastro_ia          0.875    0.700  0.778       10
+2_saturada_ia        1.000    0.750  0.857        8
+---------------------------------------------------
+macro avg            0.879    0.797  0.826       35
+accuracy: 0.829  (29/35)
+
+======================================================================
+VARIANTE: CON pesos de clase
+======================================================================
+Época  1/60  loss=1.1423 acc=0.3714  val_loss=1.0150 val_acc=0.6571
+Época  2/60  loss=0.7559 acc=0.6786  val_loss=0.9647 val_acc=0.6286
+Época  3/60  loss=0.5734 acc=0.7929  val_loss=0.7131 val_acc=0.7714
+Época  4/60  loss=0.4626 acc=0.8571  val_loss=0.6754 val_acc=0.8000
+Época  5/60  loss=0.3885 acc=0.8786  val_loss=0.7794 val_acc=0.8000
+Época  6/60  loss=0.3193 acc=0.9071  val_loss=0.7334 val_acc=0.7714
+Época  7/60  loss=0.3131 acc=0.9071  val_loss=0.5665 val_acc=0.8286
+Época  8/60  loss=0.2522 acc=0.9286  val_loss=0.5460 val_acc=0.8286
+Época  9/60  loss=0.2609 acc=0.9143  val_loss=0.5483 val_acc=0.8571
+Época 10/60  loss=0.2026 acc=0.9571  val_loss=0.5859 val_acc=0.8286
+Época 11/60  loss=0.1954 acc=0.9500  val_loss=0.5628 val_acc=0.8286
+Época 12/60  loss=0.1824 acc=0.9500  val_loss=0.5746 val_acc=0.8286
+Época 13/60  loss=0.1834 acc=0.9214  val_loss=0.5464 val_acc=0.8571
+Época 14/60  loss=0.1727 acc=0.9357  val_loss=0.5055 val_acc=0.8857
+Época 15/60  loss=0.1492 acc=0.9357  val_loss=0.4856 val_acc=0.8571
+Época 16/60  loss=0.1231 acc=0.9714  val_loss=0.6345 val_acc=0.8286
+Época 17/60  loss=0.1827 acc=0.9429  val_loss=0.6913 val_acc=0.8571
+Época 18/60  loss=0.1388 acc=0.9714  val_loss=0.5713 val_acc=0.8571
+Época 19/60  loss=0.1335 acc=0.9500  val_loss=0.5151 val_acc=0.8857
+Época 20/60  loss=0.1250 acc=0.9643  val_loss=0.5640 val_acc=0.8857
+Época 21/60  loss=0.0914 acc=0.9857  val_loss=0.5871 val_acc=0.8857
+Época 22/60  loss=0.0746 acc=0.9857  val_loss=0.6087 val_acc=0.8571
+Época 23/60  loss=0.0804 acc=0.9857  val_loss=0.6631 val_acc=0.8571
+Early stopping en la época 23.
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[16  1  0]
+ [ 2  8  0]
+ [ 1  1  6]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.842    0.941  0.889       17
+1_rastro_ia          0.800    0.800  0.800       10
+2_saturada_ia        1.000    0.750  0.857        8
+---------------------------------------------------
+macro avg            0.881    0.830  0.849       35
+accuracy: 0.857  (30/35)
+
+Guardado Figure_matrices_v5.png y Figure_curvas_v5.png

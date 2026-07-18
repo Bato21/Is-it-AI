@@ -1,0 +1,308 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1784401668.195934   34225 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1784401668.196869   34225 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+I0000 00:00:1784401668.274663   34225 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1784401669.928852   34225 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1784401669.929655   34225 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+Found 175 files belonging to 3 classes.
+Using 140 files for training.
+E0000 00:00:1784401671.359713   34225 cuda_platform.cc:52] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+Found 175 files belonging to 3 classes.
+Using 35 files for validation.
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Soporte por clase:
+clase             train   val
+0_sin_ia             82    18
+1_rastro_ia          40    10
+2_saturada_ia        18     7
+
+AVISO: con 80/20 sobre ~175 imágenes, la clase 2 queda con pocos casos en val
+       (7 imágenes). Leé su recall en NÚMEROS ABSOLUTOS, no solo en %.
+
+Pesos de clase (para la variante con corrección):
+  0_sin_ia         w=0.569
+  1_rastro_ia      w=1.167
+  2_saturada_ia    w=2.593
+
+======================================================================
+VARIANTE: SIN corrección (línea base)
+======================================================================
+Epoch 1/60
+5/5 - 9s - 2s/step - accuracy: 0.4357 - loss: 1.0874 - val_accuracy: 0.4857 - val_loss: 1.1486
+Epoch 2/60
+5/5 - 3s - 606ms/step - accuracy: 0.5857 - loss: 0.9199 - val_accuracy: 0.4857 - val_loss: 1.0864
+Epoch 3/60
+5/5 - 5s - 973ms/step - accuracy: 0.5857 - loss: 0.8899 - val_accuracy: 0.4857 - val_loss: 1.0434
+Epoch 4/60
+5/5 - 2s - 489ms/step - accuracy: 0.6571 - loss: 0.7789 - val_accuracy: 0.4857 - val_loss: 1.0134
+Epoch 5/60
+5/5 - 2s - 465ms/step - accuracy: 0.6929 - loss: 0.7457 - val_accuracy: 0.4857 - val_loss: 0.9921
+Epoch 6/60
+5/5 - 2s - 485ms/step - accuracy: 0.6357 - loss: 0.8150 - val_accuracy: 0.4857 - val_loss: 0.9743
+Epoch 7/60
+5/5 - 3s - 516ms/step - accuracy: 0.7429 - loss: 0.6219 - val_accuracy: 0.5429 - val_loss: 0.9579
+Epoch 8/60
+5/5 - 2s - 496ms/step - accuracy: 0.7214 - loss: 0.6670 - val_accuracy: 0.6000 - val_loss: 0.9356
+Epoch 9/60
+5/5 - 2s - 472ms/step - accuracy: 0.6857 - loss: 0.6523 - val_accuracy: 0.6000 - val_loss: 0.9193
+Epoch 10/60
+5/5 - 3s - 516ms/step - accuracy: 0.7286 - loss: 0.6591 - val_accuracy: 0.6000 - val_loss: 0.9111
+Epoch 11/60
+5/5 - 2s - 468ms/step - accuracy: 0.7500 - loss: 0.5802 - val_accuracy: 0.6000 - val_loss: 0.8975
+Epoch 12/60
+5/5 - 2s - 488ms/step - accuracy: 0.7786 - loss: 0.5708 - val_accuracy: 0.6000 - val_loss: 0.8860
+Epoch 13/60
+5/5 - 3s - 528ms/step - accuracy: 0.8143 - loss: 0.5128 - val_accuracy: 0.6286 - val_loss: 0.8734
+Epoch 14/60
+5/5 - 3s - 540ms/step - accuracy: 0.8000 - loss: 0.5265 - val_accuracy: 0.6286 - val_loss: 0.8646
+Epoch 15/60
+5/5 - 3s - 534ms/step - accuracy: 0.8071 - loss: 0.5233 - val_accuracy: 0.6286 - val_loss: 0.8628
+Epoch 16/60
+5/5 - 3s - 594ms/step - accuracy: 0.8214 - loss: 0.4708 - val_accuracy: 0.6286 - val_loss: 0.8609
+Epoch 17/60
+5/5 - 3s - 564ms/step - accuracy: 0.7786 - loss: 0.5427 - val_accuracy: 0.6286 - val_loss: 0.8555
+Epoch 18/60
+5/5 - 3s - 688ms/step - accuracy: 0.8214 - loss: 0.5073 - val_accuracy: 0.6286 - val_loss: 0.8449
+Epoch 19/60
+5/5 - 3s - 687ms/step - accuracy: 0.8357 - loss: 0.4650 - val_accuracy: 0.6286 - val_loss: 0.8313
+Epoch 20/60
+5/5 - 3s - 673ms/step - accuracy: 0.8429 - loss: 0.4707 - val_accuracy: 0.6286 - val_loss: 0.8210
+Epoch 21/60
+5/5 - 6s - 1s/step - accuracy: 0.7929 - loss: 0.5003 - val_accuracy: 0.6286 - val_loss: 0.8121
+Epoch 22/60
+5/5 - 3s - 616ms/step - accuracy: 0.8143 - loss: 0.4625 - val_accuracy: 0.6286 - val_loss: 0.8043
+Epoch 23/60
+5/5 - 3s - 626ms/step - accuracy: 0.8500 - loss: 0.4282 - val_accuracy: 0.6286 - val_loss: 0.7921
+Epoch 24/60
+5/5 - 4s - 716ms/step - accuracy: 0.8286 - loss: 0.4179 - val_accuracy: 0.6286 - val_loss: 0.7807
+Epoch 25/60
+5/5 - 3s - 545ms/step - accuracy: 0.8071 - loss: 0.4518 - val_accuracy: 0.6286 - val_loss: 0.7704
+Epoch 26/60
+5/5 - 3s - 587ms/step - accuracy: 0.8357 - loss: 0.4313 - val_accuracy: 0.7143 - val_loss: 0.7640
+Epoch 27/60
+5/5 - 3s - 544ms/step - accuracy: 0.8643 - loss: 0.3878 - val_accuracy: 0.6857 - val_loss: 0.7598
+Epoch 28/60
+5/5 - 3s - 573ms/step - accuracy: 0.8643 - loss: 0.3682 - val_accuracy: 0.6857 - val_loss: 0.7541
+Epoch 29/60
+5/5 - 3s - 581ms/step - accuracy: 0.8429 - loss: 0.3938 - val_accuracy: 0.6857 - val_loss: 0.7528
+Epoch 30/60
+5/5 - 3s - 590ms/step - accuracy: 0.8571 - loss: 0.4044 - val_accuracy: 0.6857 - val_loss: 0.7490
+Epoch 31/60
+5/5 - 3s - 597ms/step - accuracy: 0.8786 - loss: 0.3744 - val_accuracy: 0.6857 - val_loss: 0.7453
+Epoch 32/60
+5/5 - 3s - 618ms/step - accuracy: 0.8857 - loss: 0.3703 - val_accuracy: 0.6857 - val_loss: 0.7463
+Epoch 33/60
+5/5 - 3s - 666ms/step - accuracy: 0.8786 - loss: 0.3675 - val_accuracy: 0.7143 - val_loss: 0.7495
+Epoch 34/60
+5/5 - 3s - 647ms/step - accuracy: 0.8286 - loss: 0.4010 - val_accuracy: 0.7143 - val_loss: 0.7441
+Epoch 35/60
+5/5 - 4s - 718ms/step - accuracy: 0.8714 - loss: 0.3562 - val_accuracy: 0.6857 - val_loss: 0.7381
+Epoch 36/60
+5/5 - 5s - 981ms/step - accuracy: 0.8429 - loss: 0.3970 - val_accuracy: 0.6857 - val_loss: 0.7293
+Epoch 37/60
+5/5 - 3s - 686ms/step - accuracy: 0.8500 - loss: 0.3413 - val_accuracy: 0.6857 - val_loss: 0.7256
+Epoch 38/60
+5/5 - 3s - 640ms/step - accuracy: 0.8929 - loss: 0.3233 - val_accuracy: 0.6857 - val_loss: 0.7213
+Epoch 39/60
+5/5 - 3s - 599ms/step - accuracy: 0.8857 - loss: 0.3628 - val_accuracy: 0.6857 - val_loss: 0.7219
+Epoch 40/60
+5/5 - 3s - 599ms/step - accuracy: 0.9071 - loss: 0.3152 - val_accuracy: 0.7143 - val_loss: 0.7209
+Epoch 41/60
+5/5 - 3s - 565ms/step - accuracy: 0.8929 - loss: 0.3585 - val_accuracy: 0.7143 - val_loss: 0.7348
+Epoch 42/60
+5/5 - 5s - 1s/step - accuracy: 0.8857 - loss: 0.3434 - val_accuracy: 0.7429 - val_loss: 0.7383
+Epoch 43/60
+5/5 - 3s - 565ms/step - accuracy: 0.8714 - loss: 0.3282 - val_accuracy: 0.7429 - val_loss: 0.7260
+Epoch 44/60
+5/5 - 3s - 669ms/step - accuracy: 0.8143 - loss: 0.3806 - val_accuracy: 0.7143 - val_loss: 0.7084
+Epoch 45/60
+5/5 - 5s - 980ms/step - accuracy: 0.8786 - loss: 0.2971 - val_accuracy: 0.7143 - val_loss: 0.6884
+Epoch 46/60
+5/5 - 3s - 516ms/step - accuracy: 0.8929 - loss: 0.3555 - val_accuracy: 0.7143 - val_loss: 0.6814
+Epoch 47/60
+5/5 - 3s - 503ms/step - accuracy: 0.8929 - loss: 0.3164 - val_accuracy: 0.7143 - val_loss: 0.6788
+Epoch 48/60
+5/5 - 3s - 533ms/step - accuracy: 0.8857 - loss: 0.3397 - val_accuracy: 0.7143 - val_loss: 0.6741
+Epoch 49/60
+5/5 - 3s - 537ms/step - accuracy: 0.8786 - loss: 0.3357 - val_accuracy: 0.7143 - val_loss: 0.6626
+Epoch 50/60
+5/5 - 3s - 508ms/step - accuracy: 0.9143 - loss: 0.3323 - val_accuracy: 0.7143 - val_loss: 0.6565
+Epoch 51/60
+5/5 - 3s - 531ms/step - accuracy: 0.8929 - loss: 0.2974 - val_accuracy: 0.7143 - val_loss: 0.6531
+Epoch 52/60
+5/5 - 3s - 514ms/step - accuracy: 0.8571 - loss: 0.3178 - val_accuracy: 0.7143 - val_loss: 0.6503
+Epoch 53/60
+5/5 - 3s - 655ms/step - accuracy: 0.9286 - loss: 0.2843 - val_accuracy: 0.7429 - val_loss: 0.6509
+Epoch 54/60
+5/5 - 3s - 535ms/step - accuracy: 0.9000 - loss: 0.3053 - val_accuracy: 0.7143 - val_loss: 0.6453
+Epoch 55/60
+5/5 - 3s - 508ms/step - accuracy: 0.8714 - loss: 0.3094 - val_accuracy: 0.7143 - val_loss: 0.6390
+Epoch 56/60
+5/5 - 3s - 545ms/step - accuracy: 0.9143 - loss: 0.2851 - val_accuracy: 0.7143 - val_loss: 0.6308
+Epoch 57/60
+5/5 - 3s - 523ms/step - accuracy: 0.8929 - loss: 0.2864 - val_accuracy: 0.7143 - val_loss: 0.6235
+Epoch 58/60
+5/5 - 3s - 541ms/step - accuracy: 0.9357 - loss: 0.2845 - val_accuracy: 0.7143 - val_loss: 0.6165
+Epoch 59/60
+5/5 - 3s - 512ms/step - accuracy: 0.8929 - loss: 0.3083 - val_accuracy: 0.7143 - val_loss: 0.6114
+Epoch 60/60
+5/5 - 3s - 553ms/step - accuracy: 0.9143 - loss: 0.2917 - val_accuracy: 0.7143 - val_loss: 0.6162
+
+Mejor época 59/60  val_loss=0.6114
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[16  2  0]
+ [ 7  3  0]
+ [ 1  0  6]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.667    0.889  0.762       18
+1_rastro_ia          0.600    0.300  0.400       10
+2_saturada_ia        1.000    0.857  0.923        7
+---------------------------------------------------
+macro avg            0.756    0.682  0.695       35
+accuracy: 0.714  (25/35)
+
+======================================================================
+VARIANTE: CON pesos de clase
+======================================================================
+Epoch 1/60
+5/5 - 9s - 2s/step - accuracy: 0.4357 - loss: 1.2088 - val_accuracy: 0.3714 - val_loss: 1.1920
+Epoch 2/60
+5/5 - 3s - 529ms/step - accuracy: 0.4714 - loss: 1.0508 - val_accuracy: 0.4286 - val_loss: 1.1545
+Epoch 3/60
+5/5 - 3s - 519ms/step - accuracy: 0.4643 - loss: 1.0406 - val_accuracy: 0.6000 - val_loss: 1.1111
+Epoch 4/60
+5/5 - 3s - 560ms/step - accuracy: 0.5643 - loss: 0.9138 - val_accuracy: 0.6286 - val_loss: 1.0646
+Epoch 5/60
+5/5 - 3s - 529ms/step - accuracy: 0.6286 - loss: 0.8565 - val_accuracy: 0.6286 - val_loss: 1.0293
+Epoch 6/60
+5/5 - 3s - 512ms/step - accuracy: 0.6786 - loss: 0.8336 - val_accuracy: 0.6000 - val_loss: 1.0142
+Epoch 7/60
+5/5 - 3s - 539ms/step - accuracy: 0.6143 - loss: 0.8435 - val_accuracy: 0.6286 - val_loss: 0.9993
+Epoch 8/60
+5/5 - 3s - 555ms/step - accuracy: 0.7071 - loss: 0.7356 - val_accuracy: 0.6286 - val_loss: 0.9901
+Epoch 9/60
+5/5 - 2s - 500ms/step - accuracy: 0.6929 - loss: 0.7433 - val_accuracy: 0.6571 - val_loss: 0.9730
+Epoch 10/60
+5/5 - 3s - 553ms/step - accuracy: 0.7214 - loss: 0.7104 - val_accuracy: 0.6571 - val_loss: 0.9550
+Epoch 11/60
+5/5 - 3s - 515ms/step - accuracy: 0.6786 - loss: 0.6833 - val_accuracy: 0.6571 - val_loss: 0.9360
+Epoch 12/60
+5/5 - 3s - 562ms/step - accuracy: 0.7500 - loss: 0.6502 - val_accuracy: 0.6571 - val_loss: 0.9222
+Epoch 13/60
+W0000 00:00:1784401905.347627   36904 prefetch_autotuner.cc:55] Prefetch autotuner tried to allocate 19267840 bytes after encountering the first element of size 19267840 bytes.This already causes the autotune ram budget to be exceeded. To stay within the ram budget, either increase the ram budget or reduce element size
+5/5 - 3s - 507ms/step - accuracy: 0.7643 - loss: 0.6684 - val_accuracy: 0.6857 - val_loss: 0.9157
+Epoch 14/60
+5/5 - 3s - 572ms/step - accuracy: 0.7429 - loss: 0.6053 - val_accuracy: 0.6857 - val_loss: 0.9014
+Epoch 15/60
+5/5 - 3s - 519ms/step - accuracy: 0.7571 - loss: 0.6047 - val_accuracy: 0.7143 - val_loss: 0.8930
+Epoch 16/60
+5/5 - 3s - 536ms/step - accuracy: 0.7714 - loss: 0.5910 - val_accuracy: 0.7143 - val_loss: 0.8836
+Epoch 17/60
+5/5 - 3s - 528ms/step - accuracy: 0.7929 - loss: 0.6139 - val_accuracy: 0.7143 - val_loss: 0.8693
+Epoch 18/60
+5/5 - 3s - 515ms/step - accuracy: 0.7357 - loss: 0.5618 - val_accuracy: 0.7143 - val_loss: 0.8538
+Epoch 19/60
+5/5 - 3s - 549ms/step - accuracy: 0.7714 - loss: 0.5607 - val_accuracy: 0.7143 - val_loss: 0.8345
+Epoch 20/60
+5/5 - 3s - 515ms/step - accuracy: 0.8000 - loss: 0.5880 - val_accuracy: 0.7143 - val_loss: 0.8227
+Epoch 21/60
+W0000 00:00:1784401926.495357   36904 prefetch_autotuner.cc:55] Prefetch autotuner tried to allocate 19267840 bytes after encountering the first element of size 19267840 bytes.This already causes the autotune ram budget to be exceeded. To stay within the ram budget, either increase the ram budget or reduce element size
+5/5 - 3s - 537ms/step - accuracy: 0.7714 - loss: 0.5542 - val_accuracy: 0.7143 - val_loss: 0.8162
+Epoch 22/60
+5/5 - 3s - 566ms/step - accuracy: 0.8071 - loss: 0.5292 - val_accuracy: 0.7143 - val_loss: 0.8141
+Epoch 23/60
+5/5 - 5s - 926ms/step - accuracy: 0.8000 - loss: 0.5377 - val_accuracy: 0.7143 - val_loss: 0.8049
+Epoch 24/60
+5/5 - 3s - 544ms/step - accuracy: 0.7857 - loss: 0.5284 - val_accuracy: 0.7143 - val_loss: 0.7959
+Epoch 25/60
+5/5 - 3s - 523ms/step - accuracy: 0.7857 - loss: 0.5497 - val_accuracy: 0.7143 - val_loss: 0.7920
+Epoch 26/60
+5/5 - 3s - 527ms/step - accuracy: 0.8429 - loss: 0.4312 - val_accuracy: 0.7714 - val_loss: 0.7855
+Epoch 27/60
+5/5 - 3s - 543ms/step - accuracy: 0.8000 - loss: 0.5188 - val_accuracy: 0.8000 - val_loss: 0.7733
+Epoch 28/60
+5/5 - 3s - 529ms/step - accuracy: 0.8357 - loss: 0.4602 - val_accuracy: 0.7714 - val_loss: 0.7588
+Epoch 29/60
+5/5 - 3s - 516ms/step - accuracy: 0.7929 - loss: 0.5142 - val_accuracy: 0.7714 - val_loss: 0.7460
+Epoch 30/60
+5/5 - 3s - 546ms/step - accuracy: 0.8500 - loss: 0.4699 - val_accuracy: 0.7714 - val_loss: 0.7363
+Epoch 31/60
+5/5 - 3s - 533ms/step - accuracy: 0.8786 - loss: 0.4173 - val_accuracy: 0.7714 - val_loss: 0.7299
+Epoch 32/60
+5/5 - 3s - 547ms/step - accuracy: 0.9143 - loss: 0.3895 - val_accuracy: 0.7714 - val_loss: 0.7270
+Epoch 33/60
+5/5 - 3s - 528ms/step - accuracy: 0.8571 - loss: 0.4591 - val_accuracy: 0.7714 - val_loss: 0.7279
+Epoch 34/60
+5/5 - 3s - 547ms/step - accuracy: 0.8500 - loss: 0.4313 - val_accuracy: 0.8286 - val_loss: 0.7370
+Epoch 35/60
+5/5 - 3s - 540ms/step - accuracy: 0.8857 - loss: 0.3959 - val_accuracy: 0.8000 - val_loss: 0.7274
+Epoch 36/60
+5/5 - 3s - 518ms/step - accuracy: 0.8714 - loss: 0.4257 - val_accuracy: 0.7714 - val_loss: 0.7175
+Epoch 37/60
+5/5 - 3s - 548ms/step - accuracy: 0.8857 - loss: 0.3946 - val_accuracy: 0.8286 - val_loss: 0.7161
+Epoch 38/60
+5/5 - 3s - 558ms/step - accuracy: 0.8500 - loss: 0.3894 - val_accuracy: 0.7714 - val_loss: 0.7065
+Epoch 39/60
+5/5 - 3s - 510ms/step - accuracy: 0.8643 - loss: 0.4146 - val_accuracy: 0.7714 - val_loss: 0.6974
+Epoch 40/60
+5/5 - 3s - 551ms/step - accuracy: 0.8714 - loss: 0.4104 - val_accuracy: 0.8000 - val_loss: 0.6914
+Epoch 41/60
+5/5 - 3s - 526ms/step - accuracy: 0.9357 - loss: 0.3723 - val_accuracy: 0.8000 - val_loss: 0.6906
+Epoch 42/60
+5/5 - 5s - 980ms/step - accuracy: 0.8571 - loss: 0.4097 - val_accuracy: 0.8286 - val_loss: 0.6856
+Epoch 43/60
+5/5 - 3s - 535ms/step - accuracy: 0.8714 - loss: 0.3678 - val_accuracy: 0.8286 - val_loss: 0.6789
+Epoch 44/60
+5/5 - 3s - 553ms/step - accuracy: 0.8643 - loss: 0.3557 - val_accuracy: 0.8286 - val_loss: 0.6658
+Epoch 45/60
+5/5 - 3s - 515ms/step - accuracy: 0.8714 - loss: 0.4248 - val_accuracy: 0.8000 - val_loss: 0.6538
+Epoch 46/60
+5/5 - 3s - 550ms/step - accuracy: 0.8786 - loss: 0.3802 - val_accuracy: 0.8286 - val_loss: 0.6449
+Epoch 47/60
+5/5 - 3s - 514ms/step - accuracy: 0.9357 - loss: 0.3105 - val_accuracy: 0.8286 - val_loss: 0.6337
+Epoch 48/60
+5/5 - 3s - 550ms/step - accuracy: 0.9286 - loss: 0.3164 - val_accuracy: 0.8000 - val_loss: 0.6264
+Epoch 49/60
+5/5 - 3s - 561ms/step - accuracy: 0.8714 - loss: 0.3762 - val_accuracy: 0.8000 - val_loss: 0.6230
+Epoch 50/60
+5/5 - 3s - 531ms/step - accuracy: 0.8929 - loss: 0.3292 - val_accuracy: 0.8000 - val_loss: 0.6244
+Epoch 51/60
+5/5 - 3s - 504ms/step - accuracy: 0.9000 - loss: 0.3224 - val_accuracy: 0.8286 - val_loss: 0.6316
+Epoch 52/60
+5/5 - 3s - 534ms/step - accuracy: 0.8929 - loss: 0.3525 - val_accuracy: 0.8286 - val_loss: 0.6323
+Epoch 53/60
+5/5 - 3s - 509ms/step - accuracy: 0.9500 - loss: 0.2893 - val_accuracy: 0.8286 - val_loss: 0.6335
+Epoch 54/60
+5/5 - 3s - 531ms/step - accuracy: 0.9214 - loss: 0.3609 - val_accuracy: 0.8286 - val_loss: 0.6315
+Epoch 55/60
+5/5 - 3s - 597ms/step - accuracy: 0.8714 - loss: 0.3347 - val_accuracy: 0.8000 - val_loss: 0.6317
+Epoch 56/60
+5/5 - 3s - 508ms/step - accuracy: 0.9286 - loss: 0.3277 - val_accuracy: 0.8000 - val_loss: 0.6309
+Epoch 57/60
+5/5 - 3s - 550ms/step - accuracy: 0.8786 - loss: 0.3497 - val_accuracy: 0.8000 - val_loss: 0.6309
+
+Mejor época 49/57  val_loss=0.6230
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[15  2  1]
+ [ 3  7  0]
+ [ 1  0  6]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.789    0.833  0.811       18
+1_rastro_ia          0.778    0.700  0.737       10
+2_saturada_ia        0.857    0.857  0.857        7
+---------------------------------------------------
+macro avg            0.808    0.797  0.802       35
+accuracy: 0.800  (28/35)
+
+Guardado Figure_matrices_v5.png y Figure_curvas_v5.png
