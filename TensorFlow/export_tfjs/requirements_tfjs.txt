@@ -1,0 +1,10 @@
+# Dependencias SOLO para exportar el modelo a TensorFlow.js.
+#
+# IMPORTANTE: tensorflowjs fija sus propias versiones de TensorFlow. Instalarlo en un
+# venv APARTE, NO en TensorFlow/.venv (rompería las versiones del entorno de entrenamiento).
+#
+#   python -m venv TensorFlow/export_tfjs/.venv
+#   source TensorFlow/export_tfjs/.venv/bin/activate    # Windows: .venv\Scripts\activate
+#   pip install -r TensorFlow/export_tfjs/requirements_tfjs.txt
+#   python TensorFlow/export_tfjs/exportar_tfjs.py
+tensorflowjs

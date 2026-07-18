@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Is-it-AI — smoke test TensorFlow.js</title>
+  <!-- tf.js por CDN. Requiere internet para cargar la librería. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.2rem; }
+    img { max-width: 320px; border: 1px solid #ccc; }
+    .barra { height: 22px; background: #eee; border-radius: 4px; overflow: hidden; margin: 4px 0; }
+    .relleno { height: 100%; color: #fff; font-size: 13px; line-height: 22px; padding-left: 8px; white-space: nowrap; }
+    .c0 { background: #2e9c3a; } .c1 { background: #d99a00; } .c2 { background: #c0392b; }
+    #estado { color: #555; }
+    code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Is-it-AI — smoke test TensorFlow.js (modelo v4)</h1>
+  <p id="estado">Cargando modelo…</p>
+  <img id="img" src="imagen_prueba.jpg" alt="imagen de prueba" crossorigin="anonymous" />
+  <div id="resultados"></div>
+
+  <script>
+    const CLASES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"];
+    const estado = document.getElementById("estado");
+    const cont = document.getElementById("resultados");
+
+    async function main() {
+      // 0) Backend CPU: es más comparable numéricamente con la referencia de Python
+      //    (mismo float32 en CPU) y evita variaciones del backend WebGL en el smoke test.
+      //    El modelo corre en cualquier backend porque el export evitó la op fusionada
+      //    _FusedHardSwish de MobileNetV3 (ver TensorFlow/export_tfjs/exportar_tfjs.py).
+      await tf.setBackend("cpu");
+      await tf.ready();
+
+      // 1) Cargar el GraphModel exportado (web/model/model.json).
+      const model = await tf.loadGraphModel("model/model.json");
+      estado.textContent = "Modelo cargado (backend " + tf.getBackend() + "). Prediciendo…";
+
+      // 2) Esperar a que la imagen esté decodificada.
+      const img = document.getElementById("img");
+      if (!img.complete) await new Promise((r) => (img.onload = r));
+
+      // 3) Preprocesar: 0-255 crudo, SIN normalizar. La normalización ImageNet viaja
+      //    DENTRO del modelo (include_preprocessing=True) -> este es el pago directo de
+      //    esa decisión de diseño del lado TF: acá no dividimos por 255 ni normalizamos.
+      const probs = tf.tidy(() => {
+        const x = tf.image.resizeBilinear(         // aplaste 16:9 -> cuadrado (paridad train)
+          tf.browser.fromPixels(img).toFloat(),    // uint8 0-255 -> float, tamaño intrínseco
+          [224, 224],
+          false,                                   // alignCorners
+          true                                     // halfPixelCenters=true: iguala a
+        ).expandDims(0);                           // tf.image.resize de TF2 (Python)
+        const out = model.predict(x);
+        return (Array.isArray(out) ? out[0] : out);
+      });
+      const data = await probs.data();
+      probs.dispose();
+
+      // 4) Mostrar las 3 probabilidades.
+      estado.innerHTML = "Vector de probabilidades: <code>[" +
+        Array.from(data).map((p) => p.toFixed(4)).join(" / ") + "]</code>";
+      cont.innerHTML = "";
+      const idxMax = data.indexOf(Math.max(...data));
+      CLASES.forEach((nombre, i) => {
+        const pct = (data[i] * 100).toFixed(1);
+        const fila = document.createElement("div");
+        fila.className = "barra";
+        fila.innerHTML =
+          `<div class="relleno c${i}" style="width:${Math.max(pct, 6)}%">` +
+          `${nombre} ${pct}%${i === idxMax ? "  ◄" : ""}</div>`;
+        cont.appendChild(fila);
+      });
+    }
+
+    main().catch((e) => { estado.textContent = "Error: " + e.message; console.error(e); });
+  </script>
+</body>
+</html>

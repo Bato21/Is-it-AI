@@ -1,0 +1,16 @@
+Paridad Python <-> navegador (TensorFlow.js) — modelo TF v4
+============================================================
+Imagen: imagen_prueba.jpg (224x224, derivada de
+        imagenes_a_probar/Captura de pantalla_2026-07-02_14-33-01.png).
+Se guarda ya a 224x224 para que la paridad mida el MODELO y no la implementación de
+resize (bajar ~8x sin antialias diverge entre tf.image.resize y tf.js).
+
+Preprocesamiento en ambos lados: 0-255 crudo, SIN normalizar (la normalización ImageNet
+viaja dentro del modelo). Backend tf.js: CPU.
+
+  Python (.keras, TF 2.21) : [0.0049, 0.0170, 0.9781]  -> 2_saturada_ia
+  Navegador (tf.js 4.22)   : [0.0049, 0.0170, 0.9781]  -> 2_saturada_ia
+  max |diferencia|         : < 0.0001   (criterio: < 0.02  -> OK)
+
+Parity extra (offline, sin navegador): el SavedModel exportado vs el .keras original
+sobre la imagen full-res da max |diff| = 0.00005 -> el export es fiel al modelo entrenado.

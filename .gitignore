@@ -29,6 +29,10 @@ setup_envs.ps1
 # capturas de la cámara (modelos/v4/camara_*.py, tecla 's')
 modelos/v4/capturas/
 
+# export a TensorFlow.js (artefactos regenerables desde el .keras)
+web/model/
+TensorFlow/export_tfjs/saved_model_v4/
+
 # figuras generadas por los scripts (NO ignorar las del repo original como Figure_1.png)
 training_curves.png
 confusion_matrix.png

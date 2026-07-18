@@ -200,6 +200,13 @@ Real  0  [   20    4    0  ]
 - **Exportación a TensorFlow Lite** para inferencia en celular.
 - Ampliar el dataset (subiendo el techo de la clase 2).
 
+> **Actualización (entrega 2, 2026-07):** el target de despliegue cambió de **TensorFlow
+> Lite** a **TensorFlow.js** dentro de una app **Ionic (Angular) + OpenCV.js**, por
+> requisito del examen final (tutoriales del profe: Ionic → OpenCV.js → TF.js). No se
+> reescribe lo anterior: TFLite fue la decisión válida en su momento; el cambio es el
+> objetivo de la entrega final. La exportación TF.js está en `TensorFlow/export_tfjs/`
+> y el smoke test en `web/index.html`.
+
 ---
 
 ## 12. Mensajes clave para la presentación (los 4 que no se pueden pasar)
