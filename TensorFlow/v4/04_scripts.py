@@ -36,12 +36,23 @@ CONTRASTE DE FRAMEWORKS (espejo de PyTorch/v4/04_scripts.py):
     mano. Acá lo reforzamos igual pasando training=False al llamar al backbone.
 """
 
+from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # --- 1. Parámetros ---
-DATA_DIR = "../../dataset"
+# T0: ruta canónica ÚNICA para TF y PyTorch -> <repo>/dataset (absoluta vía __file__,
+# robusta al directorio desde el que se corra). Antes era el relativo "../../dataset".
+DATA_DIR = str(Path(__file__).resolve().parents[2] / "dataset")
+if not Path(DATA_DIR).is_dir():
+    raise SystemExit(
+        f"No existe la carpeta de datos: {DATA_DIR}\n"
+        "Colocá el dataset ahí (subcarpetas 0_sin_ia/ 1_rastro_ia/ 2_saturada_ia/), o\n"
+        "generá datos sintéticos para probar el flujo de punta a punta:\n"
+        "    python documentacion/crear_datos_prueba.py --por-clase 30"
+    )
 # CAMBIO: 224x224 en vez de 180x180. MobileNetV3 fue entrenada con este tamaño;
 # usar otro degrada las features preentrenadas. Es un requisito de la arquitectura,
 # no una elección libre como en las v1-v3.

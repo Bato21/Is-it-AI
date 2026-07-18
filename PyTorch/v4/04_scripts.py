@@ -44,7 +44,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # --- 1. Parámetros ---
-DATA_DIR = str(Path(__file__).resolve().parents[2] / "data")  # carpeta real del dataset
+# T0: ruta canónica ÚNICA para TF y PyTorch -> <repo>/dataset. Antes esta v4 apuntaba
+# a 'data' y el lado TF a 'dataset': riesgo de entrenar cada framework sobre otra carpeta.
+DATA_DIR = str(Path(__file__).resolve().parents[2] / "dataset")
+if not Path(DATA_DIR).is_dir():
+    raise SystemExit(
+        f"No existe la carpeta de datos: {DATA_DIR}\n"
+        "Colocá el dataset ahí (subcarpetas 0_sin_ia/ 1_rastro_ia/ 2_saturada_ia/), o\n"
+        "generá datos sintéticos para probar el flujo de punta a punta:\n"
+        "    python documentacion/crear_datos_prueba.py --por-clase 30"
+    )
 # CAMBIO: 224x224 en vez de 180x180. MobileNetV3 fue entrenada con este tamaño;
 # usar otro degrada las features preentrenadas. Es un requisito de la arquitectura,
 # no una elección libre como en las v1-v3.

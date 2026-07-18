@@ -1,9 +1,20 @@
+from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # --- 1. Parámetros ---
-DATA_DIR = "../../data"
+# T0: ruta canónica ÚNICA para TF y PyTorch -> <repo>/dataset (absoluta vía __file__,
+# robusta al directorio desde el que se corra). Antes era el relativo "../../data".
+DATA_DIR = str(Path(__file__).resolve().parents[2] / "dataset")
+if not Path(DATA_DIR).is_dir():
+    raise SystemExit(
+        f"No existe la carpeta de datos: {DATA_DIR}\n"
+        "Colocá el dataset ahí (subcarpetas 0_sin_ia/ 1_rastro_ia/ 2_saturada_ia/), o\n"
+        "generá datos sintéticos para probar el flujo de punta a punta:\n"
+        "    python documentacion/crear_datos_prueba.py --por-clase 30"
+    )
 IMG_SIZE = (180, 180)
 BATCH_SIZE = 32
 SEED = 123
