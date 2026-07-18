@@ -10,3 +10,6 @@ torchvision==0.17.2
 numpy==1.26.4
 matplotlib==3.11.0
 pillow==12.2.0
+# OpenCV para el consumo por cámara (modelos/v4/camara_pt.py). NO la variante headless:
+# camara_*.py usa cv2.imshow, que el paquete headless no trae. Probado con 5.0.0.
+opencv-python==5.0.0

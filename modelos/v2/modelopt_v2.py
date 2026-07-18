@@ -15,8 +15,9 @@ from PIL import Image
 from torchvision import transforms
 
 # --- CONFIG ---
-# Raíz del repo = carpeta padre de 'modelos/'.
-ROOT = Path(__file__).resolve().parents[1]
+# Raíz del repo = parents[2] (este archivo está en modelos/v2/). Antes usaba parents[1],
+# que apuntaba a modelos/ y hacía que el modelo nunca se encontrara.
+ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = ROOT / "PyTorch" / "v2" / "modelopt_v2_augmentation.pt"
 IMG_DIR = ROOT / "imagenes_a_probar"
 CLASS_NAMES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]  # orden de base.classes

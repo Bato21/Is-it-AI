@@ -1,0 +1,14 @@
+# venv TensorFlow (CPU). Python 3.11.
+#
+# Versiones probadas (Linux Mint, 2026-07):
+#   tensorflow 2.21.0  ·  numpy 2.4.6  ·  matplotlib 3.10.9  ·  pillow 12.2.0
+# numpy/matplotlib/pillow alineadas con PyTorch/requirements.txt (coherencia del repo).
+tensorflow==2.21.0
+numpy==2.4.6
+matplotlib==3.10.9
+pillow==12.2.0
+# OpenCV para el consumo por cámara (modelos/v4/camara_tf.py). NO la variante headless:
+# camara_*.py usa cv2.imshow, que el paquete headless no trae. Probado con 5.0.0.
+opencv-python==5.0.0
+# Nota: la exportación a TensorFlow.js (TensorFlow/export_tfjs/) usa tensorflowjs, que
+# fija sus propias versiones de TF -> instalarlo en un venv APARTE, no acá.

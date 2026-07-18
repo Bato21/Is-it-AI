@@ -10,8 +10,9 @@ import numpy as np
 import tensorflow as tf
 
 # --- CONFIG ---
-# Raíz del repo = carpeta padre de 'modelos/'.
-ROOT = Path(__file__).resolve().parents[1]
+# Raíz del repo = parents[2] (este archivo está en modelos/v2/). Antes usaba parents[1],
+# que apuntaba a modelos/ y hacía que el modelo nunca se encontrara.
+ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = ROOT / "TensorFlow" / "v2" / "modelotf_v2_augmentation.keras"
 IMG_DIR = ROOT / "imagenes_a_probar"
 IMG_SIZE = (180, 180)                         # MISMO tamaño que en entrenamiento (TF v2)
