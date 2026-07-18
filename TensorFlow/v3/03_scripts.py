@@ -136,6 +136,7 @@ history = model.fit(
     validation_data=val_ds,
     epochs=EPOCHS,
     callbacks=[early_stopping],
+    verbose=2,  # una línea por época: log legible para Resultado_3.txt
 )
 
 # --- 7. Curvas train vs val: accuracy Y loss ---
