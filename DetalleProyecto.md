@@ -112,9 +112,9 @@ Decisiones de diseño que atraviesan todo:
 │   ├── reporte_metricas.py          reporte por clase de los v4 sin re-entrenar
 │   ├── analisis_metricas.md         análisis con números reales + COMPLETAR: Bato
 │   ├── caso_comercial.md            uso comercial (req. 6)
-│   ├── avances_proyecto.md          histórico + nota de roadmap (TFLite → TF.js)
-│   └── estado_repo.md               este documento
-└── README.md                    propósito + pipeline de datos + cómo correr
+│   └── avances_proyecto.md          histórico + nota de roadmap (TFLite → TF.js)
+├── README.md                    propósito + pipeline de datos + cómo correr
+└── DetalleProyecto.md           este documento (resumen completo del repo)
 ```
 
 ---
