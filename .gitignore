@@ -39,8 +39,16 @@ confusion_matrix.png
 roc_curves.png
 grad_cam_output.png
 
-# mensaje de commit 
+# mensaje de commit
 mensaje_commit.txt
+
+# carpeta de estudio personal (resumen + slides Marp para la interrogación oral).
+# Material de repaso, no forma parte de la entrega -> fuera de git (pedido explícito).
+estudio/
+
+# artefactos de la búsqueda Optuna (v6): base del estudio y logs regenerables.
+*.optuna.db
+optuna_study.db
 
 # entrada/salida del conversor (mantener la estructura con .gitkeep)
 documentacion/sin_clasificar/*
