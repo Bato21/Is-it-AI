@@ -146,6 +146,37 @@ def reporte_por_clase(cm: np.ndarray, nombres: list[str]) -> None:
     print(f"accuracy: {acc:.3f}  ({int(np.trace(cm))}/{int(total)})")
 
 
+# --- 3b. ROC-AUC One-vs-Rest, calculado A MANO (mismo criterio que reporte_por_clase) ---
+# ROC es binaria por naturaleza. Con 3 clases usamos One-vs-Rest: para cada clase i se arma
+# el problema "i contra el resto" y se barre el umbral sobre su score softmax. En la v5 esto
+# se calcula para las DOS variantes (sin/con pesos) para comparar el efecto del desbalance:
+# la corrección debería mejorar sobre todo el AUC de la clase minoritaria (2_saturada_ia).
+# AVISO: la clase 2 tiene pocos casos en val, así que su curva ROC sale escalonada (gruesa).
+def roc_binaria(y_bin: np.ndarray, scores: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+    """Curva ROC de un problema binario, a mano: ordena por score descendente y acumula
+    verdaderos/falsos positivos umbral a umbral. AUC por regla trapezoidal.
+    Los scores softmax son continuos, así que los empates son despreciables."""
+    orden = np.argsort(-scores, kind="mergesort")
+    y = y_bin[orden].astype(float)
+    n_pos, n_neg = y.sum(), (1 - y).sum()
+    tpr = np.concatenate([[0.0], np.cumsum(y) / n_pos]) if n_pos else np.zeros(len(y) + 1)
+    fpr = np.concatenate([[0.0], np.cumsum(1 - y) / n_neg]) if n_neg else np.zeros(len(y) + 1)
+    # AUC por regla trapezoidal, a mano (compatible con numpy 1.x y 2.x).
+    auc = float(np.sum(np.diff(fpr) * (tpr[1:] + tpr[:-1]) / 2))
+    return fpr, tpr, auc
+
+
+def curvas_roc_ovr(y_true: np.ndarray, y_prob: np.ndarray):
+    """Devuelve: dict {clase -> (fpr, tpr, auc)}, la curva micro-promedio y el AUC macro."""
+    curvas = {}
+    for i in range(num_classes):
+        curvas[i] = roc_binaria((y_true == i).astype(int), y_prob[:, i])
+    macro = float(np.mean([curvas[i][2] for i in range(num_classes)]))
+    onehot = np.eye(num_classes)[y_true].ravel()
+    micro = roc_binaria(onehot.astype(int), y_prob.ravel())
+    return curvas, micro, macro
+
+
 # --- 4. Modelo: MobileNetV3-Small congelada + cabeza (idéntico a la v4) ---
 def construir_modelo() -> nn.Module:
     modelo = mobilenet_v3_small(weights=MobileNet_V3_Small_Weights.DEFAULT)
@@ -190,6 +221,19 @@ def matriz_confusion(modelo) -> np.ndarray:
     return cm
 
 
+# La matriz de confusión usa la predicción DURA (argmax); ROC-AUC necesita el score
+# CONTINUO (probabilidad softmax) de cada clase, así que lo recolectamos aparte.
+def probabilidades_val(modelo) -> tuple[np.ndarray, np.ndarray]:
+    ys, probs = [], []
+    modelo.eval()
+    with torch.no_grad():
+        for x, y in val_dl:
+            p = torch.softmax(modelo(x.to(DEVICE)), dim=1).cpu().numpy()
+            probs.append(p)
+            ys.append(y.numpy())
+    return np.concatenate(ys), np.concatenate(probs)
+
+
 def entrenar_variante(usar_pesos: bool):
     """Entrena una variante (sin/con pesos) con early stopping; devuelve (hist, cm)."""
     modelo = construir_modelo()
@@ -217,7 +261,8 @@ def entrenar_variante(usar_pesos: bool):
                 print(f"Early stopping en la época {epoch}.")
                 break
     modelo.load_state_dict(mejor_state)
-    return hist, matriz_confusion(modelo)
+    y_true, y_prob = probabilidades_val(modelo)
+    return hist, matriz_confusion(modelo), y_true, y_prob
 
 
 # --- 5. Correr las DOS variantes en la misma corrida ---
@@ -228,12 +273,18 @@ for etiqueta, usar in variantes:
     print("\n" + "=" * 70)
     print(f"VARIANTE: {titulo}")
     print("=" * 70)
-    hist, cm = entrenar_variante(usar)
+    hist, cm, y_true, y_prob = entrenar_variante(usar)
     print("\nMatriz de confusión (filas = real, columnas = predicho):")
     print(cm)
     print("\nReporte por clase:")
     reporte_por_clase(cm, class_names)
-    resultados[etiqueta] = {"hist": hist, "cm": cm}
+    curvas, micro, macro = curvas_roc_ovr(y_true, y_prob)
+    print("\nROC-AUC One-vs-Rest (val):")
+    for i in range(num_classes):
+        print(f"  {class_names[i]:<16} AUC = {curvas[i][2]:.4f}")
+    print(f"  {'macro-promedio':<16} AUC = {macro:.4f}")
+    print(f"  {'micro-promedio':<16} AUC = {micro[2]:.4f}")
+    resultados[etiqueta] = {"hist": hist, "cm": cm, "roc": (curvas, micro, macro)}
 
 # --- 6. Figuras: matrices lado a lado + curvas de las dos variantes ---
 fig, axes = plt.subplots(1, 2, figsize=(11, 5))
@@ -265,4 +316,26 @@ for fila, (etiqueta, _) in enumerate(variantes):
     axes[fila, 1].set_xlabel("época"); axes[fila, 1].set_ylabel("loss")
 plt.tight_layout()
 plt.savefig(Path(__file__).resolve().parent / "Figure_curvas_v5.png", dpi=150, bbox_inches="tight")
-print("\nGuardado Figure_matrices_v5.png y Figure_curvas_v5.png")
+
+# Curvas ROC One-vs-Rest de las DOS variantes, lado a lado (mismo layout que las matrices):
+# permite ver si la corrección por pesos levanta el AUC de la clase minoritaria.
+colores = ["#1F3864", "#B45309", "#2E7D32", "#7B1FA2"]
+fig, axes = plt.subplots(1, 2, figsize=(13, 6))
+for ax, (etiqueta, _) in zip(axes, variantes):
+    curvas, micro, macro = resultados[etiqueta]["roc"]
+    for i, (fpr, tpr, auc) in curvas.items():
+        ax.plot(fpr, tpr, lw=2, color=colores[i % len(colores)],
+                label=f"{class_names[i]} (AUC={auc:.3f})")
+    ax.plot(micro[0], micro[1], lw=2, ls=":", color="gray",
+            label=f"micro-promedio (AUC={micro[2]:.3f})")
+    ax.plot([0, 1], [0, 1], "k--", lw=1, alpha=0.6, label="azar (AUC=0.500)")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1.02)
+    ax.set_xlabel("Tasa de falsos positivos (FPR)")
+    ax.set_ylabel("Tasa de verdaderos positivos (TPR)")
+    ax.set_title(f"ROC One-vs-Rest — {etiqueta}\nAUC macro = {macro:.3f}")
+    ax.legend(loc="lower right", fontsize=8); ax.grid(alpha=0.3)
+plt.suptitle("Curvas ROC v5 (val) — efecto de la corrección por pesos de clase",
+             fontweight="bold", color="#1F3864")
+plt.tight_layout()
+plt.savefig(Path(__file__).resolve().parent / "Figure_roc_v5.png", dpi=150, bbox_inches="tight")
+print("\nGuardado Figure_matrices_v5.png, Figure_curvas_v5.png y Figure_roc_v5.png")

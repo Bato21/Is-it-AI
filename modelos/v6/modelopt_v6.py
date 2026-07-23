@@ -8,7 +8,7 @@ INDEPENDIENTE del entrenamiento (solo lee el checkpoint .pt).
 El checkpoint de la v6 guarda la cabeza óptima (cabeza_state_dict), sus best_params (para
 reconstruir la MISMA arquitectura que eligió Optuna) y la normalización ImageNet. Acá se
 rearma: backbone congelado (features+avgpool+flatten) -> cabeza. La normalización se
-replica EXACTO desde el checkpoint (contraste con TF, que la lleva dentro del modelo).
+replica exacto desde el checkpoint (contraste con TF, que la lleva dentro del modelo).
 """
 from pathlib import Path
 from random import sample

@@ -216,6 +216,72 @@ def evaluar(cabeza) -> tuple[float, np.ndarray]:
     return correctos / total, cm
 
 
+# --- 4b. Probabilidades softmax de validación (insumo de las curvas ROC) ---
+# La matriz de confusión usa la predicción DURA (argmax); ROC-AUC necesita el score
+# CONTINUO (probabilidad softmax) de cada clase, así que lo recolectamos aparte.
+def probabilidades_val(cabeza) -> tuple[np.ndarray, np.ndarray]:
+    cabeza.eval()
+    ys, probs = [], []
+    with torch.no_grad():
+        for x, y in dl_val:
+            p = torch.softmax(cabeza(x.to(DEVICE)), dim=1).cpu().numpy()
+            probs.append(p)
+            ys.append(y.numpy())
+    return np.concatenate(ys), np.concatenate(probs)
+
+
+# --- 4c. ROC-AUC One-vs-Rest, calculado A MANO (mismo criterio que reporte_por_clase) ---
+# ROC es binaria por naturaleza. Con 3 clases usamos One-vs-Rest: para cada clase i se
+# arma el problema "i contra el resto" y se barre el umbral sobre su score softmax.
+def roc_binaria(y_bin: np.ndarray, scores: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+    """Curva ROC de un problema binario, a mano: ordena por score descendente y acumula
+    verdaderos/falsos positivos umbral a umbral. AUC por regla trapezoidal (np.trapz).
+    Los scores softmax son continuos, así que los empates son despreciables."""
+    orden = np.argsort(-scores, kind="mergesort")
+    y = y_bin[orden].astype(float)
+    n_pos, n_neg = y.sum(), (1 - y).sum()
+    tpr = np.concatenate([[0.0], np.cumsum(y) / n_pos]) if n_pos else np.zeros(len(y) + 1)
+    fpr = np.concatenate([[0.0], np.cumsum(1 - y) / n_neg]) if n_neg else np.zeros(len(y) + 1)
+    # AUC = área bajo la curva por regla trapezoidal, a mano (compatible con numpy 1.x y 2.x,
+    # que renombró np.trapz -> np.trapezoid).
+    auc = float(np.sum(np.diff(fpr) * (tpr[1:] + tpr[:-1]) / 2))
+    return fpr, tpr, auc
+
+
+def curvas_roc_ovr(y_true: np.ndarray, y_prob: np.ndarray):
+    """Devuelve: dict {clase -> (fpr, tpr, auc)}, la curva micro-promedio y el AUC macro."""
+    curvas = {}
+    for i in range(num_classes):
+        curvas[i] = roc_binaria((y_true == i).astype(int), y_prob[:, i])
+    macro = float(np.mean([curvas[i][2] for i in range(num_classes)]))
+    # micro-promedio: se aplanan el one-hot real y las probabilidades y se corre UNA ROC
+    # sobre todas las decisiones clase-a-clase juntas (pondera por soporte).
+    onehot = np.eye(num_classes)[y_true].ravel()
+    micro = roc_binaria(onehot.astype(int), y_prob.ravel())
+    return curvas, micro, macro
+
+
+def plot_roc(curvas, micro, macro, nombres, salida) -> None:
+    fpr_m, tpr_m, micro_auc = micro
+    colores = ["#1F3864", "#B45309", "#2E7D32", "#7B1FA2"]
+    fig, ax = plt.subplots(figsize=(7, 7))
+    for i, (fpr, tpr, auc) in curvas.items():
+        ax.plot(fpr, tpr, lw=2, color=colores[i % len(colores)],
+                label=f"{nombres[i]} (AUC={auc:.3f})")
+    ax.plot(fpr_m, tpr_m, lw=2, ls=":", color="gray",
+            label=f"micro-promedio (AUC={micro_auc:.3f})")
+    ax.plot([0, 1], [0, 1], "k--", lw=1, alpha=0.6, label="azar (AUC=0.500)")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1.02)
+    ax.set_xlabel("Tasa de falsos positivos (FPR)")
+    ax.set_ylabel("Tasa de verdaderos positivos (TPR)")
+    ax.set_title(f"Curvas ROC One-vs-Rest — v6 (val)\nAUC macro = {macro:.3f}",
+                 fontweight="bold", color="#1F3864")
+    ax.legend(loc="lower right", fontsize=9); ax.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(salida, dpi=150, bbox_inches="tight"); plt.close()
+    print(f"  guardado {salida.name}")
+
+
 def entrenar_cabeza(params, epochs, paciencia):
     torch.manual_seed(SEED)
     cabeza = construir_cabeza(params)
@@ -355,9 +421,19 @@ if __name__ == "__main__":
     print("\nReporte por clase:")
     reporte_por_clase(cm, class_names)
 
+    # ROC-AUC One-vs-Rest sobre las probabilidades softmax de validación.
+    y_true_val, y_prob_val = probabilidades_val(cabeza)
+    curvas, micro, macro = curvas_roc_ovr(y_true_val, y_prob_val)
+    print("\nROC-AUC One-vs-Rest (val):")
+    for i in range(num_classes):
+        print(f"  {class_names[i]:<16} AUC = {curvas[i][2]:.4f}")
+    print(f"  {'macro-promedio':<16} AUC = {macro:.4f}")
+    print(f"  {'micro-promedio':<16} AUC = {micro[2]:.4f}")
+
     print("\nGenerando figuras...")
     plot_historia(study, AQUI / "Figure_optuna_historia_v6.png")
     plot_importancia(study, AQUI / "Figure_optuna_importancia_v6.png")
+    plot_roc(curvas, micro, macro, class_names, AQUI / "Figure_roc_v6.png")
 
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.imshow(cm, cmap="Blues")

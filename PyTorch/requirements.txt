@@ -1,18 +1,28 @@
-# venv PyTorch (CPU). Python 3.11.9.
+# venv PyTorch (CPU). conda env `frameworks-ia`, Python 3.11.15 (Linux).
 #
-# Versiones EXACTAS probadas (2026-06, Windows 11):
-#   torch 2.2.2+cpu  ·  torchvision 0.17.2+cpu  ·  numpy 1.26.4
-#   matplotlib 3.11.0  ·  pillow 12.2.0
-# torch 2.2.x mantiene el export móvil (lite interpreter) de exportar_movil.py.
-# numpy/matplotlib/pillow se fijan iguales que en TensorFlow (coherencia).
-torch==2.2.2
-torchvision==0.17.2
-numpy==1.26.4
-matplotlib==3.11.0
+# Versiones EXACTAS instaladas y VERIFICADAS (2026-07): forward/backward de torch,
+# carga de MobileNetV3 preentrenada, softmax->numpy, cv2/PIL/matplotlib y el estudio
+# de Optuna (TPESampler + MedianPruner) corren de punta a punta con este stack.
+#   torch 2.12.0+cpu  ·  torchvision 0.27.0+cpu  ·  numpy 2.4.4
+#   matplotlib 3.10.9  ·  pillow 12.2.0
+# Los builds torch/torchvision son +cpu (índice https://download.pytorch.org/whl/cpu);
+# acá se fija la versión base y el sufijo +cpu se resuelve al instalar desde ese índice.
+# COMPATIBILIDAD (clave): numpy 2.x SOLO funciona con torch >= 2.3. La combinación vieja
+# (torch 2.2.2 + numpy 2.4) se rompía; por eso torch y numpy suben juntos, no por separado.
+# El env de TensorFlow (tensorflow-ia) va con numpy 2.4.6 (misma serie 2.4.x, coherencia).
+torch==2.12.0
+torchvision==0.27.0
+numpy==2.4.4
+matplotlib==3.10.9
 pillow==12.2.0
 # OpenCV para el consumo por cámara (modelos/v4/camara_pt.py). NO la variante headless:
-# camara_*.py usa cv2.imshow, que el paquete headless no trae. Probado con 5.0.0.
-opencv-python==5.0.0
+# camara_*.py usa cv2.imshow, que el paquete headless no trae. Instalado 5.0.0.93.
+opencv-python==5.0.0.93
 # Optuna para la búsqueda de hiperparámetros de la v6 (PyTorch/v6/06_scripts.py).
-# 3.x trae TPESampler, MedianPruner y optuna.importance (fANOVA) usados en el script.
-optuna==3.6.1
+# 4.x trae TPESampler, MedianPruner y los suggest_* usados en el script, compatible con
+# numpy 2.x.
+optuna==4.9.0
+# scikit-learn: lo usa optuna.importance (fANOVA) para la figura de importancia de v6
+# (Figure_optuna_importancia_v6.png). Sin él v6 NO se rompe (try/except) pero omite esa
+# figura. Arrastra scipy como dependencia. Verificado con numpy 2.4.4.
+scikit-learn==1.9.0

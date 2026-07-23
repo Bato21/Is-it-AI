@@ -20,6 +20,7 @@ except Exception:
     pass
 
 import matplotlib
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
@@ -137,4 +138,71 @@ plt.title("Accuracy: train vs val")
 plt.xlabel("época")
 plt.ylabel("accuracy")
 plt.savefig(Path(__file__).resolve().parent / "Figure_1.png", dpi=150, bbox_inches="tight")
-print("Guardado Figure_1.png")
+
+# --- 7. ROC-AUC One-vs-Rest, calculado A MANO ---
+# ROC es binaria por naturaleza. Con 3 clases usamos One-vs-Rest: para cada clase i se arma
+# el problema "i contra el resto" y se barre el umbral sobre su score softmax. En la v1
+# (baseline que sobreajusta a propósito) sirve como línea base contra la que comparan v2+.
+class_names = dataset.classes
+
+
+def roc_binaria(y_bin: np.ndarray, scores: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+    """Curva ROC de un problema binario, a mano: ordena por score descendente y acumula
+    verdaderos/falsos positivos umbral a umbral. AUC por regla trapezoidal.
+    Los scores softmax son continuos, así que los empates son despreciables."""
+    orden = np.argsort(-scores, kind="mergesort")
+    y = y_bin[orden].astype(float)
+    n_pos, n_neg = y.sum(), (1 - y).sum()
+    tpr = np.concatenate([[0.0], np.cumsum(y) / n_pos]) if n_pos else np.zeros(len(y) + 1)
+    fpr = np.concatenate([[0.0], np.cumsum(1 - y) / n_neg]) if n_neg else np.zeros(len(y) + 1)
+    # AUC por regla trapezoidal, a mano (compatible con numpy 1.x y 2.x).
+    auc = float(np.sum(np.diff(fpr) * (tpr[1:] + tpr[:-1]) / 2))
+    return fpr, tpr, auc
+
+
+def curvas_roc_ovr(y_true_arr: np.ndarray, y_prob_arr: np.ndarray):
+    """Devuelve: dict {clase -> (fpr, tpr, auc)}, la curva micro-promedio y el AUC macro."""
+    curvas = {}
+    for i in range(num_classes):
+        curvas[i] = roc_binaria((y_true_arr == i).astype(int), y_prob_arr[:, i])
+    macro = float(np.mean([curvas[i][2] for i in range(num_classes)]))
+    onehot = np.eye(num_classes)[y_true_arr].ravel()
+    micro = roc_binaria(onehot.astype(int), y_prob_arr.ravel())
+    return curvas, micro, macro
+
+
+# Pase de evaluación sobre validación: recolectamos las probabilidades softmax por clase.
+y_true, y_prob = [], []
+modelo.eval()
+with torch.no_grad():
+    for x, y in val_dl:
+        out = modelo(x.to(DEVICE))
+        y_true.extend(y.numpy())
+        y_prob.append(torch.softmax(out, dim=1).cpu().numpy())
+y_prob = np.concatenate(y_prob)
+y_true_arr = np.array(y_true)
+
+curvas_roc, micro_roc, macro_roc = curvas_roc_ovr(y_true_arr, y_prob)
+print("\nROC-AUC One-vs-Rest (val):")
+for i in range(num_classes):
+    print(f"  {class_names[i]:<16} AUC = {curvas_roc[i][2]:.4f}")
+print(f"  {'macro-promedio':<16} AUC = {macro_roc:.4f}")
+print(f"  {'micro-promedio':<16} AUC = {micro_roc[2]:.4f}")
+
+colores = ["#1F3864", "#B45309", "#2E7D32", "#7B1FA2"]
+fig, ax = plt.subplots(figsize=(7, 7))
+for i, (fpr, tpr, auc) in curvas_roc.items():
+    ax.plot(fpr, tpr, lw=2, color=colores[i % len(colores)],
+            label=f"{class_names[i]} (AUC={auc:.3f})")
+ax.plot(micro_roc[0], micro_roc[1], lw=2, ls=":", color="gray",
+        label=f"micro-promedio (AUC={micro_roc[2]:.3f})")
+ax.plot([0, 1], [0, 1], "k--", lw=1, alpha=0.6, label="azar (AUC=0.500)")
+ax.set_xlim(0, 1); ax.set_ylim(0, 1.02)
+ax.set_xlabel("Tasa de falsos positivos (FPR)")
+ax.set_ylabel("Tasa de verdaderos positivos (TPR)")
+ax.set_title(f"Curvas ROC One-vs-Rest — v1 (val)\nAUC macro = {macro_roc:.3f}",
+             fontweight="bold", color="#1F3864")
+ax.legend(loc="lower right", fontsize=9); ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig(Path(__file__).resolve().parent / "Figure_roc_v1.png", dpi=150, bbox_inches="tight")
+print("\nGuardado Figure_1.png y Figure_roc_v1.png")
