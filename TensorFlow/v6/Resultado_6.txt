@@ -1,0 +1,161 @@
+Found 300 files belonging to 3 classes.
+Using 240 files for training.
+Found 300 files belonging to 3 classes.
+Using 60 files for validation.
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Pre-computando embeddings del backbone congelado (una sola vez)...
+  embeddings train: (240, 576)  ·  val: (60, 576)  (dim 576)
+
+==================================================================
+  Optuna sobre la cabeza  ·  30 trials  ·  máx 40 épocas/trial
+==================================================================
+ Trial  val_acc   mejor   parámetros
+------------------------------------------------------------------
+     0   0.9000  0.9000   capas=2 units=256 drop=0.45000000000000007 opt=rmsprop lr=9.2e-04
+     1   0.9000  0.9000   capas=1 units=128 drop=0.1 opt=rmsprop lr=2.2e-04
+     2   0.9333  0.9333   capas=2 units=256 drop=0.45000000000000007 opt=rmsprop lr=5.3e-04
+     3   0.8833  0.9333   capas=1 units=128 drop=0.30000000000000004 opt=rmsprop lr=4.2e-04
+     4   0.9500  0.9500   capas=1 units=128 drop=0.4 opt=sgd lr=5.4e-03
+     5   0.9333  0.9500   capas=1 units=128 drop=0.4 opt=rmsprop lr=1.2e-03
+     6   0.9167  0.9500   capas=1 units=256 drop=0.55 opt=rmsprop lr=1.8e-03
+     7   0.8833  0.9500   capas=2 units=64 drop=0.2 opt=rmsprop lr=5.9e-03
+     8   0.6000  0.9500   capas=2 units=64 drop=0.4 opt=sgd lr=4.3e-04
+     9   0.9333  0.9500   capas=2 units=256 drop=0.55 opt=adam lr=6.3e-04
+    10   0.9000  0.9500   capas=1 units=128 drop=0.30000000000000004 opt=sgd lr=9.5e-03
+    11   0.8333  0.9500   capas=2 units=256 drop=0.5 opt=sgd lr=2.9e-03
+    12   0.7833  0.9500   capas=1 units=128 drop=0.6 opt=adam lr=1.1e-04
+    13   0.9167  0.9500   capas=2 units=256 drop=0.35 opt=sgd lr=2.9e-03
+    14   0.5500  0.9500   capas=1 units=64 drop=0.45000000000000007 opt=sgd lr=2.2e-04
+    15   0.9500  0.9500   capas=2 units=128 drop=0.25 opt=adam lr=4.4e-03
+    16   0.9667  0.9667   capas=2 units=128 drop=0.2 opt=adam lr=4.8e-03
+    17   0.9667  0.9667   capas=1 units=128 drop=0.15000000000000002 opt=adam lr=9.5e-03
+    18   0.9333  0.9667   capas=2 units=128 drop=0.1 opt=adam lr=9.2e-03
+    19   0.9500  0.9667   capas=1 units=128 drop=0.15000000000000002 opt=adam lr=2.6e-03
+    20   0.9500  0.9667   capas=1 units=128 drop=0.2 opt=adam lr=6.7e-03
+    21   0.9167  0.9667   capas=1 units=128 drop=0.2 opt=adam lr=4.9e-03
+    22   0.9333  0.9667   capas=1 units=128 drop=0.15000000000000002 opt=adam lr=3.8e-03
+    23   0.8000  0.9667   capas=1 units=128 drop=0.30000000000000004 opt=sgd lr=1.8e-03
+    24   0.9167  0.9667   capas=1 units=128 drop=0.25 opt=adam lr=7.1e-03
+    25   0.9167  0.9667   capas=1 units=64 drop=0.15000000000000002 opt=adam lr=9.6e-03
+    26   0.9000  0.9667   capas=2 units=128 drop=0.35 opt=sgd lr=4.1e-03
+    27   0.9500  0.9667   capas=1 units=128 drop=0.25 opt=adam lr=6.7e-03
+    28   0.8833  0.9667   capas=2 units=128 drop=0.1 opt=sgd lr=1.7e-03
+    29   0.9167  0.9667   capas=1 units=64 drop=0.4 opt=adam lr=8.8e-04
+
+==================================================================
+  MEJORES HIPERPARÁMETROS
+==================================================================
+  val_accuracy: 0.9667  (96.7%)
+    n_capas   : 2
+    units     : 128
+    dropout   : 0.2
+    optimizer : adam
+    lr        : 0.004792526787696446
+
+  trials completados : 30/30
+  media val_accuracy : 0.8889
+  std  val_accuracy  : 0.0942
+  peor / mejor       : 0.5500 / 0.9667
+
+  guardado mejores_hiperparametros.json
+
+------------------------------------------------------------------
+  Reentrenando con los mejores hiperparámetros
+------------------------------------------------------------------
+Epoch 1/80
+8/8 - 1s - 78ms/step - accuracy: 0.4750 - loss: 1.1253 - val_accuracy: 0.7333 - val_loss: 0.6969
+Epoch 2/80
+8/8 - 0s - 9ms/step - accuracy: 0.6917 - loss: 0.7094 - val_accuracy: 0.7167 - val_loss: 0.6325
+Epoch 3/80
+8/8 - 0s - 8ms/step - accuracy: 0.7083 - loss: 0.6227 - val_accuracy: 0.7833 - val_loss: 0.5079
+Epoch 4/80
+8/8 - 0s - 8ms/step - accuracy: 0.8917 - loss: 0.3514 - val_accuracy: 0.8833 - val_loss: 0.3450
+Epoch 5/80
+8/8 - 0s - 9ms/step - accuracy: 0.9083 - loss: 0.2576 - val_accuracy: 0.9000 - val_loss: 0.2983
+Epoch 6/80
+8/8 - 0s - 8ms/step - accuracy: 0.9500 - loss: 0.2006 - val_accuracy: 0.9000 - val_loss: 0.2471
+Epoch 7/80
+8/8 - 0s - 8ms/step - accuracy: 0.9667 - loss: 0.1096 - val_accuracy: 0.9167 - val_loss: 0.2972
+Epoch 8/80
+8/8 - 0s - 8ms/step - accuracy: 0.9750 - loss: 0.0901 - val_accuracy: 0.9333 - val_loss: 0.2345
+Epoch 9/80
+8/8 - 0s - 8ms/step - accuracy: 0.9833 - loss: 0.0789 - val_accuracy: 0.9000 - val_loss: 0.2972
+Epoch 10/80
+8/8 - 0s - 8ms/step - accuracy: 0.9875 - loss: 0.0830 - val_accuracy: 0.9333 - val_loss: 0.2198
+Epoch 11/80
+8/8 - 0s - 7ms/step - accuracy: 0.9458 - loss: 0.1224 - val_accuracy: 0.8667 - val_loss: 0.5068
+Epoch 12/80
+8/8 - 0s - 7ms/step - accuracy: 0.9708 - loss: 0.0768 - val_accuracy: 0.9167 - val_loss: 0.2030
+Epoch 13/80
+8/8 - 0s - 7ms/step - accuracy: 0.9792 - loss: 0.0672 - val_accuracy: 0.8667 - val_loss: 0.3977
+Epoch 14/80
+8/8 - 0s - 7ms/step - accuracy: 0.9917 - loss: 0.0531 - val_accuracy: 0.9000 - val_loss: 0.3356
+Epoch 15/80
+8/8 - 0s - 8ms/step - accuracy: 0.9750 - loss: 0.0815 - val_accuracy: 0.8833 - val_loss: 0.4395
+Epoch 16/80
+8/8 - 0s - 7ms/step - accuracy: 0.9625 - loss: 0.0809 - val_accuracy: 0.9000 - val_loss: 0.2685
+Epoch 17/80
+8/8 - 0s - 8ms/step - accuracy: 0.9708 - loss: 0.0691 - val_accuracy: 0.9000 - val_loss: 0.3323
+Epoch 18/80
+8/8 - 0s - 7ms/step - accuracy: 0.9792 - loss: 0.1085 - val_accuracy: 0.9000 - val_loss: 0.3557
+Epoch 19/80
+8/8 - 0s - 8ms/step - accuracy: 0.9708 - loss: 0.0639 - val_accuracy: 0.9167 - val_loss: 0.4954
+Epoch 20/80
+8/8 - 0s - 7ms/step - accuracy: 0.9833 - loss: 0.0459 - val_accuracy: 0.8833 - val_loss: 0.4092
+Epoch 21/80
+8/8 - 0s - 8ms/step - accuracy: 0.9708 - loss: 0.0848 - val_accuracy: 0.9000 - val_loss: 0.3621
+Epoch 22/80
+8/8 - 0s - 8ms/step - accuracy: 0.9917 - loss: 0.0472 - val_accuracy: 0.9333 - val_loss: 0.1901
+Epoch 23/80
+8/8 - 0s - 7ms/step - accuracy: 0.9792 - loss: 0.0426 - val_accuracy: 0.9000 - val_loss: 0.3182
+Epoch 24/80
+8/8 - 0s - 7ms/step - accuracy: 0.9958 - loss: 0.0182 - val_accuracy: 0.9333 - val_loss: 0.2140
+Epoch 25/80
+8/8 - 0s - 8ms/step - accuracy: 0.9958 - loss: 0.0175 - val_accuracy: 0.9333 - val_loss: 0.1876
+Epoch 26/80
+8/8 - 0s - 7ms/step - accuracy: 0.9958 - loss: 0.0152 - val_accuracy: 0.9167 - val_loss: 0.2656
+Epoch 27/80
+8/8 - 0s - 8ms/step - accuracy: 1.0000 - loss: 0.0057 - val_accuracy: 0.9333 - val_loss: 0.3104
+Epoch 28/80
+8/8 - 0s - 7ms/step - accuracy: 0.9917 - loss: 0.0164 - val_accuracy: 0.9500 - val_loss: 0.2508
+Epoch 29/80
+8/8 - 0s - 7ms/step - accuracy: 1.0000 - loss: 0.0024 - val_accuracy: 0.9333 - val_loss: 0.2476
+Epoch 30/80
+8/8 - 0s - 7ms/step - accuracy: 1.0000 - loss: 0.0031 - val_accuracy: 0.9167 - val_loss: 0.3066
+Epoch 31/80
+8/8 - 0s - 8ms/step - accuracy: 1.0000 - loss: 0.0036 - val_accuracy: 0.9167 - val_loss: 0.2854
+Epoch 32/80
+8/8 - 0s - 8ms/step - accuracy: 0.9958 - loss: 0.0083 - val_accuracy: 0.8500 - val_loss: 0.4577
+Epoch 33/80
+8/8 - 0s - 8ms/step - accuracy: 0.9958 - loss: 0.0171 - val_accuracy: 0.9333 - val_loss: 0.3181
+Epoch 34/80
+8/8 - 0s - 8ms/step - accuracy: 0.9958 - loss: 0.0100 - val_accuracy: 0.8833 - val_loss: 0.4836
+Epoch 35/80
+8/8 - 0s - 7ms/step - accuracy: 0.9917 - loss: 0.0225 - val_accuracy: 0.9167 - val_loss: 0.3320
+Epoch 36/80
+8/8 - 0s - 7ms/step - accuracy: 0.9833 - loss: 0.0383 - val_accuracy: 0.8500 - val_loss: 0.7319
+Epoch 37/80
+8/8 - 0s - 7ms/step - accuracy: 0.9667 - loss: 0.1301 - val_accuracy: 0.8500 - val_loss: 0.6849
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[23  0  1]
+ [ 2 15  1]
+ [ 0  0 18]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.920    0.958  0.939       24
+1_rastro_ia          1.000    0.833  0.909       18
+2_saturada_ia        0.900    1.000  0.947       18
+---------------------------------------------------
+macro avg            0.940    0.931  0.932       60
+accuracy: 0.933  (56/60)
+
+Generando figuras...
+  guardado Figure_optuna_historia_v6.png
+  guardado Figure_optuna_importancia_v6.png
+  guardado Figure_matriz_v6.png
+
+Modelo final guardado en modelotf_v6_optuna.keras

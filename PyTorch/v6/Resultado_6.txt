@@ -1,0 +1,85 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Pre-computando embeddings del backbone congelado (una sola vez)...
+  embeddings train: (240, 576)  ·  val: (60, 576)  (dim 576)
+Soporte val por clase: {'0_sin_ia': 18, '1_rastro_ia': 20, '2_saturada_ia': 22}
+
+==================================================================
+  Optuna sobre la cabeza  ·  30 trials  ·  máx 40 épocas/trial
+==================================================================
+ Trial  val_acc   mejor   parámetros
+------------------------------------------------------------------
+     0   0.9333  0.9333   capas=2 units=256 drop=0.45000000000000007 opt=rmsprop lr=9.2e-04
+     1   0.8667  0.9333   capas=1 units=128 drop=0.1 opt=rmsprop lr=2.2e-04
+     2   0.8833  0.9333   capas=2 units=256 drop=0.45000000000000007 opt=rmsprop lr=5.3e-04
+     3   0.8833  0.9333   capas=1 units=128 drop=0.30000000000000004 opt=rmsprop lr=4.2e-04
+     4   0.8833  0.9333   capas=1 units=128 drop=0.4 opt=sgd lr=5.4e-03
+     5   0.9167  0.9333   capas=1 units=128 drop=0.4 opt=rmsprop lr=1.2e-03
+     6   0.9167  0.9333   capas=1 units=256 drop=0.55 opt=rmsprop lr=1.8e-03
+     7   0.8833  0.9333   capas=2 units=64 drop=0.2 opt=rmsprop lr=5.9e-03
+     8   0.3833  0.9333   capas=2 units=64 drop=0.4 opt=sgd lr=4.3e-04
+     9   0.9167  0.9333   capas=2 units=256 drop=0.55 opt=adam lr=6.3e-04
+    10   0.8667  0.9333   capas=2 units=256 drop=0.6 opt=adam lr=1.2e-04
+    11   0.9333  0.9333   capas=1 units=128 drop=0.25 opt=rmsprop lr=1.8e-03
+    12   0.9333  0.9333   capas=2 units=128 drop=0.30000000000000004 opt=rmsprop lr=2.3e-03
+    13   0.8833  0.9333   capas=1 units=256 drop=0.2 opt=rmsprop lr=2.9e-03
+    14   0.8500  0.9333   capas=1 units=64 drop=0.2 opt=sgd lr=3.1e-03
+    15   0.9167  0.9333   capas=2 units=128 drop=0.30000000000000004 opt=adam lr=1.0e-03
+    16   0.8333  0.9333   capas=2 units=256 drop=0.5 opt=rmsprop lr=9.1e-03
+    17   0.9333  0.9333   capas=1 units=256 drop=0.1 opt=rmsprop lr=1.0e-03
+    18   0.9167  0.9333   capas=2 units=128 drop=0.25 opt=adam lr=2.4e-04
+    19   0.8500  0.9333   capas=1 units=64 drop=0.35 opt=sgd lr=1.5e-03
+    20   0.9167  0.9333   capas=1 units=256 drop=0.45000000000000007 opt=rmsprop lr=7.6e-04
+    21   0.9000  0.9333   capas=2 units=128 drop=0.30000000000000004 opt=rmsprop lr=2.4e-03
+    22   0.9000  0.9333   capas=2 units=128 drop=0.25 opt=rmsprop lr=2.1e-03
+    23   0.9167  0.9333   capas=2 units=128 drop=0.35 opt=rmsprop lr=4.3e-03
+    24   0.8833  0.9333   capas=2 units=128 drop=0.15000000000000002 opt=rmsprop lr=3.6e-03
+    25   0.8833  0.9333   capas=2 units=128 drop=0.25 opt=rmsprop lr=1.5e-03
+    26   0.9167  0.9333   capas=2 units=128 drop=0.45000000000000007 opt=rmsprop lr=8.4e-04
+    27   0.9000  0.9333   capas=2 units=128 drop=0.35 opt=rmsprop lr=2.1e-03
+    28   0.8167  0.9333   capas=1 units=64 drop=0.30000000000000004 opt=sgd lr=1.3e-03
+    29   0.9167  0.9333   capas=2 units=256 drop=0.15000000000000002 opt=adam lr=3.0e-04
+
+==================================================================
+  MEJORES HIPERPARÁMETROS
+==================================================================
+  val_accuracy: 0.9333  (93.3%)
+    n_capas   : 2
+    units     : 256
+    dropout   : 0.45000000000000007
+    optimizer : rmsprop
+    lr        : 0.0009159332036121727
+
+  trials completados : 30/30
+  media val_accuracy : 0.8778
+  std  val_accuracy  : 0.0965
+  peor / mejor       : 0.3833 / 0.9333
+
+  guardado mejores_hiperparametros.json
+
+------------------------------------------------------------------
+  Reentrenando con los mejores hiperparámetros
+------------------------------------------------------------------
+val_accuracy final: 0.9333
+
+Matriz de confusión (filas = real, columnas = predicho):
+[[15  2  1]
+ [ 1 19  0]
+ [ 0  0 22]]
+
+Reporte por clase:
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.938    0.833  0.882       18
+1_rastro_ia          0.905    0.950  0.927       20
+2_saturada_ia        0.957    1.000  0.978       22
+---------------------------------------------------
+macro avg            0.933    0.928  0.929       60
+accuracy: 0.933  (56/60)
+
+Generando figuras...
+  guardado Figure_optuna_historia_v6.png
+  guardado Figure_optuna_importancia_v6.png
+  guardado Figure_matriz_v6.png
+
+Modelo final guardado en modelopt_v6_optuna.pt

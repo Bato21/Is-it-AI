@@ -1,0 +1,10 @@
+{
+  "val_accuracy": 0.9666666388511658,
+  "params": {
+    "n_capas": 2,
+    "units": 128,
+    "dropout": 0.2,
+    "optimizer": "adam",
+    "lr": 0.004792526787696446
+  }
+}

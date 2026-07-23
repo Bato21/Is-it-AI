@@ -1,0 +1,10 @@
+{
+  "val_accuracy": 0.9333333333333333,
+  "params": {
+    "n_capas": 2,
+    "units": 256,
+    "dropout": 0.45000000000000007,
+    "optimizer": "rmsprop",
+    "lr": 0.0009159332036121727
+  }
+}

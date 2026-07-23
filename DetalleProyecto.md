@@ -36,7 +36,7 @@ Matrices: filas = real, columnas = predicho, orden `0 / 1 / 2`.
 | v3 | + Early stopping (converger) | **88.3%** | `[[21,3,0],[4,14,0],[0,0,18]]` | Convergió; esquina 0↔2 **limpia**, error solo entre vecinos. |
 | v4 | CNN → MobileNetV3-Small (transfer learning) | **80.0%** | `[[21,2,1],[8,10,0],[1,0,17]]` | Cortó en la época 60/60 (**sub-entrenada**); recall clase 1 flojo (10/18). |
 | v5 | Dataset desbalanceado (100/50/25) sin/con pesos | 71.4% → **80.0%** | `[[16,2,0],[7,3,0],[1,0,6]]` → `[[15,2,1],[3,7,0],[1,0,6]]` | Sin pesos el recall de clase 1 **colapsa (3/10)**; con pesos **se recupera (7/10)**. Efecto de libro. |
-| v6 | **Optuna** sobre la cabeza (backbone congelado, features pre-computadas) | *(se corre en la máquina del alumno)* | — | Hiperparámetros de la cabeza (dropout/LR/optimizador/tamaño) **buscados** con TPE+MedianPruner, no a ojo. Guarda `mejores_hiperparametros.json` + figuras. |
+| v6 | **Optuna** sobre la cabeza (backbone congelado, features pre-computadas) | **93.3%** (best trial 96.7%) | `[[23,0,1],[2,15,1],[0,0,18]]` | Hiperparámetros buscados con TPE+MedianPruner (2·128·drop0.2·adam·lr4.8e-3). **+13.3 pp vs v4**: cierra el sub-entrenamiento de TF v4. recall clase 2 = 18/18. |
 
 ### PyTorch
 
@@ -47,7 +47,7 @@ Matrices: filas = real, columnas = predicho, orden `0 / 1 / 2`.
 | v3 | + Early stopping (converger) | **83.3%** | `[[14,3,1],[1,18,1],[3,1,18]]` | Tras converger **persisten 4 errores extremos 0↔2** → no era ruido. |
 | v4 | CNN → MobileNetV3-Small | **90.0%** | `[[14,4,0],[1,18,1],[0,0,22]]` | Esquina 0↔2 **en cero**; clase 2 recall **22/22**. El titular del proyecto. |
 | v5 | Dataset desbalanceado sin/con pesos | 82.9% → **85.7%** | `[[16,1,0],[3,7,0],[2,0,6]]` → `[[16,1,0],[2,8,0],[1,1,6]]` | Efecto **sutil** (las features preentrenadas ya separan bien) — también es un hallazgo. |
-| v6 | **Optuna** sobre la cabeza (espejo del lado TF) | *(se corre en la máquina del alumno)* | — | Mismo espacio de búsqueda y lógica de Optuna; cambia solo cómo se arma/entrena la cabeza (bucle manual vs `fit`). |
+| v6 | **Optuna** sobre la cabeza (espejo del lado TF) | **93.3%** | `[[15,2,1],[1,19,0],[0,0,22]]` | 2·256·drop0.45·rmsprop·lr9.2e-4. **+3.3 pp vs v4**; recall clase 2 = 22/22. Único error = un 0→2 (barato). |
 
 **El titular (PyTorch, v3→v4):** las mismas imágenes que la CNN desde cero confundía en
 los extremos, las features preentrenadas de ImageNet las separan. El límite era la
