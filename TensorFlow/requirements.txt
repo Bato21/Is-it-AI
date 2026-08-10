@@ -10,8 +10,17 @@ pillow==12.2.0
 # OpenCV para el consumo por cámara (modelos/v4/camara_tf.py). NO la variante headless:
 # camara_*.py usa cv2.imshow, que el paquete headless no trae. Probado con 5.0.0.
 opencv-python==5.0.0
-# Optuna para la búsqueda de hiperparámetros de la v6 (TensorFlow/v6/06_scripts.py).
-# 3.x trae TPESampler, MedianPruner y optuna.importance (fANOVA) usados en el script.
-optuna==3.6.1
+# Optuna para la búsqueda de hiperparámetros de las v6 y v7.
+# SUBIDO 3.6.1 -> 4.9.0 en la v7 para IGUALAR la versión del venv de PyTorch. El TPE
+# cambió entre la 3.x y la 4.x, así que con versiones distintas los dos frameworks
+# exploraban el espacio de forma distinta y el "espejo" TF<->PyTorch dejaba de ser
+# comparable. Ahora los dos corren optuna 4.9.0.
+# OJO con la 4.x: un trial PODADO conserva un `value` (el último parcial reportado),
+# NO None. Los scripts filtran por trial.state, no por value (ver v7).
+optuna==4.9.0
+# scikit-learn: lo usa optuna.importance (fANOVA) para la figura de importancia de
+# hiperparámetros. Sin él los scripts NO se rompen (try/except) pero omiten esa figura.
+# Arrastra scipy. Misma versión que el venv de PyTorch.
+scikit-learn==1.9.0
 # Nota: la exportación a TensorFlow.js (TensorFlow/export_tfjs/) usa tensorflowjs, que
 # fija sus propias versiones de TF -> instalarlo en un venv APARTE, no acá.

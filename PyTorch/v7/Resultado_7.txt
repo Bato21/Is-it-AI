@@ -1,0 +1,141 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Partición canónica (documentacion/particion.json, huella e7e218fd83b8aeed):
+  desarrollo : 250 imgs  {'0_sin_ia': 86, '1_rastro_ia': 75, '2_saturada_ia': 89}
+  test       :  63 imgs  {'0_sin_ia': 22, '1_rastro_ia': 19, '2_saturada_ia': 22}   <- APARTADO, se usa una sola vez
+  folds      : 5 (validación cruzada dentro de desarrollo)
+
+Pre-computando embeddings del backbone congelado (una sola vez)...
+  desarrollo: (250, 576)  ·  test: (63, 576)  (dim 576)
+
+==============================================================================
+  Optuna sobre la cabeza  ·  30 trials  ·  objetivo = media de 5-fold CV
+==============================================================================
+ Trial  cv_media    ±std   mejor   parámetros
+------------------------------------------------------------------------------
+     0    0.8281  0.0410  0.8281   capas=2 units=256 drop=0.45 opt=rmsprop lr=9.2e-04
+     1    0.7923  0.0380  0.8281   capas=1 units=128 drop=0.10 opt=rmsprop lr=2.2e-04
+     2    0.8203  0.0389  0.8281   capas=2 units=256 drop=0.45 opt=rmsprop lr=5.3e-04
+     3    0.8042  0.0456  0.8281   capas=1 units=128 drop=0.30 opt=rmsprop lr=4.2e-04
+     4    0.7961  0.0494  0.8281   capas=1 units=128 drop=0.40 opt=sgd lr=5.4e-03
+     5    0.8201  0.0504  0.8281   capas=1 units=128 drop=0.40 opt=rmsprop lr=1.2e-03
+     6    0.8242  0.0552  0.8281   capas=1 units=256 drop=0.55 opt=rmsprop lr=1.8e-03
+     7    0.8165  0.0601  0.8281   capas=2 units=64 drop=0.20 opt=rmsprop lr=5.9e-03
+     8    podado          0.8281   capas=2 units=64 drop=0.40 opt=sgd lr=4.3e-04
+     9    0.8281  0.0388  0.8281   capas=2 units=256 drop=0.55 opt=adam lr=6.3e-04
+    10    podado          0.8281   capas=2 units=256 drop=0.60 opt=adam lr=1.2e-04
+    11    0.8241  0.0460  0.8281   capas=2 units=256 drop=0.50 opt=adam lr=1.2e-03
+    12    podado          0.8281   capas=2 units=256 drop=0.60 opt=adam lr=2.3e-03
+    13    0.8241  0.0540  0.8281   capas=2 units=256 drop=0.50 opt=adam lr=6.3e-04
+    14    0.8482  0.0314  0.8482   capas=2 units=256 drop=0.30 opt=adam lr=3.1e-03
+    15    0.8402  0.0546  0.8482   capas=2 units=256 drop=0.30 opt=adam lr=2.9e-03
+    16    0.8241  0.0441  0.8482   capas=2 units=64 drop=0.25 opt=adam lr=3.6e-03
+    17    0.8281  0.0429  0.8482   capas=2 units=256 drop=0.25 opt=adam lr=9.1e-03
+    18    0.8361  0.0406  0.8482   capas=2 units=256 drop=0.30 opt=adam lr=2.8e-03
+    19    podado          0.8482   capas=2 units=64 drop=0.15 opt=sgd lr=4.3e-03
+    20    0.8241  0.0526  0.8482   capas=1 units=256 drop=0.30 opt=adam lr=8.0e-03
+    21    0.8360  0.0427  0.8482   capas=2 units=256 drop=0.30 opt=adam lr=2.5e-03
+    22    0.8241  0.0556  0.8482   capas=2 units=256 drop=0.35 opt=adam lr=2.9e-03
+    23    0.8481  0.0544  0.8482   capas=2 units=256 drop=0.20 opt=adam lr=1.8e-03
+    24    0.8402  0.0547  0.8482   capas=2 units=256 drop=0.20 opt=adam lr=1.7e-03
+    25    0.8321  0.0599  0.8482   capas=2 units=256 drop=0.15 opt=adam lr=1.6e-03
+    26    podado          0.8482   capas=2 units=256 drop=0.20 opt=sgd lr=1.7e-03
+    27    0.8401  0.0454  0.8482   capas=2 units=256 drop=0.10 opt=adam lr=9.3e-04
+    28    0.8441  0.0384  0.8482   capas=2 units=128 drop=0.20 opt=adam lr=5.0e-03
+    29    0.8440  0.0234  0.8482   capas=2 units=128 drop=0.25 opt=adam lr=5.1e-03
+
+==============================================================================
+  MEJORES HIPERPARÁMETROS (elegidos por validación cruzada, sin ver el test)
+==============================================================================
+  media de CV: 0.8482  (84.8%)
+    n_capas   : 2
+    units     : 256
+    dropout   : 0.30000000000000004
+    optimizer : adam
+    lr        : 0.00310263119168588
+
+  trials completados : 25/30  (5 podados)
+  media cv_accuracy  : 0.8275
+  std  cv_accuracy   : 0.0143
+  peor / mejor       : 0.7923 / 0.8482
+
+  accuracy por fold  : [0.8235, 0.88, 0.86, 0.8, 0.8776]
+  mejores épocas     : [8, 23, 11, 18, 7]  ->  refit con 11 épocas
+
+------------------------------------------------------------------------------
+  Refit sobre desarrollo (250 imgs) y evaluación sobre TEST (63 imgs)
+  5 semillas: [123, 7, 42, 2024, 31]
+------------------------------------------------------------------------------
+  semilla   123  test_acc=0.7778  F1=0.7759  QWK=0.6667  0<->2=5  ECE=0.1265
+  semilla     7  test_acc=0.7937  F1=0.7911  QWK=0.7317  0<->2=3  ECE=0.1148
+  semilla    42  test_acc=0.8095  F1=0.7980  QWK=0.7789  0<->2=3  ECE=0.1277
+  semilla  2024  test_acc=0.7937  F1=0.7907  QWK=0.6988  0<->2=4  ECE=0.1357
+  semilla    31  test_acc=0.7778  F1=0.7795  QWK=0.7229  0<->2=3  ECE=0.1472
+
+==================================================================
+  RESULTADOS SOBRE TEST — PyTorch v7  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ↑     0.7905   0.0119   0.7778   0.8095
+  F1 macro              ↑     0.7870   0.0081   0.7759   0.7980
+  recall clase 2        ↑     0.7182   0.1012   0.6364   0.9091
+  errores 0<->2         ↓     3.6000   0.8000   3.0000   5.0000
+    de los cuales 2->0  ↓     2.0000   0.8944   1.0000   3.0000
+    de los cuales 0->2  ↓     1.6000   0.4899   1.0000   2.0000
+  QWK (ordinal)         ↑     0.7198   0.0372   0.6667   0.7789
+  MAE ordinal           ↓     0.2667   0.0211   0.2381   0.3016
+  AUC macro (OvR)       ↑     0.9392   0.0056   0.9295   0.9465
+  AUC micro (OvR)       ↑     0.9305   0.0056   0.9216   0.9370
+  ECE (calibración)     ↓     0.1304   0.0107   0.1148   0.1472
+  -------------------------------------------------------------
+  ↑ = más alto es mejor   ·   ↓ = más bajo es mejor
+
+Matriz de confusión ACUMULADA sobre 5 semillas (filas = real, columnas = predicho):
+[[94  8  8]
+ [ 9 76 10]
+ [10 21 79]]
+
+Reporte por clase (acumulado, 315 predicciones):
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.832    0.855  0.843      110
+1_rastro_ia          0.724    0.800  0.760       95
+2_saturada_ia        0.814    0.718  0.763      110
+---------------------------------------------------
+macro avg            0.790    0.791  0.789      315
+accuracy: 0.790  (249/315)
+
+Error caro (esquina 0<->2): 18 de 315
+  saturada clasificada como sin_ia (2->0): 10
+  sin_ia clasificada como saturada (0->2): 8
+
+==============================================================================
+  LO QUE COSTABA EL PROTOCOLO VIEJO
+==============================================================================
+  v6 (PyTorch): 0.9333 de val_accuracy, pero ese val es el MISMO conjunto
+                que Optuna maximizó durante 30 trials -> sesgo de selección.
+  v7 (PyTorch): 0.7905 ± 0.0119 sobre un test
+                de 63 imágenes que la búsqueda NUNCA vio.
+  Diferencia  : -0.1428  <- esto es lo que el protocolo viejo
+                estaba regalando (o no, si sale positivo: entonces el modelo
+                era genuinamente bueno y la v6 no estaba tan inflada).
+
+Generando figuras...
+  guardado Figure_optuna_historia_v7.png
+  guardado Figure_optuna_importancia_v7.png
+  guardado Figure_matriz_v7.png
+
+ROC-AUC One-vs-Rest (test, semilla 123):
+  0_sin_ia         AUC = 0.9290
+  1_rastro_ia      AUC = 0.9270
+  2_saturada_ia    AUC = 0.9324
+  macro-promedio   AUC = 0.9295
+  micro-promedio   AUC = 0.9216
+  guardado Figure_roc_v7.png
+  guardado Figure_calibracion_v7.png
+  guardado Figure_semillas_v7.png
+
+  guardado mejores_hiperparametros.json
+  guardado resultados_v7.json
+  guardado modelopt_v7_protocolo.pt  (semilla 123, elegida de antemano)

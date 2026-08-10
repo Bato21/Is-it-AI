@@ -1,0 +1,146 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786372055.117740    6240 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1786372055.118602    6240 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786372056.797472    6240 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1786372056.797880    6240 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Partición canónica (documentacion/particion.json, huella e7e218fd83b8aeed):
+  desarrollo : 250 imgs  {'0_sin_ia': 86, '1_rastro_ia': 75, '2_saturada_ia': 89}
+  test       :  63 imgs  {'0_sin_ia': 22, '1_rastro_ia': 19, '2_saturada_ia': 22}   <- APARTADO, se usa una sola vez
+  folds      : 5 (validación cruzada dentro de desarrollo)
+
+Pre-computando embeddings del backbone congelado (una sola vez)...
+  desarrollo: (250, 576)  ·  test: (63, 576)  (dim 576)
+
+==============================================================================
+  Optuna sobre la cabeza  ·  30 trials  ·  objetivo = media de 5-fold CV
+==============================================================================
+ Trial  cv_media    ±std   mejor   parámetros
+------------------------------------------------------------------------------
+     0    0.8678  0.0644  0.8678   capas=2 units=256 drop=0.45 opt=rmsprop lr=9.2e-04
+     1    0.8001  0.0631  0.8678   capas=1 units=128 drop=0.10 opt=rmsprop lr=2.2e-04
+     2    0.8321  0.0684  0.8678   capas=2 units=256 drop=0.45 opt=rmsprop lr=5.3e-04
+     3    0.8040  0.0497  0.8678   capas=1 units=128 drop=0.30 opt=rmsprop lr=4.2e-04
+     4    0.8123  0.0458  0.8678   capas=1 units=128 drop=0.40 opt=sgd lr=5.4e-03
+     5    0.8520  0.0450  0.8678   capas=1 units=128 drop=0.40 opt=rmsprop lr=1.2e-03
+     6    0.8361  0.0493  0.8678   capas=1 units=256 drop=0.55 opt=rmsprop lr=1.8e-03
+     7    0.8800  0.0506  0.8800   capas=2 units=64 drop=0.20 opt=rmsprop lr=5.9e-03
+     8    podado          0.8800   capas=2 units=64 drop=0.40 opt=sgd lr=4.3e-04
+     9    podado          0.8800   capas=2 units=256 drop=0.55 opt=adam lr=6.3e-04
+    10    0.8720  0.0574  0.8800   capas=2 units=64 drop=0.10 opt=adam lr=9.5e-03
+    11    0.8759  0.0297  0.8800   capas=2 units=64 drop=0.15 opt=adam lr=1.0e-02
+    12    0.8681  0.0571  0.8800   capas=2 units=64 drop=0.25 opt=adam lr=3.7e-03
+    13    0.8637  0.0589  0.8800   capas=2 units=64 drop=0.20 opt=adam lr=9.9e-03
+    14    podado          0.8800   capas=2 units=64 drop=0.20 opt=adam lr=2.3e-03
+    15    podado          0.8800   capas=2 units=64 drop=0.15 opt=sgd lr=4.8e-03
+    16    podado          0.8800   capas=2 units=64 drop=0.30 opt=adam lr=1.1e-04
+    17    0.8720  0.0484  0.8800   capas=2 units=64 drop=0.20 opt=adam lr=3.1e-03
+    18    podado          0.8800   capas=2 units=64 drop=0.30 opt=rmsprop lr=6.2e-03
+    19    podado          0.8800   capas=2 units=64 drop=0.15 opt=sgd lr=7.7e-03
+    20    0.8638  0.0560  0.8800   capas=1 units=64 drop=0.25 opt=adam lr=3.1e-03
+    21    0.8760  0.0408  0.8800   capas=2 units=64 drop=0.10 opt=adam lr=9.8e-03
+    22    podado          0.8800   capas=2 units=64 drop=0.10 opt=adam lr=6.4e-03
+    23    podado          0.8800   capas=2 units=64 drop=0.15 opt=adam lr=4.3e-03
+    24    0.8678  0.0562  0.8800   capas=2 units=64 drop=0.15 opt=adam lr=7.2e-03
+    25    podado          0.8800   capas=2 units=64 drop=0.25 opt=rmsprop lr=2.2e-03
+    26    0.8517  0.0704  0.8800   capas=2 units=64 drop=0.10 opt=adam lr=9.0e-03
+    27    0.8478  0.0563  0.8800   capas=2 units=64 drop=0.20 opt=adam lr=5.1e-03
+    28    podado          0.8800   capas=2 units=256 drop=0.15 opt=sgd lr=3.7e-03
+    29    podado          0.8800   capas=2 units=128 drop=0.60 opt=rmsprop lr=6.8e-03
+
+==============================================================================
+  MEJORES HIPERPARÁMETROS (elegidos por validación cruzada, sin ver el test)
+==============================================================================
+  media de CV: 0.8800  (88.0%)
+    n_capas   : 2
+    units     : 64
+    dropout   : 0.2
+    optimizer : rmsprop
+    lr        : 0.005897305857047367
+
+  trials completados : 18/30  (12 podados)
+  media cv_accuracy  : 0.8524
+  std  cv_accuracy   : 0.0247
+  peor / mejor       : 0.8001 / 0.8800
+
+  accuracy por fold  : [0.902, 0.9, 0.92, 0.78, 0.898]
+  mejores épocas     : [11, 14, 16, 18, 17]  ->  refit con 16 épocas
+
+------------------------------------------------------------------------------
+  Refit sobre desarrollo (250 imgs) y evaluación sobre TEST (63 imgs)
+  5 semillas: [123, 7, 42, 2024, 31]
+------------------------------------------------------------------------------
+  semilla   123  test_acc=0.8571  F1=0.8540  QWK=0.8636  0<->2=1  ECE=0.1152
+  semilla     7  test_acc=0.7460  F1=0.7440  QWK=0.6517  0<->2=5  ECE=0.2003
+  semilla    42  test_acc=0.8889  F1=0.8871  QWK=0.8837  0<->2=1  ECE=0.1277
+  semilla  2024  test_acc=0.8413  F1=0.8358  QWK=0.8539  0<->2=1  ECE=0.1157
+  semilla    31  test_acc=0.6667  F1=0.6542  QWK=0.5301  0<->2=6  ECE=0.2817
+
+==================================================================
+  RESULTADOS SOBRE TEST — TensorFlow v7  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ↑     0.8000   0.0819   0.6667   0.8889
+  F1 macro              ↑     0.7950   0.0849   0.6542   0.8871
+  recall clase 2        ↑     0.7818   0.2120   0.4091   0.9545
+  errores 0<->2         ↓     2.8000   2.2271   1.0000   6.0000
+    de los cuales 2->0  ↓     2.0000   2.5298   0.0000   6.0000
+    de los cuales 0->2  ↓     0.8000   0.4000   0.0000   1.0000
+  QWK (ordinal)         ↑     0.7566   0.1410   0.5301   0.8837
+  MAE ordinal           ↓     0.2444   0.1165   0.1270   0.4286
+  AUC macro (OvR)       ↑     0.9312   0.0176   0.8995   0.9508
+  AUC micro (OvR)       ↑     0.9214   0.0303   0.8643   0.9487
+  ECE (calibración)     ↓     0.1681   0.0650   0.1152   0.2817
+  -------------------------------------------------------------
+  ↑ = más alto es mejor   ·   ↓ = más bajo es mejor
+
+Matriz de confusión ACUMULADA sobre 5 semillas (filas = real, columnas = predicho):
+[[93 13  4]
+ [15 73  7]
+ [10 14 86]]
+
+Reporte por clase (acumulado, 315 predicciones):
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.788    0.845  0.816      110
+1_rastro_ia          0.730    0.768  0.749       95
+2_saturada_ia        0.887    0.782  0.831      110
+---------------------------------------------------
+macro avg            0.802    0.799  0.798      315
+accuracy: 0.800  (252/315)
+
+Error caro (esquina 0<->2): 14 de 315
+  saturada clasificada como sin_ia (2->0): 10
+  sin_ia clasificada como saturada (0->2): 4
+
+==============================================================================
+  LO QUE COSTABA EL PROTOCOLO VIEJO
+==============================================================================
+  v6 (TensorFlow): 0.9333 de val_accuracy (best trial 0.9667), pero ese val
+                   es el MISMO conjunto que Optuna maximizó durante 30
+                   trials -> sesgo de selección.
+  v7 (TensorFlow): 0.8000 ± 0.0819 sobre un test
+                   de 63 imágenes que la búsqueda NUNCA vio.
+  Diferencia     : -0.1333
+
+Generando figuras...
+  guardado Figure_optuna_historia_v7.png
+  guardado Figure_optuna_importancia_v7.png
+  guardado Figure_matriz_v7.png
+
+ROC-AUC One-vs-Rest (test, semilla 123):
+  0_sin_ia         AUC = 0.9401
+  1_rastro_ia      AUC = 0.9390
+  2_saturada_ia    AUC = 0.9734
+  macro-promedio   AUC = 0.9508
+  micro-promedio   AUC = 0.9487
+  guardado Figure_roc_v7.png
+  guardado Figure_calibracion_v7.png
+  guardado Figure_semillas_v7.png
+
+  guardado mejores_hiperparametros.json
+  guardado resultados_v7.json
+  guardado modelotf_v7_protocolo.keras  (semilla 123, elegida de antemano)
