@@ -2,7 +2,7 @@
 
 *Guía de lectura del repositorio **Is-it-AI**. Recorre, versión por versión y separado por
 framework, qué se agregó en cada paso, **cómo se llama cada función**, qué hace y qué
-resultado dio. Escrita al cierre de la **v7**, con números de corridas reales.*
+resultado dio. Escrita al cierre de la **v8**, con números de corridas reales.*
 
 > **Cómo usar este documento.** Si venís a entender el proyecto de cero, leé §1 y §2.
 > Si venís a defenderlo oralmente, leé §3 (resultados) y §8 (contrastes de framework).
@@ -47,9 +47,9 @@ Is-it-AI/
 ├── dataset/                    (fuera de git) 313 imágenes: 108 / 94 / 111
 ├── dataset_desbalanceado/      (fuera de git) subset 100/50/25 para la v5
 │
-├── TensorFlow/  v1..v7/        entrenamiento — un script por versión
+├── TensorFlow/  v1..v8/        entrenamiento — un script por versión
 │   └── export_tfjs/            exportación a TensorFlow.js (venv aparte)
-├── PyTorch/     v1..v7/        entrenamiento — espejo exacto
+├── PyTorch/     v1..v8/        entrenamiento — espejo exacto
 │
 ├── modelos/                    scripts de CONSUMO (no entrenan, solo predicen)
 │   ├── v2/  v4/  v6/           consumo por versión + cámara OpenCV en v4
@@ -94,7 +94,8 @@ Filas = real, columnas = predicho, en orden `0_sin_ia` / `1_rastro_ia` / `2_satu
 | v4 | CNN propia → MobileNetV3-Small preentrenada | ¿El límite era el modelo o las etiquetas? |
 | v5 | Dataset desbalanceado, sin/con pesos de clase | ¿Cuánto duele el desbalance y cuánto lo corrigen los pesos? |
 | v6 | Hiperparámetros a ojo → **Optuna** | ¿Buscar hiperparámetros mejora el modelo? |
-| **v7** | **Protocolo de evaluación honesto** | **¿Cuánto de lo reportado hasta acá era real?** |
+| v7 | **Protocolo de evaluación honesto** | ¿Cuánto de lo reportado hasta acá era real? |
+| **v8** | **Destilación en cadena vs. entrenamiento directo** | **¿Conviene transferir el conocimiento de versión en versión?** |
 
 ### 3.2 Resultados — versiones v1 a v6
 
@@ -168,6 +169,123 @@ Accuracy de la validación cruzada durante la búsqueda: **TF 0.8800**, **PyTorc
 > v6 y la v7, así que la comparación v6↔v7 no es 100% a data constante. Pero 13 imágenes
 > no explican 14 puntos, y los dos frameworks cayeron lo mismo por separado.
 
+### 3.4 Resultados — v8 (destilación en cadena vs. directo)
+
+Mismo test apartado de 63 imágenes, mismas 5 semillas. Los dos brazos terminan en la
+**misma arquitectura** (MobileNetV3 congelada + cabeza con los hiperparámetros de la v7)
+y ven **los mismos datos** (1 vista limpia + 2 aumentadas por imagen). Lo único que
+cambia es el procedimiento de entrenamiento.
+
+**Criterio de veredicto, declarado ANTES de correr:** una diferencia solo cuenta si
+`|B − A|` supera la suma de los desvíos de los dos brazos. Con 63 imágenes, todo lo demás
+es ruido, y decirlo es más honesto que festejar decimales.
+
+| Métrica | | **TF** A directo | **TF** B cadena | **PT** A directo | **PT** B cadena |
+|---|:---:|---|---|---|---|
+| accuracy | ↑ | 0.8698 ± 0.0394 | 0.8667 ± **0.0078** | 0.8190 ± 0.0215 | 0.8063 ± **0.0119** |
+| F1 macro | ↑ | 0.8681 | 0.8639 | 0.8181 | 0.8054 |
+| recall clase 2 | ↑ | 0.9273 | **0.9545** | 0.7364 | **0.7909** |
+| errores 0↔2 | ↓ | 2.0 | 1.8 | 3.2 | 4.0 |
+| QWK | ↑ | 0.8405 | 0.8452 | 0.7516 | 0.7243 |
+| AUC macro | ↑ | 0.9475 | **0.9545** | 0.9360 | **0.9465** |
+| ECE | ↓ | 0.1097 | **0.0924** | 0.1380 | **0.1107** |
+
+**Veredicto formal: TODAS las diferencias son ruido**, en los dos frameworks. Con este
+tamaño de test no se puede afirmar que la cadena sea mejor ni peor que el directo. Esa es
+la respuesta defendible, y es la que hay que dar si preguntan.
+
+**Pero hay un patrón que sí vale la pena mirar.** Cinco efectos apuntan en la MISMA
+dirección en **dos implementaciones independientes** (frameworks distintos, augmentation
+distinta, hiperparámetros distintos):
+
+| Efecto | TensorFlow | PyTorch |
+|---|---|---|
+| accuracy | −0.0032 | −0.0127 | 
+| recall clase 2 | **+0.0273** | **+0.0545** |
+| AUC macro | **+0.0070** | **+0.0106** |
+| ECE (calibración) | **−0.0173** | **−0.0273** |
+| **desvío de accuracy** | **0.0394 → 0.0078** | **0.0215 → 0.0119** |
+
+Que cinco signos coincidan en dos corridas independientes es más informativo que
+cualquiera de los deltas por separado. La lectura honesta: **la cadena paga un poco de
+accuracy y compra calibración, AUC, recall de la clase cara y —sobre todo— ESTABILIDAD.**
+
+El efecto de estabilidad es el más marcado y el menos esperado: en TensorFlow el desvío
+entre semillas cae de **±0.0394 a ±0.0078, cinco veces menos**. Es el mismo problema que
+la v7 había destapado (TF variaba de 0.6667 a 0.8889 con la misma configuración), y la
+destilación lo amortigua: los targets blandos del profesor son una señal mucho más rica y
+consistente que las etiquetas duras, así que el punto de llegada depende menos de la
+inicialización. **Para un producto que hay que desplegar, esto vale más que 1 punto de
+accuracy.**
+
+### 3.5 El hallazgo incómodo: la cadena se rompe en el eslabón 4
+
+Progresión eslabón a eslabón sobre el test (media de 5 semillas):
+
+| Eslabón | TF acc | TF QWK | TF ECE | PT acc | PT QWK | PT ECE | PT 0↔2 |
+|---|---|---|---|---|---|---|---|
+| E1 (v1: CNN pelada) | 0.8825 | 0.8473 | 0.0763 | 0.8444 | 0.8021 | 0.0695 | 2.6 |
+| E2 (v2: + augmentation) | 0.8825 | 0.8541 | 0.0863 | 0.8667 | 0.8569 | 0.0688 | 1.4 |
+| **E3 (v3: + converger)** | **0.8857** | 0.8521 | **0.0599** | **0.8698** | **0.8659** | 0.0691 | **1.2** |
+| E4 (v4: → MobileNetV3) | 0.8349 | 0.8153 | 0.0923 | 0.7905 | 0.7705 | 0.0944 | 2.2 |
+| E5 (v7: cabeza Optuna) | 0.8667 | 0.8452 | 0.0924 | 0.8063 | 0.7243 | 0.1107 | 4.0 |
+
+Dos conclusiones, y la segunda es fuerte:
+
+**1. La destilación entre CNNs funciona.** En PyTorch, E1→E3 sube 2.5 pp de accuracy,
++6.4 pp de QWK y **baja los errores 0↔2 de 2.6 a 1.2** — el error caro del proyecto,
+más que a la mitad, con la misma arquitectura y los mismos datos. Eso no es ruido de
+inicialización: es transferencia de conocimiento.
+
+**2. El salto a MobileNetV3 (E4) es lo que ROMPE la cadena, y eso invierte el titular
+del proyecto.** En los DOS frameworks, el mejor eslabón es **E3 — la CNN chica entrenada
+desde cero**, y cae al pasar a las features congeladas de ImageNet. La v4 había celebrado
+"transfer learning > CNN propia" con 90.0% vs 83.3% en PyTorch; medido sobre el test
+apartado, con la misma partición y 5 semillas, **la CNN propia iguala o gana**.
+
+Tiene sentido conceptual: las features de ImageNet están entrenadas para distinguir perros
+de aviones, no para detectar regularidad de plantilla, paleta uniforme y tipografía de
+generador. Una CNN chica entrenada sobre este dominio puede aprender justamente eso.
+
+> **El matiz que hay que decir sí o sí:** E4/E5 usan el backbone **CONGELADO** (feature
+> extraction). Esto NO dice que MobileNetV3 sea peor que la CNN propia — dice que
+> *las features de ImageNet sin adaptar* no son mejores. Con fine-tuning de las últimas
+> capas la conclusión podría darse vuelta, y eso **todavía no está medido**. Es el
+> experimento más urgente que queda pendiente.
+
+### 3.6 Sensibilidad a la temperatura y al peso de la destilación
+
+Barrido medido sobre **validación cruzada de desarrollo, nunca sobre el test** (el barrido
+es información, no un mecanismo de selección). `alpha=0.0` equivale a no destilar y es la
+línea base dentro del mismo barrido.
+
+| | α=0.0 | α=0.3 | α=0.5 | α=0.7 | α=0.9 |
+|---|---|---|---|---|---|
+| **PyTorch** T=2 | 0.8122 | 0.8043 | 0.8161 | 0.8201 | 0.8161 |
+| **PyTorch** T=4 | 0.8122 | 0.8202 | 0.8121 | 0.8082 | 0.8241 |
+| **PyTorch** T=8 | 0.8122 | 0.8281 | 0.8162 | 0.8203 | **0.8321** |
+| **TensorFlow** T=2 | 0.8479 | **0.8561** | 0.8237 | 0.8157 | 0.8121 |
+| **TensorFlow** T=4 | 0.8401 | 0.8197 | 0.8241 | 0.7957 | 0.7917 |
+| **TensorFlow** T=8 | 0.8401 | 0.8240 | 0.7960 | 0.8242 | 0.7799 |
+
+- **Chequeo de sanidad que hay que señalar:** las tres filas de α=0 de PyTorch dan
+  exactamente `0.8122`. Con α=0 la pérdida se reduce a cross-entropy pura y la temperatura
+  deja de existir, así que las tres TIENEN que coincidir. Coinciden.
+- **PyTorch y TensorFlow prefieren regímenes OPUESTOS.** PyTorch mejora con temperatura
+  alta y mucho peso de KL (T=8, α=0.9); TensorFlow prefiere temperatura baja y poco KL
+  (T=2, α=0.3) y se degrada feo con α alto (0.78-0.79). No hay un T/α universal.
+- Los valores fijos del script del profe (T=4, α=0.7) quedaron **cerca del óptimo en
+  PyTorch y cerca del peor caso en TensorFlow**. Se mantuvieron igual a propósito: si el
+  brazo B pudiera buscar dos hiperparámetros que el brazo A no tiene, ganaría por tener
+  más búsqueda, no por destilar.
+
+> **Salvedad de comparación TF↔PyTorch en la v8:** en la v7 los dos frameworks compartían
+> TODO y sus resultados coincidían (0.8000 vs 0.7905). En la v8 comparten la partición y
+> las métricas, pero **cada uno genera sus vistas aumentadas con su propia augmentation**
+> (capas de Keras vs. transforms de torchvision) y usa los hiperparámetros que su propia
+> CV eligió. Por eso vuelve a aparecer una brecha (0.87 vs 0.82) que **no** debe leerse
+> como "TensorFlow es mejor": son datos de entrenamiento distintos.
+
 ---
 
 ## 4. Cómo correr todo
@@ -181,8 +299,15 @@ python documentacion/particion_datos.py
 python documentacion/particion_datos.py --mostrar     # ver la que ya existe
 
 # 2) Entrenar (venv tensorflow-ia para TF, frameworks-ia para PyTorch)
-python TensorFlow/v7/07_scripts.py
+python TensorFlow/v7/07_scripts.py      # protocolo honesto  (~5 min)
 python PyTorch/v7/07_scripts.py
+
+# 2b) v8: destilación en cadena vs. directo. OJO: entrena 3 CNNs desde cero por
+#     semilla, así que tarda (~20 min TF, ~40 min PyTorch en CPU).
+#     Redirigir a archivo SIN pipes intermedios: un `| head` mata el proceso por
+#     SIGPIPE a mitad de camino (pasó en la primera corrida).
+python TensorFlow/v8/08_scripts.py > TensorFlow/v8/Resultado_8.txt 2>&1
+python PyTorch/v8/08_scripts.py    > PyTorch/v8/Resultado_8.txt    2>&1
 
 # 3) Consumo y cámara
 python modelos/v4/modelotf_v4.py ; python modelos/v4/camara_pt.py
@@ -346,6 +471,30 @@ semilla), `mejores_hiperparametros.json`, y seis figuras: `Figure_optuna_histori
 
 ---
 
+### v8 — `TensorFlow/v8/08_scripts.py` · destilación en cadena vs. directo
+
+**Nuevo:** la pérdida de destilación con temperatura, el conjunto fijo de vistas, la
+cadena de 5 eslabones y la comparación A/B contra el entrenamiento directo.
+
+| Función | Qué hace |
+|---|---|
+| `construir_extractor()` | MobileNetV3 congelada + GAP → 576-d (igual que v6/v7). |
+| `preparar_vistas(rutas, etiquetas, n_aug, semilla)` | Genera **1 vista limpia + n_aug aumentadas** por imagen. Aplica la augmentation **antes** de los dos resize (180 para la CNN, 224 para MobileNet), así el profesor y el estudiante ven la MISMA vista — requisito de la destilación. Devuelve las imágenes 180px en `uint8` y los embeddings ya pre-computados. |
+| `baseline_cnn()` | La CNN de v1/v2/v3, pero **devolviendo logits** (sin softmax final). |
+| `cabeza_v4()` | Réplica del `classifier` de MobileNetV3-Small: `Dense(1024, hard_swish) → Dropout(0.2) → Dense(3)`. Logits. |
+| `cabeza_v7(params)` | La cabeza con los hiperparámetros que Optuna eligió en la v7. Logits. |
+| `hacer_perdida_destilacion(T, alpha)` | **El corazón de la versión.** Devuelve `alpha·KL(T)·T² + (1−alpha)·CE`, lista para `compile()`. |
+| `entrenar_eslabon(...)` | Entrena un eslabón; si `logits_prof is None` usa cross-entropy pura. |
+| `logits_de(modelo, X)` · `probabilidades(modelo, X)` | Logits crudos y softmax aplicado a mano. |
+| `brazo_directo(params, epochs, semilla)` | **BRAZO A**: la receta v7 entrenada de una. |
+| `brazo_cadena(params, epochs_final, semilla)` | **BRAZO B**: los 5 eslabones encadenados. Devuelve el modelo final, el historial por eslabón y los logits de E4. |
+| `barrido_T_alpha(params, epochs_final, semilla, logits_prof)` | Barre T ∈ {2,4,8} × α ∈ {0, .3, .5, .7, .9} **sobre CV**, reutilizando el profesor E4 ya entrenado. |
+
+**Resultado: A directo 0.8698 ± 0.0394 · B cadena 0.8667 ± 0.0078.** Todas las
+diferencias, ruido. Ver §3.4-3.6.
+
+---
+
 ## 6. PyTorch — versión por versión
 
 ### v1 — `PyTorch/v1/01_script.py` · baseline espejo
@@ -402,8 +551,13 @@ errores a 0** con las mismas imágenes, y el recall de la clase 2 fue **22/22**.
 
 **La lectura:** las features de ImageNet separan lo que la CNN propia confundía en los
 extremos. **El límite era la capacidad de representación del modelo, no las etiquetas.**
-*(La v7 matiza esto: sobre un test apartado la esquina 0↔2 vuelve a aparecer, así que el
-0/22-22 era también un split favorable.)*
+
+> **⚠ Este titular quedó en discusión.** La v7 lo matizó (sobre un test apartado la esquina
+> 0↔2 vuelve a aparecer, así que el 22/22 era también un split favorable) y la **v8 lo
+> contradice de frente**: en los dos frameworks, el eslabón con la CNN propia (E3) le gana
+> al eslabón con MobileNetV3 congelada (E4). Ver §3.5. La salvedad es que E4/E5 usan el
+> backbone **congelado**; con fine-tuning la conclusión podría volver a darse vuelta, y eso
+> es hoy el experimento pendiente número 1.
 
 ---
 
@@ -481,6 +635,49 @@ dropout 0.30 · adam · lr 3.1e-3` (CV = 0.8482). 24/30 trials completados, 6 po
 
 ---
 
+### v8 — `PyTorch/v8/08_scripts.py` · destilación en cadena vs. directo
+
+Espejo exacto del lado TF: misma partición, mismas métricas, misma cadena, mismos T y α.
+
+| Elemento | Qué hace |
+|---|---|
+| `preparar_vistas(rutas, etiquetas, n_aug, semilla)` | 1 vista limpia + n_aug aumentadas por imagen; augmentation **antes** de los dos resize (180 para la CNN, 224 para MobileNet), así el profesor y el estudiante ven la MISMA vista. Las 180px se guardan en `uint8` (73 MB) y se normalizan por batch: en `float32` serían 292 MB y la máquina tenía poca RAM libre. |
+| `class BaselineCNN(nn.Module)` | La CNN de v1/v2/v3 **sin tocar una línea**: sin padding, `32·43·43 = 59168` en el flatten. Los eslabones E1-E3 son literalmente los modelos de las versiones que representan. |
+| `cabeza_v4()` | Réplica del `classifier` de MobileNetV3-Small: `Linear(576,1024) → Hardswish → Dropout(0.2) → Linear(1024,3)`. |
+| `cabeza_v7(params)` · `optimizador_v7(modelo, params)` | La cabeza y el optimizador con los hiperparámetros que Optuna eligió en la v7. |
+| `perdida_destilacion(logits_est, logits_prof, y, T, alpha)` | **El corazón de la versión.** `alpha · F.kl_div(log_softmax(est/T), softmax(prof/T), "batchmean") · T² + (1−alpha) · CE`. Calcada del `perdida_kl` del script del profe, de 50.257 tokens a 3 clases. |
+| `normalizar180(x_uint8)` | `uint8 [0,255] → float [0,1]`. Equivalente del `ToTensor()` de v1-v3. |
+| `entrenar_eslabon(...)` | Entrena un eslabón con los logits del profesor **pre-computados** (el profesor está congelado, así que no cambian entre épocas: por eso la cadena corre en minutos). |
+| `logits_de(modelo, X, es_cnn)` · `probabilidades(...)` | Logits por lotes y softmax completo. |
+| `brazo_directo(params, epochs, semilla)` | **BRAZO A**: la receta v7 entrenada de una, sobre las mismas vistas que la cadena. |
+| `brazo_cadena(params, epochs_final, semilla)` | **BRAZO B**: los 5 eslabones. Devuelve el modelo final, el historial por eslabón y los logits de E4. |
+| `barrido_T_alpha(...)` | Barre T × α **sobre CV**, reutilizando el profesor E4 ya entrenado. Excluye **todas** las vistas de las imágenes de validación, no solo la limpia: si una vista aumentada quedara en train y su vista limpia en validación, habría fuga (es la misma diapositiva). |
+
+**Resultado: A directo 0.8190 ± 0.0215 · B cadena 0.8063 ± 0.0119.** Todas las
+diferencias, ruido. Ver §3.4-3.6.
+
+**Reglas del experimento (valen para los dos frameworks):**
+- El estudiante se **RE-INICIALIZA** en cada eslabón (random en E1-E3, ImageNet en E4-E5).
+  Si heredara los pesos del profesor sería *fine-tuning* con otro nombre, no destilación.
+- Se destila sobre las **vistas aumentadas**, no sobre las limpias. Es la solución al
+  **problema del profesor saturado**: E1 memoriza las vistas limpias (softmax casi
+  one-hot, no enseña nada), pero nunca vio las rotadas, así que ahí sí duda — y el
+  conocimiento oscuro solo existe donde el profesor duda.
+- Las vistas se generan **una sola vez con semilla fija** (`SEED_VISTAS = 999`), igual
+  para los dos brazos y para todas las semillas de entrenamiento. Se pierde diversidad de
+  augmentation a cambio de que todo sea pre-computable y 100% reproducible.
+- **No hay early stopping dentro de la cadena**: no hay un conjunto de validación que los
+  dos brazos puedan compartir sin quitarle datos a alguno. El "converger" de la v3 se
+  representa con un presupuesto de épocas mayor (E1=10, E2=30, E3=40). Es una
+  simplificación consciente.
+
+> **Verificación cruzada de la pérdida (vale la pena mencionarla en la defensa):** sobre
+> los mismos logits fijos, la pérdida de destilación da `1.30930722` en PyTorch y
+> `1.30930674` en TensorFlow. Coinciden hasta la 7ª cifra, así que la afirmación "las dos
+> implementaciones son la misma pérdida" está **medida**, no asumida.
+
+---
+
 ## 7. Módulos compartidos (nuevos en la v7)
 
 Antes de la v7 cada script se copiaba su propio `reporte_por_clase()` y su propio bloque de
@@ -550,19 +747,31 @@ problemas reales encontrados escribiendo el código, no de un libro.
 | **Orden de clases** | `image_dataset_from_directory` ordena alfabéticamente. | `ImageFolder` ordena alfabéticamente. **Igual en los dos** — de ahí los prefijos `0_/1_/2_`. |
 | **Carga de datos (v7)** | `tf.data.from_tensor_slices` sobre la lista de rutas + `map(decode_image)`. | `Dataset` propio con PIL + `convert("RGB")`. |
 | **Estabilidad entre semillas (v7)** | **±0.0819** de accuracy. Mucho más sensible a la semilla. | **±0.0119**. Notoriamente más estable con la misma receta. |
+| **Logits vs. probabilidades (v8)** | La costumbre del proyecto era terminar la cabeza en `softmax`. **La destilación obliga a cambiarlo**: para aplicar temperatura hay que dividir los LOGITS por T, y una vez aplicado el softmax ya no se puede. Desde la v8 las cabezas devuelven logits y el softmax se aplica a mano. | Ya devolvía logits (`CrossEntropyLoss` incluye el softmax). **No hubo que cambiar nada.** |
+| **Pasarle los logits del profesor a la pérdida (v8)** | `loss(y_true, y_pred)` solo recibe esos dos tensores. Hay que **contrabandear** los logits del profesor dentro de `y_true`: se arma un `y_true` de ancho `1 + n_clases` = `[etiqueta, logits_profesor]` y la pérdida lo desempaqueta. Es el idiom estándar de KD en Keras. | La pérdida es una función común: se le pasa lo que uno quiera. No hace falta ningún truco. |
+| **KL divergence (v8)** | A mano: `reduce_mean(reduce_sum(p_prof · (log_p_prof − log_p_est)))`. | `F.kl_div(..., reduction="batchmean")` lo trae hecho. **Los dos dan el mismo número hasta la 7ª cifra.** |
+| **Augmentation determinista (v8)** | Capas de Keras (`RandomRotation`, `RandomZoom`, `RandomBrightness`, `RandomContrast`) invocadas con `training=True`. | `transforms.RandomAffine` + `ColorJitter` de torchvision. **No producen las mismas vistas**, y por eso la v8 vuelve a mostrar una brecha TF↔PyTorch que la v7 había cerrado. |
+| **Régimen óptimo de destilación (v8)** | Prefiere **T bajo y α bajo** (T=2, α=0.3). Se degrada con α alto. | Prefiere **T alto y α alto** (T=8, α=0.9). Régimen opuesto. |
 
 ---
 
 ## 9. Qué falta
 
-**Inmediato**
-- **v8 — la cadena de destilación** (el bonus track): entrenar v1, destilarlo, reentrenar
-  con lo que agrega v2, destilar de nuevo, etc., y comparar contra un modelo entrenado
-  directo con todo. La v7 existe justamente para que esa comparación se pueda medir: con
-  test apartado y 5 semillas, una diferencia de 2 puntos ya se puede declarar ruido o señal.
-  Los hiperparámetros que quedaron fuera del espacio de la v7 (`weight_decay`,
-  `label_smoothing`, scheduler, fine-tuning en 2 fases) entran ahí.
-- **T7 — esqueleto Ionic** (Angular + OpenCV.js + TF.js) para la entrega final.
+**Inmediato — lo que la v8 dejó servido**
+1. **Fine-tuning en dos fases (el experimento más urgente).** La v8 mostró que el mejor
+   eslabón de la cadena es la **CNN propia (E3)**, no las features congeladas de ImageNet
+   (E4/E5), en los dos frameworks. Eso pone en duda el titular "transfer learning > CNN
+   propia" de la v4 — pero solo prueba que las features de ImageNet **sin adaptar** no
+   ganan. Descongelar los últimos bloques del backbone con un lr bajo es lo que decide la
+   discusión, y hoy no está medido.
+2. **Escenario 2 del script del profe (SeqKD / pseudo-etiquetado).** La v8 implementó el
+   Escenario 1 (mismo espacio de salida, KL sobre logits). El Escenario 2 no tiene análogo
+   literal en clasificación, pero sí uno útil: que el profesor etiquete imágenes **sin
+   etiquetar** y el estudiante las aprenda con cross-entropy. Aplicado a **fotos reales de
+   teléfono**, es el ataque más barato al domain gap.
+3. **Hiperparámetros que quedaron fuera del espacio de la v7:** `weight_decay`,
+   `label_smoothing` (el hermano conceptual de la destilación), scheduler de lr.
+4. **T7 — esqueleto Ionic** (Angular + OpenCV.js + TF.js) para la entrega final.
 
 **Deudas metodológicas conocidas**
 1. **Domain gap sin medir.** Todos los números son sobre renders limpios; no hay una sola
@@ -577,6 +786,10 @@ problemas reales encontrados escribiendo el código, no de un libro.
 5. `PyTorch/v6/mejores_hiperparametros.json` no coincide con su `Resultado_6.txt` (§6, v6).
 6. Los `Resultado_*.txt` de PyTorch v1-v6 **no** incluyen la salida de ROC-AUC, aunque las
    figuras existen: se regeneraron las figuras sin volcar los logs.
+7. **Test de 63 imágenes.** La v8 terminó con TODAS sus comparaciones marcadas como
+   "ruido". No es un defecto del experimento: es el tamaño del test. Para poder afirmar
+   diferencias de 2-3 puntos hace falta más dataset, no más técnica. Es el argumento más
+   fuerte a favor de la regla de la casa: **más datos primero, técnica después.**
 
 **Tareas de Bato** (heredadas de `DetalleProyecto.md` §6)
 - Prosa del análisis y plan de acción en `analisis_metricas.md` (bloques `COMPLETAR: Bato`).

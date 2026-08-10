@@ -1,0 +1,192 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Partición canónica (huella e7e218fd83b8aeed):
+  desarrollo : 250 imgs  {'0_sin_ia': 86, '1_rastro_ia': 75, '2_saturada_ia': 89}
+  test       :  63 imgs  {'0_sin_ia': 22, '1_rastro_ia': 19, '2_saturada_ia': 22}   <- el MISMO test apartado de la v7
+
+Generando vistas (1 limpia + 2 aumentadas por imagen, semilla fija 999)...
+  dev : (750, 3, 180, 180) a 180px  ·  (750, 576) embeddings
+  test: (63, 3, 180, 180) a 180px  ·  (63, 576) embeddings
+  (105s)
+
+Hiperparámetros heredados de la v7 (elegidos por CV, sin ver el test):
+  {'n_capas': 2, 'units': 256, 'dropout': 0.30000000000000004, 'optimizer': 'adam', 'lr': 0.00310263119168588}   ·   épocas del eslabón final: 11
+Destilación: T=4.0 · alpha(KL)=0.7  (los valores del script del profe)
+
+==============================================================================
+  BRAZO A (directo)  vs  BRAZO B (cadena)  ·  5 semillas
+==============================================================================
+
+  --- semilla 123 ---
+    BRAZO A (directo): test_acc=0.8254  QWK=0.7561  ECE=0.1234  0<->2=3
+    E1 (v1: CNN pelada): test_acc=0.8571  QWK=0.8636  ECE=0.0909  0<->2=1
+    E2 (v2: + augmentation): test_acc=0.8571  QWK=0.8966  ECE=0.0703  0<->2=0
+    E3 (v3: + converger): test_acc=0.8571  QWK=0.8636  ECE=0.0623  0<->2=1
+    E4 (v4: -> MobileNetV3): test_acc=0.7778  QWK=0.7826  ECE=0.0900  0<->2=2
+    E5 (v7: cabeza Optuna): test_acc=0.7937  QWK=0.7021  ECE=0.0978  0<->2=5
+    (443s)
+
+  --- semilla 7 ---
+    BRAZO A (directo): test_acc=0.8095  QWK=0.7143  ECE=0.1516  0<->2=4
+    E1 (v1: CNN pelada): test_acc=0.8889  QWK=0.8864  ECE=0.0325  0<->2=1
+    E2 (v2: + augmentation): test_acc=0.8889  QWK=0.8864  ECE=0.0580  0<->2=1
+    E3 (v3: + converger): test_acc=0.8889  QWK=0.8837  ECE=0.0607  0<->2=1
+    E4 (v4: -> MobileNetV3): test_acc=0.8413  QWK=0.8471  ECE=0.0934  0<->2=1
+    E5 (v7: cabeza Optuna): test_acc=0.8254  QWK=0.7356  ECE=0.1234  0<->2=4
+    (455s)
+
+  --- semilla 42 ---
+    BRAZO A (directo): test_acc=0.7937  QWK=0.7532  ECE=0.1707  0<->2=2
+    E1 (v1: CNN pelada): test_acc=0.8571  QWK=0.8000  ECE=0.0689  0<->2=3
+    E2 (v2: + augmentation): test_acc=0.9048  QWK=0.8636  ECE=0.0589  0<->2=2
+    E3 (v3: + converger): test_acc=0.8730  QWK=0.8409  ECE=0.0586  0<->2=2
+    E4 (v4: -> MobileNetV3): test_acc=0.8254  QWK=0.8372  ECE=0.0649  0<->2=1
+    E5 (v7: cabeza Optuna): test_acc=0.8095  QWK=0.7073  ECE=0.0742  0<->2=4
+    (444s)
+
+  --- semilla 2024 ---
+    BRAZO A (directo): test_acc=0.8095  QWK=0.7391  ECE=0.1111  0<->2=4
+    E1 (v1: CNN pelada): test_acc=0.7619  QWK=0.6000  ECE=0.0860  0<->2=7
+    E2 (v2: + augmentation): test_acc=0.8254  QWK=0.7416  ECE=0.0850  0<->2=4
+    E3 (v3: + converger): test_acc=0.8730  QWK=0.8444  ECE=0.0911  0<->2=2
+    E4 (v4: -> MobileNetV3): test_acc=0.7937  QWK=0.7191  ECE=0.0850  0<->2=4
+    E5 (v7: cabeza Optuna): test_acc=0.7937  QWK=0.7556  ECE=0.1425  0<->2=3
+    (460s)
+
+  --- semilla 31 ---
+    BRAZO A (directo): test_acc=0.8571  QWK=0.7955  ECE=0.1333  0<->2=3
+    E1 (v1: CNN pelada): test_acc=0.8571  QWK=0.8605  ECE=0.0693  0<->2=1
+    E2 (v2: + augmentation): test_acc=0.8571  QWK=0.8966  ECE=0.0715  0<->2=0
+    E3 (v3: + converger): test_acc=0.8571  QWK=0.8966  ECE=0.0726  0<->2=0
+    E4 (v4: -> MobileNetV3): test_acc=0.7143  QWK=0.6667  ECE=0.1388  0<->2=3
+    E5 (v7: cabeza Optuna): test_acc=0.8095  QWK=0.7209  ECE=0.1158  0<->2=4
+    (472s)
+
+==================================================================
+  BRAZO A — DIRECTO (PyTorch v8)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ↑     0.8190   0.0215   0.7937   0.8571
+  F1 macro              ↑     0.8181   0.0214   0.7942   0.8561
+  recall clase 2        ↑     0.7364   0.0727   0.6364   0.8182
+  errores 0<->2         ↓     3.2000   0.7483   2.0000   4.0000
+    de los cuales 2->0  ↓     2.4000   0.8000   2.0000   4.0000
+    de los cuales 0->2  ↓     0.8000   0.7483   0.0000   2.0000
+  QWK (ordinal)         ↑     0.7516   0.0264   0.7143   0.7955
+  MAE ordinal           ↓     0.2317   0.0238   0.1905   0.2540
+  AUC macro (OvR)       ↑     0.9360   0.0088   0.9222   0.9470
+  AUC micro (OvR)       ↑     0.9252   0.0125   0.9131   0.9404
+  ECE (calibración)     ↓     0.1380   0.0210   0.1111   0.1707
+  -------------------------------------------------------------
+  ↑ = más alto es mejor   ·   ↓ = más bajo es mejor
+
+==================================================================
+  BRAZO B — CADENA DE DESTILACIÓN (PyTorch v8)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ↑     0.8063   0.0119   0.7937   0.8254
+  F1 macro              ↑     0.8054   0.0119   0.7928   0.8248
+  recall clase 2        ↑     0.7909   0.0843   0.6818   0.9091
+  errores 0<->2         ↓     4.0000   0.6325   3.0000   5.0000
+    de los cuales 2->0  ↓     2.4000   1.3565   0.0000   4.0000
+    de los cuales 0->2  ↓     1.6000   1.2000   0.0000   3.0000
+  QWK (ordinal)         ↑     0.7243   0.0195   0.7021   0.7556
+  MAE ordinal           ↓     0.2571   0.0156   0.2381   0.2857
+  AUC macro (OvR)       ↑     0.9465   0.0047   0.9379   0.9508
+  AUC micro (OvR)       ↑     0.9367   0.0067   0.9279   0.9477
+  ECE (calibración)     ↓     0.1107   0.0232   0.0742   0.1425
+  -------------------------------------------------------------
+  ↑ = más alto es mejor   ·   ↓ = más bajo es mejor
+
+==============================================================================
+  COMPARACIÓN A/B  —  ¿la cadena gana, pierde o empata?
+==============================================================================
+  métrica                     A directo     B cadena     B - A  veredicto
+  --------------------------------------------------------------------------
+  accuracy                       0.8190       0.8063   -0.0127  ruido
+  F1 macro                       0.8181       0.8054   -0.0127  ruido
+  recall clase 2                 0.7364       0.7909   +0.0545  ruido
+  errores 0<->2                  3.2000       4.0000   +0.8000  ruido
+    de los cuales 2->0           2.4000       2.4000   +0.0000  ruido
+    de los cuales 0->2           0.8000       1.6000   +0.8000  ruido
+  QWK (ordinal)                  0.7516       0.7243   -0.0273  ruido
+  MAE ordinal                    0.2317       0.2571   +0.0254  ruido
+  AUC macro (OvR)                0.9360       0.9465   +0.0106  ruido
+  AUC micro (OvR)                0.9252       0.9367   +0.0115  ruido
+  ECE (calibración)              0.1380       0.1107   -0.0273  ruido
+  --------------------------------------------------------------------------
+  'ruido' = |B-A| menor o igual que la suma de los desvíos de ambos brazos.
+
+==============================================================================
+  PROGRESIÓN DE LA CADENA, ESLABÓN POR ESLABÓN (media entre semillas)
+==============================================================================
+  eslabón                       test_acc      QWK      ECE   0<->2
+  --------------------------------------------------------------
+  E1 (v1: CNN pelada)             0.8444   0.8021   0.0695     2.6
+  E2 (v2: + augmentation)         0.8667   0.8569   0.0688     1.4
+  E3 (v3: + converger)            0.8698   0.8659   0.0691     1.2
+  E4 (v4: -> MobileNetV3)         0.7905   0.7705   0.0944     2.2
+  E5 (v7: cabeza Optuna)          0.8063   0.7243   0.1107     4.0
+
+==============================================================================
+  SENSIBILIDAD A T Y ALPHA (medida sobre CV de desarrollo, NUNCA sobre test)
+==============================================================================
+  alpha=0.0 equivale a NO destilar: es la línea base dentro del mismo barrido.
+    T=2.0  alpha=0.0   cv_accuracy=0.8122
+    T=2.0  alpha=0.3   cv_accuracy=0.8043
+    T=2.0  alpha=0.5   cv_accuracy=0.8161
+    T=2.0  alpha=0.7   cv_accuracy=0.8201
+    T=2.0  alpha=0.9   cv_accuracy=0.8161
+    T=4.0  alpha=0.0   cv_accuracy=0.8122
+    T=4.0  alpha=0.3   cv_accuracy=0.8202
+    T=4.0  alpha=0.5   cv_accuracy=0.8121
+    T=4.0  alpha=0.7   cv_accuracy=0.8082
+    T=4.0  alpha=0.9   cv_accuracy=0.8241
+    T=8.0  alpha=0.0   cv_accuracy=0.8122
+    T=8.0  alpha=0.3   cv_accuracy=0.8281
+    T=8.0  alpha=0.5   cv_accuracy=0.8162
+    T=8.0  alpha=0.7   cv_accuracy=0.8203
+    T=8.0  alpha=0.9   cv_accuracy=0.8321
+
+  mejor combinación por CV: T=8.0 alpha=0.9 -> 0.8321
+  (NO se usa para elegir el modelo final: la v8 se reporta con los valores
+   fijos del script del profe, T=4.0 alpha=0.7.)
+
+Matriz ACUMULADA — BRAZO A (directo), 5 semillas:
+[[94 12  4]
+ [ 5 83  7]
+ [12 17 81]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.847    0.855  0.851      110
+1_rastro_ia          0.741    0.874  0.802       95
+2_saturada_ia        0.880    0.736  0.802      110
+---------------------------------------------------
+macro avg            0.823    0.822  0.818      315
+accuracy: 0.819  (258/315)
+
+Matriz ACUMULADA — BRAZO B (cadena), 5 semillas:
+[[92 10  8]
+ [ 3 75 17]
+ [12 11 87]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.860    0.836  0.848      110
+1_rastro_ia          0.781    0.789  0.785       95
+2_saturada_ia        0.777    0.791  0.784      110
+---------------------------------------------------
+macro avg            0.806    0.806  0.806      315
+accuracy: 0.806  (254/315)
+
+Generando figuras...
+  guardado Figure_matriz_directo_v8.png
+  guardado Figure_matriz_cadena_v8.png
+  guardado Figure_calibracion_directo_v8.png
+  guardado Figure_calibracion_cadena_v8.png
+  guardado Figure_progresion_v8.png
+  guardado Figure_barrido_T_alpha_v8.png
+  guardado Figure_semillas_cadena_v8.png
+  guardado resultados_v8.json
+  guardado modelopt_v8_cadena.pt  (brazo B, semilla 123)
