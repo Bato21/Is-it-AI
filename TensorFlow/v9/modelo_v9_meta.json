@@ -1,0 +1,21 @@
+{
+  "version": "v9",
+  "framework": "tensorflow",
+  "arquitectura": "MobileNetV3-Small",
+  "clases": [
+    "0_sin_ia",
+    "1_rastro_ia",
+    "2_saturada_ia"
+  ],
+  "entrada": {
+    "alto": 224,
+    "ancho": 224,
+    "canales": 3,
+    "rango": "0-255",
+    "orden": "NHWC"
+  },
+  "preprocesamiento": "ninguno en el cliente: la normalización ImageNet viaja dentro del grafo (include_preprocessing=True)",
+  "salida": "softmax de 3 clases, en el orden de 'clases'",
+  "semilla": 42,
+  "accuracy_test_fotos": 0.961352657004831
+}

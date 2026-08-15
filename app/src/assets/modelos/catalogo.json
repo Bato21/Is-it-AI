@@ -1,0 +1,93 @@
+{
+  "version": "v9",
+  "generado": "export/generar_catalogo.py",
+  "clases": [
+    "0_sin_ia",
+    "1_rastro_ia",
+    "2_saturada_ia"
+  ],
+  "particion": {
+    "creado": "2026-08-15T15:08:41",
+    "version": "v9",
+    "politica": "TEST y VALIDACION son 100% fotos; los renders solo entrenan",
+    "seed": 123,
+    "n_folds": 5,
+    "prop_test": 0.2,
+    "usar_exif": true,
+    "dataset_dir": "dataset",
+    "huella_dataset": "19fe41da5b383a8c",
+    "total": 1337,
+    "total_fotos": 1037,
+    "total_renders": 300,
+    "avisos": []
+  },
+  "nota": "Las métricas son la media entre semillas sobre el TEST DE FOTOS de la v9 (207 fotos de pantalla, ningún render): la accuracy comercial.",
+  "modelos": [
+    {
+      "id": "a-tfjs",
+      "nombre": "Modelo A — MobileNetV3 (TensorFlow.js)",
+      "etiqueta": "A · TF.js",
+      "framework": "TensorFlow / Keras",
+      "arquitectura": "MobileNetV3-Small",
+      "backend": "tfjs",
+      "ruta": "assets/modelos/tfjs_v9/model.json",
+      "ordenEjes": "NHWC",
+      "salida": "softmax",
+      "tamano": 224,
+      "pesoMB": 4.1,
+      "disponible": true,
+      "descripcion": "Fine-tuning en dos fases sobre fotos de pantalla. El más rápido de los tres y el único que corre sobre la GPU del teléfono.",
+      "porQue": "Default del producto: menor latencia por foto y backend WebGL.",
+      "metricas": {
+        "accuracy": 0.9478,
+        "macroF1": 0.9475,
+        "recallClase2": 0.973,
+        "errores02": 6.2
+      }
+    },
+    {
+      "id": "b-onnx",
+      "nombre": "Modelo B — MobileNetV3 (PyTorch → ONNX)",
+      "etiqueta": "B · ONNX",
+      "framework": "PyTorch",
+      "arquitectura": "MobileNetV3-Small",
+      "backend": "onnx",
+      "ruta": "assets/modelos/modelo_b_v9.onnx",
+      "ordenEjes": "NCHW",
+      "salida": "logits",
+      "tamano": 224,
+      "pesoMB": 4.6,
+      "disponible": true,
+      "descripcion": "El espejo de A entrenado en PyTorch: misma partición, mismas vistas aumentadas, misma arquitectura.",
+      "porQue": "Verifica en producción la paridad entre frameworks y sirve de respaldo donde WebGL falla (ONNX corre sobre WASM).",
+      "metricas": {
+        "accuracy": 0.9372,
+        "macroF1": 0.9374,
+        "recallClase2": 0.9378,
+        "errores02": 5.0
+      }
+    },
+    {
+      "id": "c-onnx",
+      "nombre": "Modelo C — EfficientNet-B0 desequilibrado (ONNX)",
+      "etiqueta": "C · Efficient",
+      "framework": "PyTorch",
+      "arquitectura": "EfficientNet-B0",
+      "backend": "onnx",
+      "ruta": "assets/modelos/modelo_c_v9.onnx",
+      "ordenEjes": "NCHW",
+      "salida": "logits",
+      "tamano": 224,
+      "pesoMB": 16.0,
+      "disponible": true,
+      "descripcion": "Otra familia de arquitectura, entrenada con dataset desequilibrado 9:1 · C2_focal_sampler.",
+      "porQue": "Tercer voto de una arquitectura no emparentada: rompe los empates cuando A y B discrepan.",
+      "metricas": {
+        "accuracy": 0.8647,
+        "macroF1": 0.8649,
+        "recallClase2": 0.8198,
+        "errores02": 13.3
+      }
+    }
+  ]
+}

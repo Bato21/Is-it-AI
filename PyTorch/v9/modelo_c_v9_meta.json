@@ -1,0 +1,24 @@
+{
+  "version": "v9",
+  "modelo": "C",
+  "framework": "pytorch",
+  "arquitectura": "EfficientNet-B0",
+  "clases": [
+    "0_sin_ia",
+    "1_rastro_ia",
+    "2_saturada_ia"
+  ],
+  "entrenamiento": "dataset desequilibrado 10:3:1 · C2_focal_sampler",
+  "entrada": {
+    "alto": 224,
+    "ancho": 224,
+    "canales": 3,
+    "rango": "0-255",
+    "orden": "NCHW"
+  },
+  "preprocesamiento": "ninguno en el cliente (Normalizador va dentro del modelo)",
+  "salida": "logits de 3 clases; aplicar softmax en el cliente",
+  "macro_f1_test_fotos": 0.8649424509063918,
+  "recall_clase2_test_fotos": 0.8198198198198199,
+  "accuracy_test_fotos": 0.8647342995169082
+}

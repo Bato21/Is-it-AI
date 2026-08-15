@@ -1,0 +1,102 @@
+==============================================================================
+  MODELO C — EfficientNet-B0 bajo DESEQUILIBRIO DE CLASES
+==============================================================================
+Clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']   ·   dispositivo: cpu
+  caché válido: imgs_224.npy ((1337, 224, 224, 3))
+
+Generando vistas (semilla 999, las MISMAS de los modelos A y B)...
+
+==============================================================================
+  EL DATASET DESEQUILIBRADO
+==============================================================================
+  clase             balanceado  desequilibrado  proporción
+  ----------------------------------------------------------
+  0_sin_ia                1041            1041       100%
+  1_rastro_ia             1044             312        30%
+  2_saturada_ia           1122             111        10%
+  ----------------------------------------------------------
+  vistas totales: 3207 -> 1464   ·   ratio mayoritaria:minoritaria = 9.4 : 1
+  TEST (sin tocar): 207 fotos  {'0_sin_ia': 65, '1_rastro_ia': 68, '2_saturada_ia': 74}
+
+  Un modelo que predijera SIEMPRE la clase mayoritaria sacaría 71.1% de accuracy sobre datos con esta
+  distribución. Ese es el número contra el que hay que leer los resultados de C0.
+
+Pre-computando embeddings (1280-d) con EfficientNet-B0 congelada...
+  (1464, 1280)  (46s)
+
+==============================================================================
+  C0_sin_correccion  —  cross-entropy plana (línea base: no hace nada con el desequilibrio)
+==============================================================================
+  semilla 123   macro_F1=0.7869  recall_clase2=0.6351  accuracy=0.7874  0<->2=20  (308s)
+  semilla 7     macro_F1=0.7914  recall_clase2=0.6486  accuracy=0.7923  0<->2=18  (300s)
+  semilla 42    macro_F1=0.7677  recall_clase2=0.6216  accuracy=0.7681  0<->2=21  (323s)
+
+==============================================================================
+  C1_class_weights  —  cross-entropy ponderada por 1/frecuencia de clase
+==============================================================================
+  semilla 123   macro_F1=0.8406  recall_clase2=0.7297  accuracy=0.8406  0<->2=18  (346s)
+  semilla 7     macro_F1=0.8406  recall_clase2=0.7432  accuracy=0.8406  0<->2=16  (113s)
+  semilla 42    macro_F1=0.8311  recall_clase2=0.7297  accuracy=0.8309  0<->2=18  (57s)
+
+==============================================================================
+  C2_focal_sampler  —  Focal Loss (?=2, ?=1/frec) + WeightedRandomSampler
+==============================================================================
+  semilla 123   macro_F1=0.8646  recall_clase2=0.7973  accuracy=0.8647  0<->2=12  (58s)
+  semilla 7     macro_F1=0.8652  recall_clase2=0.8378  accuracy=0.8647  0<->2=15  (63s)
+  semilla 42    macro_F1=0.8650  recall_clase2=0.8243  accuracy=0.8647  0<->2=13  (60s)
+
+==============================================================================
+  COMPARACIÓN — por qué la ACCURACY es la métrica equivocada acá
+==============================================================================
+  estrategia            macro F1  recall c2  accuracy  AUC macro   0<->2
+  ------------------------------------------------------------------------
+  C0_sin_correccion       0.7820     0.6351    0.7826     0.9609    19.7
+  C1_class_weights        0.8374     0.7342    0.8374     0.9662    17.3
+  C2_focal_sampler        0.8649     0.8198    0.8647     0.9649    13.3
+  ------------------------------------------------------------------------
+
+  Línea base C0 (sin corrección):
+    accuracy      = 0.7826   <- el número que uno reportaría sin pensar
+    recall clase 2= 0.6351   <- lo que el producto realmente necesita
+    macro F1      = 0.7820
+
+  DIAGNÓSTICO (c): el desequilibrio 10:3:1 NO alcanzó a hundir el recall de la
+  clase 2. Lectura honesta: EfficientNet-B0 preentrenada extrae rasgos lo
+  bastante separables como para que las pocas vistas de la clase rara alcancen.
+  Para reproducir el fracaso clásico haría falta un desequilibrio más extremo
+  (ej. 2% de la clase 2) o un backbone sin preentrenar.
+
+  C1_class_weights vs C0:  macro_F1 +0.0555   recall_c2 +0.0991   accuracy +0.0548
+
+  C2_focal_sampler vs C0:  macro_F1 +0.0829   recall_c2 +0.1847   accuracy +0.0821
+
+==============================================================================
+  ESTRATEGIA GANADORA POR MACRO-F1: C2_focal_sampler  (semilla 7)
+==============================================================================
+  Se elige por macro F1 y no por accuracy porque macro F1 pesa igual a las tres
+  clases: es la métrica que NO se deja engañar por el desequilibrio.
+  Este es el modelo que se exporta a ONNX y se sube a la app como 'Modelo C'.
+
+Matriz ACUMULADA — C2_focal_sampler sobre el test de fotos:
+[[168   3  24]
+ [ 12 187   5]
+ [ 16  24 182]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.857    0.862  0.859      195
+1_rastro_ia          0.874    0.917  0.895      204
+2_saturada_ia        0.863    0.820  0.841      222
+---------------------------------------------------
+macro avg            0.865    0.866  0.865      621
+accuracy: 0.865  (537/621)
+
+Generando figuras...
+  guardado Figure_matriz_modelo_c_v9.png
+  guardado Figure_calibracion_modelo_c_v9.png
+  guardado Figure_roc_modelo_c_v9.png
+  guardado Figure_estrategias_desequilibrio_v9.png
+  guardado resultados_modelo_c_v9.json
+  guardado modelopt_v9_modelo_c.pt
+  guardado modelo_c_v9_meta.json
+
+Tiempo total: 28.7 min

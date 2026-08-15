@@ -1,0 +1,143 @@
+.centrado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: var(--ion-color-medium);
+}
+
+.pista {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+/* --- Visor --- */
+.visor {
+  position: relative;
+
+  &.oculto { display: none; }
+}
+
+/* El <video> es solo la fuente del canvas; nunca se muestra.
+   display:none lo pausaría en algunos navegadores móviles, así que se lo saca de la vista
+   con posicionamiento en lugar de ocultarlo. */
+.fuente {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lienzo {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  background: #000;
+}
+
+.metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+/* --- Acciones --- */
+.acciones {
+  margin-top: 12px;
+}
+
+.acciones-secundarias {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* --- Resultado --- */
+.resultado {
+  border-left: 6px solid var(--ion-color-primary);
+}
+
+.detalle {
+  margin-top: 0;
+}
+
+.barras {
+  margin: 16px 0 8px;
+}
+
+.barra-fila {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr 3.2rem;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+.barra-nombre {
+  color: var(--ion-color-medium-shade);
+}
+
+.barra-pista {
+  height: 14px;
+  background: var(--ion-color-light-shade, #e6e6e6);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.barra-relleno {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 220ms ease-out;
+}
+
+.barra-valor {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.tecnico {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  line-height: 1.4;
+}
+
+.miniatura img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-light-shade, #ddd);
+}
+
+/* --- Comparación de los 3 --- */
+.fila-modelo {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 3rem 4rem;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--ion-color-light-shade, #eee);
+}
+
+.fila-clase { font-weight: 600; }
+
+.fila-conf,
+.fila-ms {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ion-color-medium);
+}

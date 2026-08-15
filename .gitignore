@@ -55,3 +55,29 @@ documentacion/sin_clasificar/*
 !documentacion/sin_clasificar/.gitkeep
 documentacion/presentaciones_fuente/*
 !documentacion/presentaciones_fuente/.gitkeep
+
+# --- v9 ---
+# Caché de imágenes decodificadas a 224x224 (200 MB, regenerable en ~3 min).
+# Lo comparten TensorFlow, PyTorch y el modelo C; se reconstruye solo si cambia el dataset.
+dataset_cache/
+
+# Artefactos intermedios de exportación (SavedModel temporal antes de TFJS/ONNX).
+TensorFlow/export_tfjs/saved_model_*/
+export/.tmp/
+
+# App Ionic: dependencias y build. Los MODELOS de src/assets/modelos/ SÍ van a git
+# (son el producto: 25 MB entre los tres), pero lo regenerable no.
+app/node_modules/
+app/www/
+app/.angular/
+app/platforms/
+app/plugins/
+# Los binarios WASM de ONNX Runtime (34 MB) se copian desde node_modules en cada
+# `npm install` (hook postinstall -> scripts/copiar-ort.mjs). Versionarlos sería guardar
+# en git una copia de una dependencia, y encima quedaría desincronizada al subir la versión
+# del paquete.
+app/src/assets/ort/
+
+# Metadatos de carpeta que genera el Explorador de Windows.
+desktop.ini
+Thumbs.db

@@ -1,0 +1,44 @@
+{
+  "name": "is-it-ai-app",
+  "version": "9.0.0",
+  "description": "Detector de huella de IA en diapositivas — Ionic 8 + Angular 18 + TensorFlow.js + ONNX Runtime Web + OpenCV.js",
+  "author": "Frameworks de IA — UDD",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --port 8100",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "lint": "ng lint",
+    "ionic:serve": "ng serve --port 8100 --host 0.0.0.0",
+    "copiar:ort": "node scripts/copiar-ort.mjs",
+    "postinstall": "node scripts/copiar-ort.mjs"
+  },
+  "dependencies": {
+    "@angular/common": "18.2.14",
+    "@angular/core": "18.2.14",
+    "@angular/forms": "18.2.14",
+    "@angular/platform-browser": "18.2.14",
+    "@angular/platform-browser-dynamic": "18.2.14",
+    "@angular/router": "18.2.14",
+    "@ionic/angular": "8.4.1",
+    "@tensorflow/tfjs": "4.22.0",
+    "ionicons": "7.4.0",
+    "onnxruntime-web": "1.20.1",
+    "rxjs": "7.8.1",
+    "tslib": "2.8.1",
+    "zone.js": "0.14.10"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "18.2.21",
+    "@angular/cli": "18.2.21",
+    "@angular/compiler": "18.2.14",
+    "@angular/compiler-cli": "18.2.14",
+    "@ionic/angular-toolkit": "11.0.1",
+    "typescript": "5.5.4"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

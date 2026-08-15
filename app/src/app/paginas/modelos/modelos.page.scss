@@ -1,0 +1,78 @@
+.intro {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+ion-card.activo {
+  border-left: 6px solid var(--ion-color-success);
+}
+
+.porque {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium-shade);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+
+  ion-icon { flex-shrink: 0; margin-top: 2px; }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+/* Rejilla de métricas: 4 columnas en pantallas normales, 2 en las angostas. */
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0 4px;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .metricas { grid-template-columns: repeat(2, 1fr); }
+}
+
+.metrica {
+  background: var(--ion-color-light, #f4f5f8);
+  border-radius: 8px;
+  padding: 8px 4px;
+
+  .valor {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nombre {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+.nota-metricas {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 8px;
+}
+
+.botones { margin-top: 12px; }
+
+.botones-sec {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.explicacion {
+  p { font-size: 0.88rem; line-height: 1.5; }
+}

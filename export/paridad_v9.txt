@@ -1,0 +1,78 @@
+Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=Paridad Python <-> navegador (TensorFlow.js) — modelo A v9
+=
+Entrada: patron sintetico x[i,j,c] = (i*7 + j*13 + c*29) % 256, 224x224x3.
+Se usa un patron generado y no una imagen para que la diferencia medida sea
+atribuible al MODELO y no al decodificador de JPEG de cada lado.
+
+Preprocesamiento en ambos lados: 0-255 crudo, SIN normalizar (la normalizacion
+ImageNet viaja dentro del grafo). Backend tf.js: CPU.
+
+  Python (.keras, TF 2.16.2)  : [0.13510000705718994, 0.8648999929428101, 0.0]
+  Navegador (tf.js, GraphModel)   : [0.1351, 0.8649, 0.0]
+  max |diferencia|                : 1.55e-06   (criterio: < 0.02 -> OK)
+  clase predicha                  : 1 en ambos
+
+Nota: la exportacion desactiva el pase 'remap' de Grappler para evitar la op
+_FusedHardSwish, que ningun backend de tf.js implementa. Esta verificacion es la
+que confirma que ese cambio de grafo no altero el resultado.

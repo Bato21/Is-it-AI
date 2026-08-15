@@ -1,0 +1,14 @@
+/* Estilos globales de Ionic. El orden importa: core primero, luego estructura y utilidades. */
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Solo las utilidades que la app usa. float-elements.css queda fuera a propósito: sus
+   reglas RTL (:dir, :host-context) disparan 20 warnings del optimizador de CSS y la app
+   no usa ninguna clase de float. */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";

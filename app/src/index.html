@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Is it AI? — Detector de huella de IA en diapositivas</title>
+  <base href="/" />
+
+  <meta name="viewport"
+        content="viewport-fit=cover, width=device-width, initial-scale=1.0,
+                 minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#1F3864" />
+
+  <!--
+    OpenCV.js 4.x — build WebAssembly desde el CDN oficial.
+
+    Se carga ASÍNCRONO y avisa por evento cuando el módulo WASM terminó de inicializar.
+    Ese aviso es imprescindible: `cv` existe como objeto mucho antes de que su runtime
+    esté listo, así que llamar a cv.imread() apenas carga el script falla con errores
+    incomprensibles ("cv.Mat is not a constructor"). El servicio OpenCvService se suscribe
+    a este evento y no toca nada hasta recibirlo.
+
+    Alternativa OFFLINE (recomendada para la demo del examen, por si la sala no tiene red):
+      1. descargar https://docs.opencv.org/4.x/opencv.js  a  src/assets/opencv.js
+      2. reemplazar el <script async src="https://..."> por:
+         <script async src="assets/opencv.js" onload="onOpenCvReady()"></script>
+  -->
+  <script>
+    window._opencvReady = false;
+    window.onOpenCvReady = function () {
+      window._opencvReady = true;
+      window.dispatchEvent(new Event('opencv-ready'));
+      console.log('[OpenCV] listo —', cv.getBuildInformation().split('\n')[0]);
+    };
+  </script>
+  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

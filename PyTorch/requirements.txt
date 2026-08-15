@@ -26,3 +26,18 @@ optuna==4.9.0
 # (Figure_optuna_importancia_v6.png). Sin él v6 NO se rompe (try/except) pero omite esa
 # figura. Arrastra scipy como dependencia. Verificado con numpy 2.4.4.
 scikit-learn==1.9.0
+# --- v9: exportación a ONNX (PyTorch/v9 -> app Ionic) ---
+# torch.onnx.export ya viene con torch; estos dos son para VERIFICAR la exportación:
+#   onnx        -> checker.check_model(): valida que el grafo esté bien formado.
+#   onnxruntime -> corre el .onnx y permite comparar sus salidas contra las de PyTorch
+#                  (export/exportar_onnx.py aborta si difieren más de 1e-4).
+onnx==1.22.0
+onnxruntime==1.28.0
+# CUIDADO AL INSTALARLOS: `pip install onnx onnxruntime` SUBE numpy a 2.x y ROMPE este venv.
+# El síntoma es "RuntimeError: Numpy is not available" al llamar torch.from_numpy(), porque
+# torch 2.2.2 se compiló contra la ABI de numpy 1.x. Ya pasó una vez en este repo.
+# Si ocurre, la reparación es una línea:
+#     pip install "numpy==1.26.4"
+# La alternativa de fondo sería subir a torch >= 2.3 (que sí soporta numpy 2.x), pero eso
+# cambiaría el entorno con el que se entrenaron v1-v9 y sus resultados dejarían de ser
+# reproducibles. Se prefiere fijar numpy.

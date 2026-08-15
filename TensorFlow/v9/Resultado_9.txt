@@ -1,0 +1,169 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Partición v9 (huella 19fe41da5b383a8c) — política: TEST y VALIDACION son 100% fotos; los renders solo entrenan
+  caché válido: imgs_224.npy ((1337, 224, 224, 3))
+  desarrollo  : 1069 imgs  (830 fotos / 239 renders)  {'0_sin_ia': 347, '1_rastro_ia': 348, '2_saturada_ia': 374}
+  test        :  207 imgs  (207 fotos / 0 renders)  {'0_sin_ia': 65, '1_rastro_ia': 68, '2_saturada_ia': 74}
+  test_render :   61 imgs  (0 fotos / 61 renders)  {'0_sin_ia': 22, '1_rastro_ia': 19, '2_saturada_ia': 20}
+
+Generando vistas de desarrollo (1 limpia + 2 aumentadas, semilla 999)...
+    vistas 600/3207
+    vistas 1200/3207
+    vistas 1800/3207
+    vistas 2400/3207
+    vistas 3000/3207
+  (3207, 224, 224, 3)  (57s)
+
+Hiperparámetros CONGELADOS de la v7 (elegidos por CV, sin ver el test):
+  {'n_capas': 2, 'units': 64, 'dropout': 0.2, 'optimizer': 'rmsprop', 'lr': 0.005897305857047367}   ·   épocas de la cabeza: 16
+Fine-tuning: últimas 12 capas · lr=1e-05 · 4 épocas · BatchNorm congeladas
+
+Pre-computando embeddings (576-d) con el backbone congelado...
+  desarrollo (3207, 576)  (35s)
+
+==============================================================================
+  FASE 1 — BACKBONE CONGELADO  ·  5 semillas
+==============================================================================
+  semilla 123     test: acc=0.9082 0<->2=10   test_render: acc=0.8361 0<->2=1
+  semilla 7       test: acc=0.9179 0<->2=9   test_render: acc=0.8852 0<->2=0
+  semilla 42      test: acc=0.9469 0<->2=5   test_render: acc=0.8197 0<->2=3
+  semilla 2024    test: acc=0.9275 0<->2=6   test_render: acc=0.8689 0<->2=1
+  semilla 31      test: acc=0.9275 0<->2=6   test_render: acc=0.8033 0<->2=3
+
+==============================================================================
+  FASE 2 — FINE-TUNING PROGRESIVO  ·  5 semillas
+==============================================================================
+  semilla 123     test: acc=0.9372 0<->2=9   test_render: acc=0.8852 0<->2=2   (122s, 10 capas entrenables)
+  semilla 7       test: acc=0.9469 0<->2=7   test_render: acc=0.8852 0<->2=0   (27s, 10 capas entrenables)
+  semilla 42      test: acc=0.9614 0<->2=3   test_render: acc=0.8361 0<->2=3   (27s, 10 capas entrenables)
+  semilla 2024    test: acc=0.9420 0<->2=6   test_render: acc=0.8689 0<->2=1   (27s, 10 capas entrenables)
+  semilla 31      test: acc=0.9517 0<->2=6   test_render: acc=0.8361 0<->2=2   (26s, 10 capas entrenables)
+
+==================================================================
+  FASE 1 — congelado · TEST DE FOTOS (accuracy comercial)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ?     0.9256   0.0128   0.9082   0.9469
+  F1 macro              ?     0.9234   0.0142   0.9030   0.9468
+  recall clase 2        ?     0.9676   0.0183   0.9459   1.0000
+  errores 0<->2         ?     7.2000   1.9391   5.0000  10.0000
+    de los cuales 2->0  ?     2.0000   1.4142   0.0000   4.0000
+    de los cuales 0->2  ?     5.2000   2.8566   1.0000   9.0000
+  QWK (ordinal)         ?     0.8655   0.0327   0.8159   0.9085
+  MAE ordinal           ?     0.1092   0.0217   0.0773   0.1401
+  AUC macro (OvR)       ?     0.9941   0.0014   0.9927   0.9967
+  AUC micro (OvR)       ?     0.9906   0.0021   0.9866   0.9929
+  ECE (calibración)     ?     0.0421   0.0166   0.0203   0.0691
+  -------------------------------------------------------------
+  ? = más alto es mejor   ·   ? = más bajo es mejor
+
+==================================================================
+  FASE 2 — fine-tuning · TEST DE FOTOS (accuracy comercial)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ?     0.9478   0.0083   0.9372   0.9614
+  F1 macro              ?     0.9475   0.0085   0.9365   0.9611
+  recall clase 2        ?     0.9730   0.0085   0.9595   0.9865
+  errores 0<->2         ?     6.2000   1.9391   3.0000   9.0000
+    de los cuales 2->0  ?     1.8000   0.7483   1.0000   3.0000
+    de los cuales 0->2  ?     4.4000   1.3565   2.0000   6.0000
+  QWK (ordinal)         ?     0.8948   0.0270   0.8553   0.9394
+  MAE ordinal           ?     0.0821   0.0173   0.0531   0.1063
+  AUC macro (OvR)       ?     0.9960   0.0009   0.9954   0.9977
+  AUC micro (OvR)       ?     0.9959   0.0008   0.9954   0.9975
+  ECE (calibración)     ?     0.0294   0.0082   0.0215   0.0440
+  -------------------------------------------------------------
+  ? = más alto es mejor   ·   ? = más bajo es mejor
+
+==============================================================================
+  COMPARACIÓN A/B sobre el TEST DE FOTOS  ·  semillas pareadas [123, 7, 42, 2024, 31]
+==============================================================================
+  métrica                   F1 congelado  F2 finetune     F2-F1  veredicto
+  ----------------------------------------------------------------------------
+  accuracy                        0.9256       0.9478   +0.0222  GANA FINETUNE
+  F1 macro                        0.9234       0.9475   +0.0242  GANA FINETUNE
+  recall clase 2                  0.9676       0.9730   +0.0054  ruido
+  errores 0<->2                   7.2000       6.2000   -1.0000  ruido
+    de los cuales 2->0            2.0000       1.8000   -0.2000  ruido
+    de los cuales 0->2            5.2000       4.4000   -0.8000  ruido
+  QWK (ordinal)                   0.8655       0.8948   +0.0294  ruido
+  MAE ordinal                     0.1092       0.0821   -0.0271  ruido
+  AUC macro (OvR)                 0.9941       0.9960   +0.0019  ruido
+  AUC micro (OvR)                 0.9906       0.9959   +0.0053  GANA FINETUNE
+  ECE (calibración)               0.0421       0.0294   -0.0127  ruido
+  ----------------------------------------------------------------------------
+  'ruido' = |F2-F1| menor o igual que la suma de los desvíos de ambas fases.
+
+==============================================================================
+  BRECHA DE DOMINIO — el mismo modelo sobre fotos y sobre renders
+==============================================================================
+                       TEST fotos  TEST renders    brecha
+  --------------------------------------------------------
+  FASE 1 congelado         0.9256        0.8426   -0.0830
+  FASE 2 finetune          0.9478        0.8623   -0.0855
+  --------------------------------------------------------
+  brecha = accuracy(renders) - accuracy(fotos). El SIGNO es el que informa:
+    brecha > 0 : acierta más sobre renders. Es la ilusión de SUGERENCIAS §2 —
+                 parte de la accuracy de v1-v8 venía del dominio fácil.
+    brecha < 0 : acierta más sobre FOTOS. El dominio difícil pasó a ser el render,
+                 que es lo esperable cuando el 78% del entrenamiento son fotos y
+                 la augmentation además disfraza de foto a los renders.
+
+  Fase 1: brecha = -0.0830  (a favor de las fotos, |brecha| = 0.0830)
+
+  Fase 2: brecha = -0.0855  (a favor de las fotos, |brecha| = 0.0855)
+
+  El fine-tuning SEPARÓ los dos dominios: |brecha| subió 0.0026 (0.0830 -> 0.0855).
+  Lectura: el fine-tuning se especializó en el dominio mayoritario (fotos).
+  Para el producto eso es CORRECTO —la app solo ve fotos— pero conviene
+  decirlo explícitamente: el modelo v9 ya no es un buen clasificador de PDFs.
+
+==============================================================================
+  RIESGO DE SUGERENCIAS §4 — ¿el moiré empuja las diapos humanas hacia 'saturada'?
+==============================================================================
+  fase1: 0->2 = 5.2 casos   ·   2->0 = 2.0 casos   ·   total extremos = 7.2
+  fase2: 0->2 = 4.4 casos   ·   2->0 = 1.8 casos   ·   total extremos = 6.2
+  (0->2 es el falso positivo del producto: una diapo humana acusada de IA.
+   Si sube al pasar a fotos, la simulación de moiré del augmentation no alcanzó
+   y hay que subir su intensidad en documentacion/aug_pantalla.py.)
+
+Matriz ACUMULADA — fase1 sobre TEST DE FOTOS:
+[[280  19  26]
+ [ 14 320   6]
+ [ 10   2 358]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.921    0.862  0.890      325
+1_rastro_ia          0.938    0.941  0.940      340
+2_saturada_ia        0.918    0.968  0.942      370
+---------------------------------------------------
+macro avg            0.926    0.923  0.924     1035
+accuracy: 0.926  (958/1035)
+
+Matriz ACUMULADA — fase2 sobre TEST DE FOTOS:
+[[300   3  22]
+ [ 12 321   7]
+ [  9   1 360]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.935    0.923  0.929      325
+1_rastro_ia          0.988    0.944  0.965      340
+2_saturada_ia        0.925    0.973  0.949      370
+---------------------------------------------------
+macro avg            0.949    0.947  0.948     1035
+accuracy: 0.948  (981/1035)
+
+Generando figuras...
+  guardado Figure_matriz_fase1_v9.png
+  guardado Figure_matriz_fase2_v9.png
+  guardado Figure_calibracion_v9.png
+  guardado Figure_roc_v9.png
+  guardado Figure_semillas_v9.png
+  guardado Figure_brecha_dominio_v9.png
+  guardado resultados_v9.json
+  guardado modelotf_v9_finetune.keras  (fase 2, semilla 42)
+  guardado modelo_v9_meta.json
+
+Tiempo total: 6.6 min

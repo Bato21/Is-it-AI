@@ -1,10 +1,37 @@
-# Dependencias SOLO para exportar el modelo a TensorFlow.js.
+# Dependencias SOLO para exportar el modelo A a TensorFlow.js.
 #
-# IMPORTANTE: tensorflowjs fija sus propias versiones de TensorFlow. Instalarlo en un
-# venv APARTE, NO en TensorFlow/.venv (rompería las versiones del entorno de entrenamiento).
+# IMPORTANTE: instalar en un venv APARTE, NUNCA en TensorFlow/.venv. tensorflowjs fija sus
+# propias versiones de TensorFlow, y cambiarlas en el entorno de entrenamiento haría que los
+# resultados de la v9 dejen de ser reproducibles.
 #
 #   python -m venv TensorFlow/export_tfjs/.venv
-#   source TensorFlow/export_tfjs/.venv/bin/activate    # Windows: .venv\Scripts\activate
+#   TensorFlow/export_tfjs/.venv/Scripts/activate      # Linux/Mac: source .../bin/activate
 #   pip install -r TensorFlow/export_tfjs/requirements_tfjs.txt
 #   python TensorFlow/export_tfjs/exportar_tfjs.py
-tensorflowjs
+#
+# POR QUÉ ESTE ARCHIVO TIENE PINES Y UN --no-deps (esto NO es paranoia, pasó acá):
+#
+#   `pip install tensorflowjs` a secas NO TERMINA. tensorflowjs depende de flax, flax de
+#   optax, y el resolutor entra en backtracking probando decenas de versiones de cada uno
+#   (se lo dejó 20 minutos descargando metadata de flax 0.8.2, 0.8.1, 0.8.0, 0.7.5...).
+#
+#   La solución es no instalar ese árbol: la conversión de un SavedModel de CNN no ejecuta
+#   NADA de jax ni de flax — solo los importa porque están en el __init__ del paquete.
+#   Se instala tensorflowjs con --no-deps y exportar_tfjs.py registra stubs para esos
+#   módulos (ver el encabezado de ese script).
+#
+# Receta exacta, en este orden:
+#
+#   pip install tensorflow==2.16.2
+#   pip install tf_keras~=2.16.0
+#   pip install --no-deps tensorflowjs==4.22.0
+#
+# tf_keras es una dependencia REAL (tensorflowjs la importa de verdad para leer modelos
+# Keras), así que esa sí se instala normalmente. TF se fija en 2.16.2 para que coincida con
+# la versión que entrenó el modelo y no haya sorpresas al deserializar el .keras.
+
+tensorflow==2.16.2
+tf_keras~=2.16.0
+# tensorflowjs: instalar con --no-deps (ver arriba). Se deja comentado para que
+# `pip install -r` no lo arrastre con dependencias.
+#   pip install --no-deps tensorflowjs==4.22.0

@@ -1,0 +1,144 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/camara"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Modelos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <ion-note color="medium" class="intro">
+    Los tres resuelven el mismo problema, pero difieren en framework, arquitectura y forma de
+    entrenamiento. Elegir uno es elegir un compromiso, no una preferencia.
+  </ion-note>
+
+  @if (!hayMetricas()) {
+    <ion-card color="warning">
+      <ion-card-content>
+        <ion-icon name="information-circle-outline"></ion-icon>
+        No se encontró <code>assets/modelos/catalogo.json</code>. Se está mostrando el
+        catálogo por defecto, sin métricas. Generalo con
+        <code>python export/exportar_modelos.py</code>.
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @for (m of modelos(); track m.id) {
+    <ion-card [class.activo]="esActivo(m)">
+      <ion-card-header>
+        <ion-card-subtitle>
+          {{ m.framework }} · {{ m.arquitectura }}
+          @if (esActivo(m)) {
+            <ion-badge color="success">activo</ion-badge>
+          }
+        </ion-card-subtitle>
+        <ion-card-title>{{ m.nombre }}</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p>{{ m.descripcion }}</p>
+
+        <!-- El "por qué" de cada modelo es lo que convierte el selector en una decisión
+             informada en vez de una ruleta. -->
+        <p class="porque">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <em>{{ m.porQue }}</em>
+        </p>
+
+        <div class="chips">
+          <ion-chip outline="true" color="medium">
+            <ion-icon name="flash-outline"></ion-icon>
+            <ion-label>{{ m.backend === 'tfjs' ? 'TensorFlow.js / WebGL' : 'ONNX Runtime / WASM' }}</ion-label>
+          </ion-chip>
+          <ion-chip outline="true" color="medium">
+            <ion-icon name="scale-outline"></ion-icon>
+            <ion-label>~{{ m.pesoMB }} MB</ion-label>
+          </ion-chip>
+          <ion-chip outline="true" color="medium">
+            <ion-label>{{ m.ordenEjes }} · {{ m.tamano }}px</ion-label>
+          </ion-chip>
+          @if (estaCargado(m)) {
+            <ion-chip outline="true" color="success">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <ion-label>en memoria</ion-label>
+            </ion-chip>
+          }
+        </div>
+
+        <!-- Métricas medidas sobre el TEST DE FOTOS de la v9 (207 fotos de cámara).
+             No es la accuracy de laboratorio sobre renders: es la accuracy comercial. -->
+        @if (m.metricas; as k) {
+          <div class="metricas">
+            <div class="metrica">
+              <span class="valor">{{ porcentaje(k.accuracy) }}</span>
+              <span class="nombre">accuracy</span>
+            </div>
+            <div class="metrica">
+              <span class="valor">{{ porcentaje(k.macroF1) }}</span>
+              <span class="nombre">F1 macro</span>
+            </div>
+            <div class="metrica">
+              <span class="valor">{{ porcentaje(k.recallClase2) }}</span>
+              <span class="nombre">recall clase 2</span>
+            </div>
+            <div class="metrica">
+              <span class="valor">{{ k.errores02 }}</span>
+              <span class="nombre">errores 0↔2</span>
+            </div>
+          </div>
+          <ion-note color="medium" class="nota-metricas">
+            Medidas sobre el test de la v9: 207 fotos de pantalla, ningún render.
+          </ion-note>
+        }
+
+        <div class="botones">
+          <ion-button expand="block" [disabled]="esActivo(m)" (click)="seleccionar(m)">
+            <ion-icon slot="start" name="layers-outline"></ion-icon>
+            {{ esActivo(m) ? 'Ya está activo' : 'Usar este modelo' }}
+          </ion-button>
+
+          <div class="botones-sec">
+            @if (!estaCargado(m)) {
+              <ion-button fill="outline" size="small"
+                          [disabled]="cargando() !== null"
+                          (click)="precargar(m)">
+                @if (cargando() === m.id) {
+                  <ion-spinner name="crescent" slot="start"></ion-spinner>
+                } @else {
+                  <ion-icon slot="start" name="cloud-download-outline"></ion-icon>
+                }
+                Precargar
+              </ion-button>
+            } @else {
+              <ion-button fill="clear" size="small" color="medium" (click)="liberar(m)">
+                <ion-icon slot="start" name="trash-outline"></ion-icon>
+                Liberar memoria
+              </ion-button>
+            }
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  <ion-card class="explicacion">
+    <ion-card-header>
+      <ion-card-title>¿Por qué tres modelos?</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        Porque el producto tiene que sobrevivir a que el modelo cambie. La app no sabe qué
+        modelo está corriendo: le pide una predicción a una interfaz y recibe probabilidades.
+        Agregar un cuarto modelo es agregar un archivo y una entrada en el catálogo — cero
+        líneas de la aplicación.
+      </p>
+      <p>
+        Y porque tres opiniones independientes valen más que una. En la pantalla de cámara,
+        <strong>Comparar los 3</strong> corre los tres sobre la misma foto: si coinciden, la
+        respuesta es sólida; si discrepan, la diapositiva es ambigua y conviene mirarla a mano.
+      </p>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

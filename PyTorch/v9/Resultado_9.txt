@@ -1,0 +1,156 @@
+Orden de clases: ['0_sin_ia', '1_rastro_ia', '2_saturada_ia']
+
+Partición v9 (huella 19fe41da5b383a8c) — política: TEST y VALIDACION son 100% fotos; los renders solo entrenan
+Dispositivo: cpu
+  caché válido: imgs_224.npy ((1337, 224, 224, 3))
+  desarrollo  : 1069 imgs  (830 fotos / 239 renders)  {'0_sin_ia': 347, '1_rastro_ia': 348, '2_saturada_ia': 374}
+  test        :  207 imgs  (207 fotos / 0 renders)  {'0_sin_ia': 65, '1_rastro_ia': 68, '2_saturada_ia': 74}
+  test_render :   61 imgs  (0 fotos / 61 renders)  {'0_sin_ia': 22, '1_rastro_ia': 19, '2_saturada_ia': 20}
+
+Generando vistas de desarrollo (1 limpia + 2 aumentadas, semilla 999 — LAS MISMAS que TensorFlow)...
+    vistas 600/3207
+    vistas 1200/3207
+    vistas 1800/3207
+    vistas 2400/3207
+    vistas 3000/3207
+  (3207, 224, 224, 3)  (10s)
+
+Hiperparámetros CONGELADOS de PyTorch/v7 (elegidos por CV, sin ver el test):
+  {'n_capas': 2, 'units': 256, 'dropout': 0.30000000000000004, 'optimizer': 'adam', 'lr': 0.00310263119168588}   ·   épocas de la cabeza: 11
+Fine-tuning: features[11:] · lr=1e-05 · 4 épocas · BatchNorm en eval()
+
+Pre-computando embeddings (576-d) con el backbone congelado...
+  desarrollo (3207, 576)  (6s)
+
+==============================================================================
+  FASE 1 — BACKBONE CONGELADO  ·  5 semillas
+==============================================================================
+  semilla 123     test: acc=0.9130 0<->2=4   test_render: acc=0.7869 0<->2=3
+  semilla 7       test: acc=0.9130 0<->2=6   test_render: acc=0.8033 0<->2=3
+  semilla 42      test: acc=0.9324 0<->2=7   test_render: acc=0.8033 0<->2=3
+  semilla 2024    test: acc=0.9372 0<->2=5   test_render: acc=0.8361 0<->2=3
+  semilla 31      test: acc=0.9082 0<->2=6   test_render: acc=0.8361 0<->2=3
+
+==============================================================================
+  FASE 2 — FINE-TUNING PROGRESIVO  ·  5 semillas
+==============================================================================
+  semilla 123     test: acc=0.9372 0<->2=3   test_render: acc=0.8525 0<->2=2   (49s, 346896/927008 params entrenables del backbone)
+  semilla 7       test: acc=0.9420 0<->2=6   test_render: acc=0.8525 0<->2=3   (48s, 346896/927008 params entrenables del backbone)
+  semilla 42      test: acc=0.9372 0<->2=5   test_render: acc=0.8197 0<->2=3   (48s, 346896/927008 params entrenables del backbone)
+  semilla 2024    test: acc=0.9372 0<->2=6   test_render: acc=0.8197 0<->2=3   (48s, 346896/927008 params entrenables del backbone)
+  semilla 31      test: acc=0.9324 0<->2=5   test_render: acc=0.8361 0<->2=3   (193s, 346896/927008 params entrenables del backbone)
+
+==================================================================
+  FASE 1 — congelado · TEST DE FOTOS (accuracy comercial)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ?     0.9208   0.0117   0.9082   0.9372
+  F1 macro              ?     0.9205   0.0119   0.9081   0.9372
+  recall clase 2        ?     0.9216   0.0335   0.8784   0.9730
+  errores 0<->2         ?     5.6000   1.0198   4.0000   7.0000
+    de los cuales 2->0  ?     1.4000   0.8000   0.0000   2.0000
+    de los cuales 0->2  ?     4.2000   0.9798   3.0000   6.0000
+  QWK (ordinal)         ?     0.8808   0.0127   0.8682   0.8968
+  MAE ordinal           ?     0.1063   0.0118   0.0870   0.1208
+  AUC macro (OvR)       ?     0.9898   0.0021   0.9872   0.9923
+  AUC micro (OvR)       ?     0.9883   0.0029   0.9842   0.9909
+  ECE (calibración)     ?     0.0452   0.0053   0.0352   0.0509
+  -------------------------------------------------------------
+  ? = más alto es mejor   ·   ? = más bajo es mejor
+
+==================================================================
+  FASE 2 — fine-tuning · TEST DE FOTOS (accuracy comercial)  ·  5 semillas  ·  media ± desvío
+==================================================================
+  métrica                      media     ±std      mín      máx
+  -------------------------------------------------------------
+  accuracy              ?     0.9372   0.0031   0.9324   0.9420
+  F1 macro              ?     0.9374   0.0031   0.9323   0.9420
+  recall clase 2        ?     0.9378   0.0108   0.9189   0.9459
+  errores 0<->2         ?     5.0000   1.0954   3.0000   6.0000
+    de los cuales 2->0  ?     1.2000   0.7483   0.0000   2.0000
+    de los cuales 0->2  ?     3.8000   0.4000   3.0000   4.0000
+  QWK (ordinal)         ?     0.8993   0.0111   0.8893   0.9205
+  MAE ordinal           ?     0.0870   0.0053   0.0773   0.0918
+  AUC macro (OvR)       ?     0.9924   0.0016   0.9899   0.9945
+  AUC micro (OvR)       ?     0.9921   0.0017   0.9895   0.9944
+  ECE (calibración)     ?     0.0375   0.0052   0.0273   0.0418
+  -------------------------------------------------------------
+  ? = más alto es mejor   ·   ? = más bajo es mejor
+
+==============================================================================
+  COMPARACIÓN A/B sobre el TEST DE FOTOS  ·  semillas pareadas [123, 7, 42, 2024, 31]
+==============================================================================
+  métrica                   F1 congelado  F2 finetune     F2-F1  veredicto
+  ----------------------------------------------------------------------------
+  accuracy                        0.9208       0.9372   +0.0164  GANA FINETUNE
+  F1 macro                        0.9205       0.9374   +0.0169  GANA FINETUNE
+  recall clase 2                  0.9216       0.9378   +0.0162  ruido
+  errores 0<->2                   5.6000       5.0000   -0.6000  ruido
+    de los cuales 2->0            1.4000       1.2000   -0.2000  ruido
+    de los cuales 0->2            4.2000       3.8000   -0.4000  ruido
+  QWK (ordinal)                   0.8808       0.8993   +0.0185  ruido
+  MAE ordinal                     0.1063       0.0870   -0.0193  GANA FINETUNE
+  AUC macro (OvR)                 0.9898       0.9924   +0.0026  ruido
+  AUC micro (OvR)                 0.9883       0.9921   +0.0037  ruido
+  ECE (calibración)               0.0452       0.0375   -0.0077  ruido
+  ----------------------------------------------------------------------------
+
+==============================================================================
+  BRECHA DE DOMINIO — el mismo modelo sobre fotos y sobre renders
+==============================================================================
+                       TEST fotos  TEST renders    brecha
+  --------------------------------------------------------
+  FASE 1 congelado         0.9208        0.8131   -0.1077
+  FASE 2 finetune          0.9372        0.8361   -0.1011
+  --------------------------------------------------------
+  brecha = accuracy(renders) - accuracy(fotos). Positiva = el render es más fácil
+  (la ilusión de SUGERENCIAS §2). Negativa = el modelo se especializó en fotos,
+  que es lo que el producto necesita.
+
+  El fine-tuning ACERCÓ los dominios: |brecha| 0.1077 -> 0.1011.
+
+==============================================================================
+  RIESGO DE SUGERENCIAS §4 — ¿el moiré empuja las diapos humanas hacia 'saturada'?
+==============================================================================
+  fase1: 0->2 = 4.2 casos   ·   2->0 = 1.4 casos   ·   total extremos = 5.6
+  fase2: 0->2 = 3.8 casos   ·   2->0 = 1.2 casos   ·   total extremos = 5.0
+
+Matriz ACUMULADA — fase1 sobre TEST DE FOTOS:
+[[302   2  21]
+ [ 22 310   8]
+ [  7  22 341]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.912    0.929  0.921      325
+1_rastro_ia          0.928    0.912  0.920      340
+2_saturada_ia        0.922    0.922  0.922      370
+---------------------------------------------------
+macro avg            0.921    0.921  0.921     1035
+accuracy: 0.921  (953/1035)
+
+Matriz ACUMULADA — fase2 sobre TEST DE FOTOS:
+[[305   1  19]
+ [ 14 318   8]
+ [  6  17 347]]
+clase            precision   recall     f1  soporte
+---------------------------------------------------
+0_sin_ia             0.938    0.938  0.938      325
+1_rastro_ia          0.946    0.935  0.941      340
+2_saturada_ia        0.928    0.938  0.933      370
+---------------------------------------------------
+macro avg            0.938    0.937  0.937     1035
+accuracy: 0.937  (970/1035)
+
+Generando figuras...
+  guardado Figure_matriz_fase1_v9.png
+  guardado Figure_matriz_fase2_v9.png
+  guardado Figure_calibracion_v9.png
+  guardado Figure_roc_v9.png
+  guardado Figure_semillas_v9.png
+  guardado Figure_brecha_dominio_v9.png
+  guardado resultados_v9.json
+  guardado modelopt_v9_finetune.pt  (fase 2, semilla 7)
+  guardado modelo_v9_meta.json
+
+Tiempo total: 7.2 min

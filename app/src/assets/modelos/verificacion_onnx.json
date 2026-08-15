@@ -1,0 +1,15 @@
+{
+  "tolerancia": 0.0001,
+  "modelos": {
+    "modelo_c_v9.onnx": {
+      "clases": [
+        "0_sin_ia",
+        "1_rastro_ia",
+        "2_saturada_ia"
+      ],
+      "mb": 16.04,
+      "max_diferencia": 6.556510925292969e-06,
+      "opset": 17
+    }
+  }
+}

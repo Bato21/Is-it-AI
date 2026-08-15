@@ -1,0 +1,33 @@
+/* Paleta del proyecto: la misma de las figuras de matplotlib (documentacion/metricas.py),
+   para que la app y el informe se lean como un solo producto. */
+:root {
+  --ion-color-primary: #1F3864;
+  --ion-color-primary-rgb: 31, 56, 100;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1b3158;
+  --ion-color-primary-tint: #354c74;
+
+  --ion-color-secondary: #B45309;
+  --ion-color-secondary-rgb: 180, 83, 9;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #9e4908;
+  --ion-color-secondary-tint: #bc6422;
+
+  /* Un color por clase: se usa en los chips, las barras y el borde del resultado. */
+  --clase-0: #2E7D32;
+  --clase-1: #B45309;
+  --clase-2: #B00020;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #6f9fe8;
+    --ion-color-primary-rgb: 111, 159, 232;
+    --ion-color-primary-contrast: #000000;
+    --ion-color-primary-contrast-rgb: 0, 0, 0;
+    --ion-color-primary-shade: #618ccc;
+    --ion-color-primary-tint: #7da9ea;
+  }
+}
