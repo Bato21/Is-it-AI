@@ -143,6 +143,9 @@ TensorFlow/.venv/Scripts/python export/verificar_paridad.py    # .keras vs Tenso
 cd app && npm install && npm start        # http://localhost:8100
 ```
 
+Para publicarla en Vercel y poder abrirla desde cualquier teléfono (la cámara necesita
+HTTPS, así que la red local no alcanza): **`documentacion/DESPLIEGUE.md`**.
+
 > `export/exportar_onnx.py` **verifica** la exportación comparando PyTorch contra ONNX Runtime
 > sobre fotos reales del test, y aborta si difieren más de 1e-4. Resultado actual:
 > 3.15e-05 (B) y 6.56e-06 (C), con 12/12 clases coincidentes. Para el modelo A, que va por
