@@ -1,259 +1,328 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>Is it AI?</ion-title>
-    <ion-buttons slot="end">
-      <!-- El modelo activo va SIEMPRE visible en la barra: el usuario tiene que saber
-           quién está respondiendo antes de creerle la respuesta. -->
-      <ion-button (click)="irAModelos()" title="Elegir modelo">
-        <ion-icon slot="start" name="layers-outline"></ion-icon>
-        {{ modeloActivo()?.etiqueta ?? 'Modelo' }}
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" [scrollY]="false">
 
-<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="instrumento grano" [attr.data-nitidez]="nivelNitidez()">
 
-  <!-- ============================ ESTADO INICIAL ============================ -->
-  @if (estado() === 'inicial') {
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Detector de huella de IA</ion-card-title>
-        <ion-card-subtitle>Fotografiá una diapositiva en pantalla</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <p>
-          Apuntá la cámara a la pantalla que muestra la diapositiva y tocá
-          <strong>Analizar</strong>. El modelo la clasifica en tres niveles de huella de IA.
-        </p>
-        <p class="pista">
-          Consejo: llená el cuadro con la pantalla y evitá que una luz se refleje encima.
-          La app rechaza las fotos movidas antes de analizarlas.
-        </p>
-        <ion-button expand="block" (click)="iniciar()">
-          <ion-icon slot="start" name="videocam"></ion-icon>
-          Encender cámara
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
-  }
+    <!-- ══════════════════════════ VISOR ══════════════════════════
+         El <video> es solo la fuente; lo que se muestra es el canvas, porque es sobre el
+         canvas que OpenCV mide y del que sale el recorte. Así lo que el usuario ve es
+         EXACTAMENTE lo que el modelo va a recibir. -->
+    <div class="visor" [class.congelado]="analizando()">
+      <video #video playsinline muted></video>
+      <canvas #lienzo></canvas>
 
-  <!-- ============================ ERROR ============================ -->
-  @if (hayError()) {
-    <ion-card color="danger">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="alert-circle-outline"></ion-icon>
-          No se pudo abrir la cámara
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>{{ errorMsg() }}</p>
-        <ion-button expand="block" fill="outline" color="light" (click)="reintentar()">
-          <ion-icon slot="start" name="refresh-outline"></ion-icon>
-          Reintentar
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
-  }
-
-  @if (pidiendo()) {
-    <div class="centrado">
-      <ion-spinner name="crescent"></ion-spinner>
-      <p>Pidiendo permiso de cámara…</p>
-    </div>
-  }
-
-  <!-- ============================ CÁMARA ACTIVA ============================ -->
-  <div class="visor" [class.oculto]="!activa()">
-    <!-- El <video> queda oculto: es solo la fuente. Lo que se muestra es el canvas, porque
-         es sobre el canvas que OpenCV mide y que se recorta la imagen para el modelo. Así
-         lo que el usuario ve es EXACTAMENTE lo que el modelo va a recibir. -->
-    <video #video playsinline muted class="fuente"></video>
-    <canvas #lienzo class="lienzo"></canvas>
-
-    <div class="metricas">
-      <ion-chip [color]="colorFps()" outline="true">
-        <ion-icon name="speedometer-outline"></ion-icon>
-        <ion-label>{{ fps() }} fps</ion-label>
-      </ion-chip>
-      <ion-chip [color]="colorNitidez()" outline="true">
-        <ion-icon name="eye-outline"></ion-icon>
-        <ion-label>{{ etiquetaNitidez() }} · {{ nitidez() }}</ion-label>
-      </ion-chip>
-      @if (!opencvListo()) {
-        <ion-chip color="medium" outline="true">
-          <ion-spinner name="dots"></ion-spinner>
-          <ion-label>OpenCV…</ion-label>
-        </ion-chip>
+      <!-- Retícula. El viewBox sigue el tamaño interno del canvas y el slice replica el
+           object-fit: cover del canvas, así los puntos de OpenCV caen donde corresponde. -->
+      @if (activa()) {
+        <svg class="reticula" [attr.viewBox]="viewBox()"
+             preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <polygon class="contorno" [attr.points]="polilinea()" />
+          @for (d of escuadras(); track $index) {
+            <path class="escuadra" [attr.d]="d" />
+          }
+        </svg>
       }
+
+      <div class="vineta"></div>
+      @if (analizando()) { <div class="barrido"></div> }
+      @if (destello()) { <div class="destello"></div> }
     </div>
-  </div>
 
-  @if (activa()) {
-    <div class="acciones">
-      <ion-button expand="block" (click)="analizar(false)" [disabled]="analizando()">
-        @if (analizando()) {
-          <ion-spinner name="crescent" slot="start"></ion-spinner>
-        } @else {
-          <ion-icon slot="start" name="camera"></ion-icon>
-        }
-        Analizar con {{ modeloActivo()?.etiqueta }}
-      </ion-button>
+    <!-- ══════════════════════════ HUD SUPERIOR ══════════════════════════ -->
+    @if (activa()) {
+      <header class="hud arriba">
+        <button class="pastilla" (click)="abrirSelector()" type="button">
+          <span class="punto"></span>
+          <span class="lectura">{{ modeloActivo()?.etiqueta }}</span>
+          <svg viewBox="0 0 24 24" class="chevron"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
 
-      <div class="acciones-secundarias">
-        <ion-button fill="outline" size="small" (click)="analizar(true)"
-                    [disabled]="analizando()">
-          <ion-icon slot="start" name="layers-outline"></ion-icon>
-          Comparar los 3
-        </ion-button>
-        <ion-button fill="clear" size="small" color="medium" (click)="detener()">
-          <ion-icon slot="start" name="videocam-off"></ion-icon>
-          Apagar
-        </ion-button>
-      </div>
+        <div class="instrumentos">
+          <div class="medidor" [attr.data-estado]="nivelNitidez()">
+            <span class="etiqueta">nitidez</span>
+            <span class="lectura valor">{{ nitidez() }}</span>
+            <span class="etiqueta estado">{{ etiquetaNitidez() }}</span>
+          </div>
+          <div class="medidor">
+            <span class="etiqueta">fps</span>
+            <span class="lectura valor">{{ fps() }}</span>
+          </div>
+        </div>
+      </header>
+    }
 
-      @if (cargandoModelo()) {
-        <ion-note color="medium">
-          Descargando {{ modeloActivo()?.nombre }} ({{ modeloActivo()?.pesoMB }} MB)…
-        </ion-note>
-        <ion-progress-bar type="indeterminate"></ion-progress-bar>
-      }
-    </div>
-  }
+    <!-- ══════════════════════════ PORTADA ══════════════════════════ -->
+    @if (estado() === 'inicial') {
+      <div class="portada">
+        <div class="marca">
+          <span class="etiqueta">Frameworks de IA · v9</span>
+          <h1 class="display">
+            Is it<br />
+            <em>AI?</em>
+          </h1>
+          <p class="bajada">
+            Apuntá la cámara a una diapositiva en pantalla. El modelo estima cuánta huella
+            de generación automática tiene, en tres niveles.
+          </p>
+        </div>
 
-  <!-- ============================ FOTO RECHAZADA ============================ -->
-  @if (calidadRechazada(); as c) {
-    <ion-card color="warning">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="alert-circle-outline"></ion-icon>
-          Foto rechazada
-        </ion-card-title>
-        <ion-card-subtitle>No se le pidió nada al modelo</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <p>{{ c.motivo }}</p>
-        <p class="tecnico">
-          Nitidez medida: <strong>{{ c.nitidez }}</strong>
-          (mínimo aceptable {{ UMBRAL_NITIDEZ }}) · brillo medio: <strong>{{ c.brillo }}</strong>
-        </p>
-        <p class="tecnico">
-          Sobre una foto así el modelo igual devolvería una respuesta, y con confianza alta.
-          Rechazarla es más honesto que mostrar un resultado inventado.
-        </p>
-      </ion-card-content>
-    </ion-card>
-  }
+        <!-- Retícula fantasma: ocupa el centro de la portada y muestra de antemano el
+             elemento con el que el usuario va a interactuar. Llena el espacio con el motivo
+             del producto en vez de con aire, y hace que la transición a la cámara se sienta
+             continua: la retícula ya estaba ahí. -->
+        <div class="emblema" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <path class="esq" d="M6 22 L6 6 L22 6" />
+            <path class="esq" d="M78 6 L94 6 L94 22" />
+            <path class="esq" d="M94 78 L94 94 L78 94" />
+            <path class="esq" d="M22 94 L6 94 L6 78" />
+            <line class="eje" x1="50" y1="42" x2="50" y2="58" />
+            <line class="eje" x1="42" y1="50" x2="58" y2="50" />
+          </svg>
+          <span class="rastreo"></span>
+        </div>
 
-  <!-- ============================ RESULTADO ============================ -->
-  @if (prediccion(); as p) {
-    <ion-card class="resultado" [style.border-left-color]="colorClase(p.indice)">
-      <ion-card-header>
-        <ion-card-subtitle>Veredicto</ion-card-subtitle>
-        <ion-card-title [style.color]="colorClase(p.indice)">
-          {{ tituloClase(p.indice) }}
-        </ion-card-title>
-      </ion-card-header>
-
-      <ion-card-content>
-        <p class="detalle">{{ detalleClase(p.indice) }}</p>
-
-        @if (confianzaBaja(p)) {
-          <ion-chip color="warning">
-            <ion-icon name="alert-circle-outline"></ion-icon>
-            <ion-label>Confianza baja — conviene revisarla a mano</ion-label>
-          </ion-chip>
-        }
-
-        <!-- Se muestra el vector COMPLETO de probabilidades, no solo la ganadora.
-             Es una regla del proyecto desde la v2: la distribución dice cuánto duda el
-             modelo, y "0.51 / 0.49 / 0.00" es una respuesta muy distinta de "0.99 / 0.01 / 0.00"
-             aunque las dos tengan la misma clase ganadora. -->
-        <div class="barras">
-          @for (prob of p.probabilidades; track $index) {
-            <div class="barra-fila">
-              <span class="barra-nombre">{{ tituloClase($index) }}</span>
-              <div class="barra-pista">
-                <div class="barra-relleno"
-                     [style.width.%]="prob * 100"
-                     [style.background]="colorClase($index)"></div>
-              </div>
-              <span class="barra-valor">{{ (prob * 100) | number:'1.1-1' }}%</span>
+        <div class="niveles">
+          @for (c of CLASES; track c; let i = $index) {
+            <div class="nivel" [attr.data-clase]="i">
+              <span class="barra"></span>
+              <span class="lectura">{{ tituloClase(i) }}</span>
             </div>
           }
         </div>
 
-        <div class="pie">
-          <ion-chip outline="true" color="medium">
-            <ion-icon name="layers-outline"></ion-icon>
-            <ion-label>{{ nombreModelo(p.modeloId) }}</ion-label>
-          </ion-chip>
-          <ion-chip outline="true" color="medium">
-            <ion-icon name="speedometer-outline"></ion-icon>
-            <ion-label>{{ p.ms }} ms</ion-label>
-          </ion-chip>
-          @if (fueEnderezada()) {
-            <ion-chip outline="true" color="success">
-              <ion-icon name="crop-outline"></ion-icon>
-              <ion-label>Pantalla detectada y enderezada</ion-label>
-            </ion-chip>
-          } @else {
-            <ion-chip outline="true" color="medium">
-              <ion-icon name="scan-outline"></ion-icon>
-              <ion-label>Sin recorte (no se detectó marco)</ion-label>
-            </ion-chip>
-          }
+        <button class="obturador grande" (click)="iniciar()" type="button">
+          <span class="anillo"></span>
+          <span class="etiqueta">Encender cámara</span>
+        </button>
+
+        <p class="nota">
+          Todo el análisis ocurre en este dispositivo. Ninguna imagen se envía a ningún lado.
+        </p>
+      </div>
+    }
+
+    @if (pidiendo()) {
+      <div class="portada centrado">
+        <div class="pulso"></div>
+        <p class="etiqueta">Solicitando acceso a la cámara…</p>
+      </div>
+    }
+
+    @if (hayError()) {
+      <div class="portada centrado">
+        <div class="aviso">
+          <span class="etiqueta">Error</span>
+          <p>{{ errorMsg() }}</p>
+          <button class="boton" (click)="reintentar()" type="button">Reintentar</button>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════ HUD INFERIOR ══════════════════════════ -->
+    @if (activa()) {
+      <footer class="hud abajo">
+        @if (cargandoModelo()) {
+          <div class="progreso">
+            <span class="etiqueta">
+              descargando {{ modeloActivo()?.etiqueta }} · {{ modeloActivo()?.pesoMB }} MB
+            </span>
+            <span class="riel"><span class="avance"></span></span>
+          </div>
+        }
+
+        <div class="pista" [class.enganchada]="enganchada()">
+          <span class="etiqueta">
+            @if (enganchada()) {
+              pantalla detectada · se endereza
+            } @else if (nivelNitidez() === 'mala') {
+              movida · estabilizá el teléfono
+            } @else {
+              encuadrá la pantalla
+            }
+          </span>
         </div>
 
-        @if (miniatura()) {
-          <div class="miniatura">
-            <p class="tecnico">Lo que recibió el modelo:</p>
-            <img [src]="miniatura()" alt="entrada del modelo" />
+        <div class="controles">
+          <button class="aux" (click)="detener()" type="button" aria-label="Apagar cámara">
+            <svg viewBox="0 0 24 24"><path d="M3 3l18 18M17 10.5V7a2 2 0 0 0-2-2H9m-4.5.5A2 2 0 0 0 4 7v10a2 2 0 0 0 2 2h9"/></svg>
+            <span class="etiqueta">apagar</span>
+          </button>
+
+          <button class="obturador" (click)="analizar(false)" type="button"
+                  [disabled]="!puedeDisparar()"
+                  [class.ocupado]="analizando()"
+                  aria-label="Analizar">
+            <span class="anillo"></span>
+            <span class="nucleo"></span>
+          </button>
+
+          <button class="aux" (click)="analizar(true)" type="button"
+                  [disabled]="!puedeDisparar()" aria-label="Comparar los tres modelos">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <span class="etiqueta">los 3</span>
+          </button>
+        </div>
+      </footer>
+    }
+  </div>
+
+  <!-- ══════════════════════════ HOJA: RESULTADO ══════════════════════════
+       ion-modal con breakpoints: trae el gesto de arrastre nativo, el foco atrapado y el
+       cierre por deslizamiento sin escribir nada de eso a mano. El fondo es transparente,
+       así el visor congelado sigue visible detrás. -->
+  <ion-modal class="hoja" [isOpen]="hojaAbierta()"
+             [breakpoints]="[0, 0.62, 0.95]" [initialBreakpoint]="0.62"
+             [backdropBreakpoint]="0.62" [handle]="true"
+             (didDismiss)="cerrarHoja()">
+    <ng-template>
+      <div class="panel">
+
+        <!-- ── Foto rechazada ── -->
+        @if (calidadRechazada(); as c) {
+          <div class="veredicto rechazo">
+            <span class="etiqueta">Sin análisis</span>
+            <h2 class="display">Foto rechazada</h2>
+            <p class="detalle">{{ c.motivo }}</p>
+
+            <div class="metricas">
+              <div class="metrica">
+                <span class="etiqueta">nitidez</span>
+                <span class="lectura valor">{{ c.nitidez }}</span>
+                <span class="etiqueta">mín {{ UMBRAL_NITIDEZ }}</span>
+              </div>
+              <div class="metrica">
+                <span class="etiqueta">brillo medio</span>
+                <span class="lectura valor">{{ c.brillo }}</span>
+                <span class="etiqueta">0–255</span>
+              </div>
+            </div>
+
+            <p class="nota">
+              Sobre una foto así el modelo igual devolvería una respuesta, y con confianza
+              alta. Rechazarla es más honesto que mostrar un resultado inventado.
+            </p>
           </div>
         }
-      </ion-card-content>
-    </ion-card>
-  }
 
-  <!-- ============================ COMPARACIÓN DE LOS 3 ============================ -->
-  @if (predicciones().length > 1) {
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Los tres modelos</ion-card-title>
-        <ion-card-subtitle>
-          @if (consenso().indice !== null) {
-            Acuerdo del {{ consenso().acuerdo * 100 | number:'1.0-0' }}% —
-            {{ tituloClase(consenso().indice!) }}
-          } @else {
-            Sin consenso: los modelos discrepan
-          }
-        </ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        @for (p of predicciones(); track p.modeloId) {
-          <div class="fila-modelo">
-            <ion-chip outline="true">
-              <ion-label>{{ nombreModelo(p.modeloId) }}</ion-label>
-            </ion-chip>
-            <span class="fila-clase" [style.color]="colorClase(p.indice)">
-              {{ tituloClase(p.indice) }}
-            </span>
-            <span class="fila-conf">{{ p.confianza * 100 | number:'1.0-0' }}%</span>
-            <span class="fila-ms">{{ p.ms }} ms</span>
+        <!-- ── Error ── -->
+        @if (errorMsg() && !calidadRechazada()) {
+          <div class="veredicto rechazo">
+            <span class="etiqueta">Error</span>
+            <h2 class="display">No se pudo analizar</h2>
+            <p class="detalle">{{ errorMsg() }}</p>
           </div>
         }
 
-        <p class="tecnico">
-          @if (consenso().indice !== null && consenso().acuerdo === 1) {
-            Los tres coinciden. Son dos frameworks, dos arquitecturas y dos regímenes de
-            entrenamiento distintos: que converjan es mucha más evidencia que un solo softmax alto.
-          } @else {
-            Cuando discrepan, la diapositiva es genuinamente ambigua. Eso es información útil
-            —convendría revisarla a mano—, no un error a esconder.
+        <!-- ── Veredicto ── -->
+        @if (prediccion(); as p) {
+          <div class="veredicto" [attr.data-clase]="p.indice">
+            <span class="etiqueta">Veredicto</span>
+            <h2 class="display">{{ tituloClase(p.indice) }}</h2>
+            <p class="detalle">{{ detalleClase(p.indice) }}</p>
+
+            <!-- Espectro: una sola barra partida en tres, no tres barras sueltas. Se lee
+                 como una distribución (que es lo que es) y no como tres números aislados. -->
+            <div class="espectro" role="img"
+                 [attr.aria-label]="'Distribución de probabilidad entre las tres clases'">
+              @for (prob of p.probabilidades; track $index) {
+                <span class="segmento" [attr.data-clase]="$index"
+                      [style.flex-grow]="prob"
+                      [class.dominante]="$index === p.indice"></span>
+              }
+            </div>
+
+            <ul class="desglose">
+              @for (prob of p.probabilidades; track $index) {
+                <li [attr.data-clase]="$index" [class.activa]="$index === p.indice">
+                  <span class="marca"></span>
+                  <span class="nombre etiqueta">{{ cortoClase($index) }}</span>
+                  <span class="lectura pct">{{ prob * 100 | number:'1.1-1' }}%</span>
+                </li>
+              }
+            </ul>
+
+            @if (confianzaBaja(p)) {
+              <p class="alerta">
+                Confianza baja. Sobre tres clases el azar es 33%: el modelo está dudando.
+                Conviene revisarla a mano.
+              </p>
+            }
+
+            <div class="sellos">
+              <span class="sello">{{ nombreModelo(p.modeloId) }}</span>
+              <span class="sello">{{ p.ms }} ms</span>
+              <span class="sello" [class.ok]="fueEnderezada()">
+                {{ fueEnderezada() ? 'enderezada' : 'sin recorte' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- ── Comparación de los tres ── -->
+          @if (hayComparacion()) {
+            <section class="comparacion">
+              <header>
+                <span class="etiqueta">Los tres modelos</span>
+                <span class="etiqueta acuerdo" [class.total]="consenso().acuerdo === 1">
+                  {{ consenso().acuerdo * 100 | number:'1.0-0' }}% de acuerdo
+                </span>
+              </header>
+
+              @for (q of predicciones(); track q.modeloId) {
+                <div class="fila" [attr.data-clase]="q.indice">
+                  <span class="marca"></span>
+                  <span class="lectura id">{{ nombreModelo(q.modeloId) }}</span>
+                  <span class="clase">{{ cortoClase(q.indice) }}</span>
+                  <span class="lectura conf">{{ q.confianza * 100 | number:'1.0-0' }}%</span>
+                  <span class="lectura ms">{{ q.ms }}ms</span>
+                </div>
+              }
+
+              <p class="nota">
+                @if (consenso().acuerdo === 1) {
+                  Los tres coinciden. Son dos frameworks, dos arquitecturas y dos regímenes
+                  de entrenamiento distintos: que converjan es mucha más evidencia que un
+                  solo softmax alto.
+                } @else {
+                  Discrepan. La diapositiva es genuinamente ambigua — eso es información
+                  útil, no un error a esconder.
+                }
+              </p>
+            </section>
           }
-        </p>
-      </ion-card-content>
-    </ion-card>
-  }
+
+          <!-- ── La entrada real del modelo ── -->
+          @if (muestra()) {
+            <section class="muestra">
+              <div class="miniatura">
+                <img [src]="muestra()" alt="Entrada exacta que recibió el modelo" />
+              </div>
+              <div>
+                <span class="etiqueta">Lo que recibió el modelo</span>
+                <p class="nota">
+                  224 × 224 px, píxeles 0–255 sin normalizar. La normalización ImageNet
+                  viaja dentro del grafo, así que el cliente no la aplica.
+                </p>
+              </div>
+            </section>
+          }
+        }
+
+        <button class="boton ancho" (click)="cerrarHoja()" type="button">
+          Analizar otra
+        </button>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ══════════════════════════ HOJA: SELECTOR DE MODELOS ══════════════════════════
+       Es una hoja y no una ruta a propósito: navegar apagaría la cámara y al volver habría
+       que pedir permiso y reencuadrar de cero. -->
+  <ion-modal class="hoja" [isOpen]="selectorAbierto()"
+             [breakpoints]="[0, 0.75, 0.98]" [initialBreakpoint]="0.75"
+             [handle]="true" (didDismiss)="cerrarSelector()">
+    <ng-template>
+      <app-selector-modelos (cerrar)="cerrarSelector()"></app-selector-modelos>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

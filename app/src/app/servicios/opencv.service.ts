@@ -235,6 +235,38 @@ export class OpenCvService {
   }
 
   /**
+   * Igual que detectarPantalla(), pero trabajando sobre una copia REDUCIDA.
+   *
+   * Existe porque la versión de arriba es demasiado cara para el bucle de frames.
+   * Canny + findContours sobre 1280x720 son ~40 ms en un teléfono de gama media: a 30 fps
+   * hay 33 ms por frame, así que correrla en vivo sería garantizar que el video tironee.
+   *
+   * Detectar sobre 320 px de ancho cuesta ~16 veces menos (el costo escala con el área) y
+   * NO pierde precisión útil: el marco de un monitor es una estructura grande y de alto
+   * contraste, justamente lo que sobrevive a una reducción. Lo que se pierde son los bordes
+   * finos, que acá son ruido — es el mismo desenfoque gaussiano del paso 1, pero gratis.
+   *
+   * Las coordenadas se devuelven en el espacio del canvas ORIGINAL, multiplicadas por el
+   * factor de escala, así quien la llama no tiene que saber que hubo una reducción.
+   */
+  detectarPantallaRapido(canvas: HTMLCanvasElement, anchoTrabajo = 320): Esquinas | null {
+    if (canvas.width <= anchoTrabajo) return this.detectarPantalla(canvas);
+
+    const escala = canvas.width / anchoTrabajo;
+    const alto = Math.round(canvas.height / escala);
+
+    const chico = document.createElement('canvas');
+    chico.width = anchoTrabajo;
+    chico.height = alto;
+    const ctx = chico.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(canvas, 0, 0, anchoTrabajo, alto);
+
+    const esquinas = this.detectarPantalla(chico);
+    if (!esquinas) return null;
+    return esquinas.map(([x, y]) => [x * escala, y * escala]) as Esquinas;
+  }
+
+  /**
    * Ordena 4 puntos como sup-izq, sup-der, inf-der, inf-izq.
    *
    * findContours los devuelve en el orden en que recorrió el contorno, que puede arrancar en

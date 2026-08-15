@@ -13,9 +13,12 @@ cámara → canvas → OpenCV.js (calidad + encuadre) → modelo (TF.js u ONNX) 
 
 ```bash
 cd app
-npm install          # instala dependencias y copia los .wasm de ONNX Runtime a assets/ort/
+npm install          # dependencias + .wasm de ONNX Runtime + OpenCV.js (todo a assets/)
 npm start            # http://localhost:8100
 ```
+
+`npm install` deja la app lista para funcionar **sin red**: copia los binarios de ONNX Runtime
+y baja OpenCV.js a `assets/`. Las tipografías ya están self-hosteadas (101 kB, variables).
 
 Para probar desde el teléfono en la misma red:
 
@@ -60,10 +63,28 @@ src/app/
 │   │                          una sola función `predecir(canvas)`. Carga perezosa y cacheada.
 │   └── opencv.service.ts      Todo OpenCV.js: nitidez (Laplaciano), detección de la pantalla
 │                              y corrección de perspectiva. Cada cv.Mat se libera.
+├── componentes/
+│   └── selector-modelos       El catálogo, como HOJA sobre el visor (no como ruta: navegar
+│                              apagaría la cámara y haría perder el encuadre).
 └── paginas/
-    ├── camara/                Pantalla principal: video, métricas en vivo, análisis.
-    └── modelos/               Selector con las métricas reales de cada modelo.
+    └── camara/                Toda la app: visor a pantalla completa, HUD, y las dos hojas.
 ```
+
+### La pantalla
+
+El visor ocupa el viewport completo y todo lo demás flota encima:
+
+- **HUD superior** — modelo activo (toca para cambiarlo) y los medidores de nitidez y FPS.
+- **Retícula viva** — cuatro escuadras sobre el video. Cambian de color con la nitidez
+  (rojo = movida, ámbar = aceptable, verde = nítida) y **saltan a las esquinas de la pantalla
+  real** cuando OpenCV la detecta, mostrando de antemano qué recorte va a recibir el modelo.
+- **HUD inferior** — pista contextual de una línea, obturador de 76 px y los dos accesorios.
+- **Hojas** — resultado y selector suben desde abajo con `ion-modal` y breakpoints (arrastre,
+  foco atrapado y cierre por deslizamiento nativos), sin desmontar la cámara.
+
+Al disparar, el visor **se congela** en el frame que se analiza y lo recorre un barrido. Sin
+eso, el video sigue moviéndose mientras se mide otra cosa y la interfaz miente sobre qué está
+mirando el modelo. Hay pulso háptico distinto para "analizando" y para "foto rechazada".
 
 **El punto de la arquitectura:** la página de cámara no sabe qué modelo corre. Le pide una
 predicción a `InferenciaService` y recibe probabilidades. Cambiar, agregar o mejorar un modelo
@@ -124,7 +145,7 @@ sirve de respaldo en WASM, y C aporta un voto de otra familia de arquitectura. E
 - **El bucle de frames corre fuera de la zona de Angular** (`NgZone.runOutsideAngular`). Con
   60 fps dentro de la zona, cada frame dispararía un ciclo completo de detección de cambios.
   Se vuelve a entrar solo cada 5 frames, para publicar FPS y nitidez.
-- **`ChangeDetectionStrategy.OnPush`** en las dos páginas: Angular solo re-renderiza cuando
+- **`ChangeDetectionStrategy.OnPush`** en la página y el selector: Angular solo re-renderiza cuando
   una señal cambia.
 - **La nitidez se calcula cada 5 frames**, no en los 60: la escena no cambia entre frames
   consecutivos y el Laplaciano no es gratis.
@@ -142,6 +163,6 @@ sirve de respaldo en WASM, y C aporta un voto de otra familia de arquitectura. E
 | `Failed to fetch ort-wasm*.wasm` | Faltan los binarios: `npm run copiar:ort` |
 | `SharedArrayBuffer is not defined` | Hilos de WASM sin cabeceras COOP/COEP. Ya se fuerza `numThreads = 1`. |
 | La cámara no abre en el celular | No es contexto seguro: usar HTTPS o un túnel (ver §1). |
-| `cv is not defined` | OpenCV.js todavía no cargó. La app espera el evento `opencv-ready`; si no llega, revisar la red o servir OpenCV desde `assets/` (ver comentario en `index.html`). |
+| `cv is not defined` | OpenCV.js todavía no cargó. Se sirve desde `assets/opencv.js` (lo baja `npm install`); si falta, la app cae al CDN. Forzar con `npm run traer:opencv`. |
 | El modelo carga pero predice raro | Casi siempre es el preprocesamiento. Verificar en Netron el orden de ejes (NHWC vs NCHW) y que el modelo espere 0-255. |
 | La primera predicción tarda mucho | Es la descarga + creación de sesión. Usar **Precargar** en la pantalla de modelos antes de la demo. |

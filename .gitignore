@@ -81,3 +81,7 @@ app/src/assets/ort/
 # Metadatos de carpeta que genera el Explorador de Windows.
 desktop.ini
 Thumbs.db
+
+# OpenCV.js (10 MB): dependencia externa, la baja `npm install` en la app
+# (app/scripts/descargar-opencv.mjs). Versionarla sería guardar un binario de terceros.
+app/src/assets/opencv.js

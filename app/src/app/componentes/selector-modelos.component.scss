@@ -1,0 +1,295 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.hoja-modelos {
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px 22px calc(var(--seguro-abajo) + 26px);
+  background: var(--sup-1);
+  border-radius: var(--r-hoja) var(--r-hoja) 0 0;
+  border-top: 1px solid var(--linea);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  /* Sin esto las tarjetas salen CORTADAS.
+     Es un contenedor flex en columna con altura fija (100% de la hoja) y contenido que la
+     excede: por defecto los hijos de un flex tienen flex-shrink: 1, así que en vez de
+     desbordar y provocar scroll, se comprimen. Y como la tarjeta tiene overflow: hidden
+     (para recortar su franja de color), el texto comprimido queda tajado a media línea.
+     flex-shrink: 0 les devuelve su altura natural y el scroll del contenedor hace su trabajo. */
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+.cabecera {
+  padding-top: 6px;
+
+  .etiqueta { display: block; margin-bottom: 8px; }
+
+  h2 {
+    font-size: clamp(1.9rem, 8vw, 2.5rem);
+    margin: 0 0 10px;
+    color: var(--tinta);
+  }
+
+  .bajada {
+    color: var(--tinta-media);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+.aviso {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 178, 63, 0.35);
+  border-radius: var(--r-md);
+  background: var(--c1-tenue);
+
+  .etiqueta { color: var(--c1); }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--tinta);
+  }
+
+  code {
+    font-family: var(--fuente-mono);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 1px 5px;
+    border-radius: var(--r-xs);
+    font-size: 0.92em;
+  }
+}
+
+/* ============================================================================
+   Tarjeta de modelo
+   ============================================================================
+   La tarjeta ENTERA es el control: en un teléfono, obligar a apuntar a un botón de 100 px
+   dentro de una tarjeta de 320 px es peor que aceptar el toque en toda su superficie.
+   Los botones secundarios (precargar/liberar) frenan la propagación del clic.
+   ============================================================================ */
+
+.tarjeta {
+  position: relative;
+  padding: 16px;
+  border: 1px solid var(--linea);
+  border-radius: var(--r-lg);
+  background: var(--sup-2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--dur-media) var(--ease-suave),
+              background var(--dur-media) var(--ease-suave),
+              transform var(--dur-rapida) var(--ease-suave);
+
+  &:active { transform: scale(0.985); }
+
+  &:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+  }
+
+  /* La franja de color a la izquierda identifica al modelo de un vistazo, y en la tarjeta
+     activa se enciende con el acento. */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--linea-viva);
+    transition: background var(--dur-media) var(--ease-suave);
+  }
+
+  &.activa {
+    border-color: rgba(90, 209, 255, 0.45);
+    background: linear-gradient(160deg, rgba(90, 209, 255, 0.07), transparent 55%),
+                var(--sup-2);
+
+    &::before { background: var(--acento); box-shadow: 0 0 16px var(--acento); }
+  }
+}
+
+.fila-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.distintivo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--linea-viva);
+  background: var(--sup-0);
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--tinta-media);
+}
+
+.activa .distintivo {
+  color: var(--acento);
+  border-color: rgba(90, 209, 255, 0.45);
+}
+
+.identidad {
+  flex: 1;
+  min-width: 0;
+
+  h3 {
+    margin: 0;
+    font-family: var(--fuente-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--tinta);
+  }
+}
+
+.insignia {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--sup-0);
+  font-family: var(--fuente-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.descripcion {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--tinta-media);
+}
+
+.porque {
+  margin: 0 0 14px;
+  padding-left: 10px;
+  border-left: 2px solid var(--linea-viva);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--tinta-tenue);
+  font-style: italic;
+}
+
+/* --- Cifras ---
+   Tres columnas, números grandes en monoespaciada. Se leen como el panel de un aparato,
+   que es exactamente lo que son. */
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: var(--r-sm);
+  background: var(--sup-0);
+  text-align: center;
+
+  .valor {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--tinta);
+    line-height: 1;
+
+    i {
+      font-style: normal;
+      font-size: 0.6em;
+      color: var(--tinta-tenue);
+      margin-left: 1px;
+    }
+  }
+
+  .etiqueta { font-size: 0.52rem; }
+}
+
+.activa .cifra .valor { color: var(--acento); }
+
+.pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sellos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.sello {
+  padding: 4px 9px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  font-family: var(--fuente-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-tenue);
+
+  &.listo {
+    border-color: rgba(52, 224, 161, 0.4);
+    color: var(--c0);
+  }
+}
+
+.mini {
+  padding: 7px 12px;
+  border: 1px solid var(--linea-viva);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--tinta-media);
+  font-family: var(--fuente-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-rapida) var(--ease-suave),
+              border-color var(--dur-rapida) var(--ease-suave);
+
+  &:active:not(:disabled) { color: var(--tinta); border-color: var(--acento); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.explicacion {
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: var(--r-md);
+  background: var(--sup-0);
+  border: 1px solid var(--linea);
+
+  .etiqueta { display: block; margin-bottom: 8px; }
+
+  p {
+    margin: 0 0 10px;
+    font-size: 0.74rem;
+    line-height: 1.6;
+    color: var(--tinta-media);
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  strong { color: var(--tinta); font-weight: 500; }
+}

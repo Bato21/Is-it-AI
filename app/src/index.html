@@ -8,32 +8,97 @@
   <meta name="viewport"
         content="viewport-fit=cover, width=device-width, initial-scale=1.0,
                  minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#1F3864" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#08090b" />
+  <meta name="description"
+        content="Estima la huella de generación por IA de una diapositiva, con inferencia
+                 en el propio dispositivo." />
 
-  <!--
-    OpenCV.js 4.x — build WebAssembly desde el CDN oficial.
+  <!-- La app es una herramienta de cámara a pantalla completa: se declara instalable para
+       que, agregada a la pantalla de inicio, abra sin barra de navegador. -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    Se carga ASÍNCRONO y avisa por evento cuando el módulo WASM terminó de inicializar.
-    Ese aviso es imprescindible: `cv` existe como objeto mucho antes de que su runtime
-    esté listo, así que llamar a cv.imread() apenas carga el script falla con errores
-    incomprensibles ("cv.Mat is not a constructor"). El servicio OpenCvService se suscribe
-    a este evento y no toca nada hasta recibirlo.
+  <!-- Las fuentes se sirven desde assets/ (ver global.scss). El preload las pide en
+       paralelo con el CSS en vez de esperar a que el parser descubra el @font-face, que es
+       lo que produce el salto de tipografía al cargar. -->
+  <link rel="preload" href="assets/fuentes/bricolage-grotesque-var.woff2" as="font"
+        type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fuentes/azeret-mono-var.woff2" as="font"
+        type="font/woff2" crossorigin />
 
-    Alternativa OFFLINE (recomendada para la demo del examen, por si la sala no tiene red):
-      1. descargar https://docs.opencv.org/4.x/opencv.js  a  src/assets/opencv.js
-      2. reemplazar el <script async src="https://..."> por:
-         <script async src="assets/opencv.js" onload="onOpenCvReady()"></script>
-  -->
   <script>
-    window._opencvReady = false;
-    window.onOpenCvReady = function () {
-      window._opencvReady = true;
-      window.dispatchEvent(new Event('opencv-ready'));
-      console.log('[OpenCV] listo —', cv.getBuildInformation().split('\n')[0]);
-    };
+    /*
+      CARGA DE OpenCV.js
+      ==================
+      OpenCV.js son ~10 MB de WebAssembly. Se sirve desde assets/ (lo baja `npm install`
+      vía scripts/descargar-opencv.mjs) y se cae al CDN solo si el archivo local no está.
+
+      CÓMO SE DETECTA QUE ESTÁ LISTO — y por qué NO por los caminos "obvios":
+
+        1. El `onload` del <script> NO sirve. Avisa que el JavaScript terminó de evaluarse,
+           no que el runtime WASM esté inicializado; `cv` existe como objeto mucho antes de
+           que `cv.Mat` sea construible. Peor: con este build se midió en el navegador que
+           el manejador de `onload` directamente NUNCA corría, aun con `cv.Mat` ya siendo
+           una función.
+
+        2. `Module.onRuntimeInitialized` TAMPOCO sirve acá. Se definió `window.Module` antes
+           de cargar el script y se verificó después: el hook seguía siendo nuestra función,
+           sin haberse llamado nunca. Este build no adopta el Module pre-existente.
+
+        3. Y el glue de Emscripten PISA GLOBALES: tras cargar opencv.js, una función que
+           habíamos dejado en `window` había sido reemplazada por un objeto sin prototipo.
+           Por eso acá no se expone NINGUNA función global: todo vive dentro de este closure
+           y lo único que sale afuera es el flag booleano y un evento.
+
+      Lo que sí funciona es sondear por la capacidad concreta que se necesita: que
+      `cv.Mat` sea construible. Es una comprobación sobre el hecho, no sobre un aviso.
+    */
+    (function () {
+      var listo = false;
+      window._opencvReady = false;
+
+      function marcarListo() {
+        if (listo) return;
+        listo = true;
+        window._opencvReady = true;
+        window.dispatchEvent(new Event('opencv-ready'));
+        try {
+          console.log('[OpenCV] listo —', cv.getBuildInformation().split('\n')[0]);
+        } catch (e) {
+          console.log('[OpenCV] listo');
+        }
+      }
+
+      function cargar(src, alFallar) {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = src;
+        s.onerror = alFallar || null;
+        document.head.appendChild(s);
+      }
+
+      cargar('assets/opencv.js', function () {
+        console.warn('[OpenCV] no está en assets/. Cayendo al CDN — la app va a depender ' +
+                     'de la red. Para la demo offline: cd app && npm run traer:opencv');
+        cargar('https://docs.opencv.org/4.9.0/opencv.js');
+      });
+
+      var intentos = 0;
+      var reloj = setInterval(function () {
+        if (listo) { clearInterval(reloj); return; }
+        if (window.cv && typeof window.cv.Mat === 'function') {
+          clearInterval(reloj);
+          marcarListo();
+        } else if (++intentos > 600) {                 // ~90 s
+          clearInterval(reloj);
+          console.error('[OpenCV] no se inicializó. La app funciona, pero sin filtro de ' +
+                        'nitidez ni corrección de perspectiva.');
+        }
+      }, 150);
+    })();
   </script>
-  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
 </head>
 <body>
   <app-root></app-root>

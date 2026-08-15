@@ -12,7 +12,8 @@
     "lint": "ng lint",
     "ionic:serve": "ng serve --port 8100 --host 0.0.0.0",
     "copiar:ort": "node scripts/copiar-ort.mjs",
-    "postinstall": "node scripts/copiar-ort.mjs"
+    "postinstall": "node scripts/copiar-ort.mjs && node scripts/descargar-opencv.mjs",
+    "traer:opencv": "node scripts/descargar-opencv.mjs"
   },
   "dependencies": {
     "@angular/common": "18.2.14",

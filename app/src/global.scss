@@ -1,4 +1,4 @@
-/* Estilos globales de Ionic. El orden importa: core primero, luego estructura y utilidades. */
+/* Estilos globales. El orden importa: core primero, luego estructura y utilidades. */
 @import "@ionic/angular/css/core.css";
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
@@ -10,5 +10,174 @@
    no usa ninguna clase de float. */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
+
+/* ============================================================================
+   TIPOGRAFÍA — servida desde assets/, NO desde Google Fonts.
+   ============================================================================
+   La app tiene que funcionar sin red: la demo del examen es justo el momento en que
+   uno no quiere depender del wifi de la sala. Los dos archivos son VARIABLES, así que
+   un solo .woff2 cubre todos los pesos — 101 kB en total para las dos familias.
+
+   font-display: swap -> el texto se pinta de inmediato con la fuente de respaldo y
+   cambia cuando la propia carga. En una app donde lo primero que se ve es un
+   viewfinder, bloquear el render por una fuente sería absurdo.
+   ============================================================================ */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/assets/fuentes/bricolage-grotesque-var.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Azeret Mono';
+  src: url('/assets/fuentes/azeret-mono-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* ============================================================================
+   Base
+   ============================================================================ */
+/* box-sizing en TODO.
+   Hace falta porque los botones de ancho completo (.obturador.grande, .boton.ancho) llevan
+   padding propio: con content-box, `width: 100%` se mide sobre el contenido y el padding se
+   suma después, así que el botón termina 36 px más ancho que su contenedor y se sale por la
+   derecha. Se veía como el botón y la nota cortados contra el borde.
+
+   Va con `*` a secas y NO con el idiom `html { border-box } * { inherit }`: ese patrón falla
+   acá porque `*` también matchea a `html`, y sobre `html` la palabra `inherit` no tiene de
+   quién heredar, así que cae al valor inicial (content-box) y TODO el documento hereda eso.
+   Se comprobó midiendo con CDP: el árbol entero daba content-box. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  /* Ningún desborde horizontal: la app es una columna, nunca se desplaza de costado. */
+  max-width: 100%;
+  overflow-x: hidden;
+  background: var(--sup-0);
+  color: var(--tinta);
+  font-family: var(--fuente-mono);
+  /* La app es un instrumento a pantalla completa: no debe hacer scroll de rebote ni
+     zoom por doble toque. Los dos gestos pelean con el encuadre de la cámara. */
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Selección de texto con el acento de la app en vez del azul del sistema. */
+::selection {
+  background: var(--acento);
+  color: var(--sup-0);
+}
+
+/* Barras de scroll finas y oscuras, solo donde hay scroll real (las hojas). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--linea-viva) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--linea-viva);
+  border-radius: 2px;
+}
+
+/* ============================================================================
+   Clases tipográficas del sistema
+   ============================================================================ */
+
+/* Lecturas numéricas. tabular-nums es lo que evita que el ancho salte cuando el FPS
+   pasa de 9 a 10 o la nitidez de 99 a 100 — a 12 actualizaciones por segundo, ese
+   salto se percibe como un tic nervioso. */
+.lectura {
+  font-family: var(--fuente-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: -0.01em;
+}
+
+/* Etiquetas de instrumento: chicas, espaciadas, en mayúscula. */
+.etiqueta {
+  font-family: var(--fuente-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-tenue);
+}
+
+/* Títulos y veredictos. El eje óptico de Bricolage se aprovecha acá: a tamaño grande
+   la fuente ajusta su contraste interno en vez de solo escalar. */
+.display {
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-variation-settings: 'opsz' 72;
+}
+
+/* ============================================================================
+   Grano
+   ============================================================================
+   Una capa de ruido muy tenue sobre toda la app. Cumple una función real, no
+   decorativa: los degradados oscuros sobre paneles OLED producen BANDING (escalones
+   visibles entre tonos casi iguales), y un poco de ruido lo rompe. Es la misma razón
+   por la que el cine agrega grano digital.
+
+   Va como SVG en un data URI: sin peticiones de red y sin archivo que mantener.
+   ============================================================================ */
+.grano::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================================
+   Ionic: ajustes puntuales
+   ============================================================================ */
+ion-modal.hoja {
+  --background: transparent;
+  --box-shadow: none;
+}
+
+ion-modal.hoja::part(handle) {
+  background: var(--linea-viva);
+  width: 44px;
+}
+
+ion-content {
+  --background: transparent;
+}
+
+/* ============================================================================
+   Accesibilidad: respetar a quien pidió menos movimiento.
+   La app tiene bastante animación (barrido de análisis, retícula que respira,
+   barras que crecen). Para alguien con sensibilidad vestibular eso no es un detalle.
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

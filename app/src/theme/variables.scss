@@ -1,33 +1,132 @@
-/* Paleta del proyecto: la misma de las figuras de matplotlib (documentacion/metricas.py),
-   para que la app y el informe se lean como un solo producto. */
+/* ============================================================================
+   SISTEMA VISUAL — "instrumento óptico forense"
+   ============================================================================
+
+   La app no es una app de cámara: es un aparato de medición que se apunta a una
+   pantalla y devuelve una lectura. Esa es la idea que manda en todas las decisiones
+   de acá abajo.
+
+   OSCURO, Y NO POR MODA. Tres razones concretas:
+     1. El contenido es un viewfinder en vivo. Cualquier chrome claro alrededor de un
+        video compite con él y arruina la lectura de la escena.
+     2. Se usa apuntando a una pantalla encendida, muchas veces en una sala a media luz.
+        Una interfaz blanca a 300 nits en la cara es hostil en ese contexto.
+     3. Los valores de las tres clases funcionan como LEDs de estado. Sobre fondo oscuro
+        un verde y un rojo se leen de un vistazo; sobre blanco hay que interpretarlos.
+
+   EL FONDO NO ES NEGRO PURO. #08090B tiene un sesgo azul mínimo: el negro absoluto
+   sobre OLED produce bordes duros con el contenido y aplana la sensación de profundidad.
+
+   LOS COLORES DE CLASE SIGUEN EL EJE ORDINAL del proyecto (0 -> 1 -> 2 = densidad
+   creciente de artefactos), así que van de frío a caliente. No son tres colores
+   elegidos por gusto: son una escala.
+   ============================================================================ */
+
 :root {
-  --ion-color-primary: #1F3864;
-  --ion-color-primary-rgb: 31, 56, 100;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #1b3158;
-  --ion-color-primary-tint: #354c74;
+  /* --- Superficies --- */
+  --sup-0: #08090b;   /* fondo absoluto, detrás de todo */
+  --sup-1: #101317;   /* paneles y hojas */
+  --sup-2: #171c22;   /* tarjetas dentro de paneles */
+  --sup-3: #1f262e;   /* estados hover / pressed */
+  --linea: #262f38;   /* bordes */
+  --linea-viva: #38444f;
 
-  --ion-color-secondary: #B45309;
-  --ion-color-secondary-rgb: 180, 83, 9;
-  --ion-color-secondary-contrast: #ffffff;
-  --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #9e4908;
-  --ion-color-secondary-tint: #bc6422;
+  /* --- Texto --- */
+  --tinta: #eef2f6;
+  --tinta-media: #9aa7b4;
+  --tinta-tenue: #616e7c;
 
-  /* Un color por clase: se usa en los chips, las barras y el borde del resultado. */
-  --clase-0: #2E7D32;
-  --clase-1: #B45309;
-  --clase-2: #B00020;
+  /* --- Escala ordinal de las 3 clases: frío -> caliente --- */
+  --c0: #34e0a1;   /* sin rastro de IA   — verde señal */
+  --c1: #ffb23f;   /* rastro de IA       — ámbar */
+  --c2: #ff4d6d;   /* saturada de IA     — rojo-rosa */
+  --c0-tenue: rgba(52, 224, 161, 0.14);
+  --c1-tenue: rgba(255, 178, 63, 0.14);
+  --c2-tenue: rgba(255, 77, 109, 0.14);
+
+  /* --- Cromo de la interfaz --- */
+  --acento: #5ad1ff;              /* cian: retícula, foco, elementos activos */
+  --acento-tenue: rgba(90, 209, 255, 0.12);
+  --alerta: #ff8a5b;
+
+  /* --- Tipografía ---
+     Bricolage Grotesque : grotesca con carácter, para el veredicto y los títulos.
+                           Tiene eje óptico (opsz), así que a tamaño grande ajusta
+                           su contraste en vez de solo escalar.
+     Azeret Mono         : monoespaciada mecánica, para TODA lectura numérica.
+                           Ancho fijo = los dígitos no bailan cuando cambian 30 veces
+                           por segundo, que es exactamente lo que pasa con FPS y nitidez. */
+  --fuente-display: 'Bricolage Grotesque', 'Georgia', serif;
+  --fuente-mono: 'Azeret Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* --- Geometría ---
+     Radios chicos y consistentes. Un instrumento no tiene esquinas de burbuja. */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-hoja: 22px;
+
+  /* --- Sombras: elevación por oscuridad, no por gris --- */
+  --sombra-baja: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --sombra-media: 0 8px 24px -8px rgba(0, 0, 0, 0.7);
+  --sombra-alta: 0 -12px 48px -12px rgba(0, 0, 0, 0.85);
+
+  /* --- Movimiento ---
+     La curva con rebote leve es para lo que "encaja" (la retícula al detectar la
+     pantalla, la hoja al subir). Lo demás sale suave y corto. */
+  --ease-encaje: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-suave: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-rapida: 140ms;
+  --dur-media: 260ms;
+  --dur-lenta: 420ms;
+
+  /* --- Áreas seguras (notch y barra de gestos) ---
+     Se leen una vez acá y se usan en todos lados. Sin esto, en un iPhone el botón
+     de captura queda debajo de la barra de inicio y no se puede tocar. */
+  --seguro-arriba: env(safe-area-inset-top, 0px);
+  --seguro-abajo: env(safe-area-inset-bottom, 0px);
+  --seguro-izq: env(safe-area-inset-left, 0px);
+  --seguro-der: env(safe-area-inset-right, 0px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ion-color-primary: #6f9fe8;
-    --ion-color-primary-rgb: 111, 159, 232;
-    --ion-color-primary-contrast: #000000;
-    --ion-color-primary-contrast-rgb: 0, 0, 0;
-    --ion-color-primary-shade: #618ccc;
-    --ion-color-primary-tint: #7da9ea;
-  }
+/* ============================================================================
+   Ionic: se le pasan las variables de arriba para que sus componentes hereden el
+   sistema en vez de traer su propio tema. La app fuerza modo oscuro siempre —
+   no sigue la preferencia del sistema — porque el diseño ES oscuro: en claro no
+   sería el mismo producto peor iluminado, sería otro producto.
+   ============================================================================ */
+:root {
+  --ion-background-color: var(--sup-0);
+  --ion-background-color-rgb: 8, 9, 11;
+  --ion-text-color: var(--tinta);
+  --ion-text-color-rgb: 238, 242, 246;
+
+  --ion-font-family: var(--fuente-mono);
+
+  --ion-color-primary: #5ad1ff;
+  --ion-color-primary-rgb: 90, 209, 255;
+  --ion-color-primary-contrast: #05121a;
+  --ion-color-primary-contrast-rgb: 5, 18, 26;
+  --ion-color-primary-shade: #4fb8e0;
+  --ion-color-primary-tint: #6bd6ff;
+
+  --ion-color-success: #34e0a1;
+  --ion-color-success-rgb: 52, 224, 161;
+  --ion-color-success-contrast: #04140d;
+
+  --ion-color-warning: #ffb23f;
+  --ion-color-warning-rgb: 255, 178, 63;
+  --ion-color-warning-contrast: #1a1102;
+
+  --ion-color-danger: #ff4d6d;
+  --ion-color-danger-rgb: 255, 77, 109;
+  --ion-color-danger-contrast: #1a0409;
+
+  --ion-color-medium: #9aa7b4;
+  --ion-color-medium-rgb: 154, 167, 180;
+
+  --ion-item-background: var(--sup-2);
+  --ion-toolbar-background: transparent;
+  --ion-tab-bar-background: var(--sup-1);
 }

@@ -1,28 +1,38 @@
-.centrado {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 32px 0;
-  color: var(--ion-color-medium);
+/* ============================================================================
+   CamaraPage — el visor ocupa el viewport y todo lo demás flota encima.
+   ============================================================================ */
+
+:host {
+  display: block;
+  height: 100%;
 }
 
-.pista {
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
-}
-
-/* --- Visor --- */
-.visor {
+.instrumento {
   position: relative;
-
-  &.oculto { display: none; }
+  /* 100dvh y no 100vh: en móvil, vh se mide contra el viewport SIN la barra del navegador,
+     así que con 100vh el HUD inferior queda tapado por esa barra hasta que el usuario hace
+     scroll. dvh sigue el viewport dinámico y es exactamente lo que hace falta acá. */
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--sup-0);
+  isolation: isolate;
 }
 
-/* El <video> es solo la fuente del canvas; nunca se muestra.
-   display:none lo pausaría en algunos navegadores móviles, así que se lo saca de la vista
-   con posicionamiento en lugar de ocultarlo. */
-.fuente {
+/* ============================================================================
+   VISOR
+   ============================================================================ */
+
+.visor {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+/* El <video> es solo la fuente del canvas; nunca se muestra. Se lo saca de la vista con
+   posicionamiento en lugar de display:none, porque display:none pausa la reproducción en
+   varios navegadores móviles y el canvas se quedaría congelado. */
+video {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -30,114 +40,880 @@
   pointer-events: none;
 }
 
-.lienzo {
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: filter var(--dur-media) var(--ease-suave),
+              transform var(--dur-lenta) var(--ease-suave);
+}
+
+/* Durante el análisis la imagen se congela y se desatura un poco: comunica "esto ya no es
+   en vivo, es la foto que se está midiendo" sin escribir una palabra. */
+.visor.congelado canvas {
+  filter: saturate(0.55) contrast(1.06) brightness(0.82);
+  transform: scale(1.015);
+}
+
+/* Viñeta: oscurece los bordes para que el HUD se despegue del video sin necesidad de
+   ponerle una caja opaca a cada elemento. */
+.vineta {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 85% at 50% 45%, transparent 40%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, transparent 22%,
+                    transparent 62%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+/* ============================================================================
+   RETÍCULA
+   ============================================================================
+   Dos capas: el contorno completo (tenue, punteado) y las cuatro escuadras (sólidas).
+   Las escuadras son lo que el ojo lee como "marco"; el contorno solo confirma la forma.
+   ============================================================================ */
+
+.reticula {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.contorno {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 10 14;
+  opacity: 0.35;
+  color: var(--acento);
+  transition: opacity var(--dur-media) var(--ease-suave);
+}
+
+.escuadra {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--acento);
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: color var(--dur-media) var(--ease-suave);
+}
+
+/* El color de la retícula ES el medidor de nitidez. El usuario no tiene que mirar el
+   número del HUD: el marco ya le dice si puede disparar. */
+.instrumento[data-nitidez='mala'] .escuadra,
+.instrumento[data-nitidez='mala'] .contorno { color: var(--c2); }
+
+.instrumento[data-nitidez='media'] .escuadra,
+.instrumento[data-nitidez='media'] .contorno { color: var(--c1); }
+
+.instrumento[data-nitidez='buena'] .escuadra,
+.instrumento[data-nitidez='buena'] .contorno { color: var(--c0); }
+
+/* Al no haber pantalla detectada, la retícula respira: comunica "buscando" sin un spinner.
+   Cuando engancha, la animación se corta sola porque las escuadras saltan a las esquinas
+   reales — el cambio de posición ya es la confirmación. */
+.reticula { animation: respirar 3.2s ease-in-out infinite; }
+
+@keyframes respirar {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+
+/* ============================================================================
+   BARRIDO Y DESTELLO
+   ============================================================================ */
+
+/* Línea que recorre el frame mientras el modelo evalúa. No es decorativa: ocupa
+   exactamente el tiempo en que la app no puede responder, y sin ella una espera de 400 ms
+   sobre una imagen congelada se lee como que la app se colgó. */
+.barrido {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--acento-tenue) 45%,
+    rgba(90, 209, 255, 0.85) 50%,
+    var(--acento-tenue) 55%,
+    transparent 100%);
+  background-size: 100% 42%;
+  background-repeat: no-repeat;
+  animation: barrer 1.15s var(--ease-suave) infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes barrer {
+  0%   { background-position: 0 -45%; }
+  100% { background-position: 0 145%; }
+}
+
+.destello {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  pointer-events: none;
+  animation: destellar 180ms var(--ease-suave) forwards;
+}
+
+@keyframes destellar {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* ============================================================================
+   HUD
+   ============================================================================ */
+
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  pointer-events: none;
+
+  /* Solo los controles reciben toques; el resto del HUD deja pasar el gesto al visor. */
+  > * { pointer-events: auto; }
+}
+
+.hud.arriba {
+  top: 0;
+  padding: calc(var(--seguro-arriba) + 14px) calc(var(--seguro-der) + 16px) 0
+           calc(var(--seguro-izq) + 16px);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud.abajo {
+  bottom: 0;
+  padding: 0 calc(var(--seguro-der) + 16px) calc(var(--seguro-abajo) + 20px)
+           calc(var(--seguro-izq) + 16px);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+/* --- Pastilla del modelo activo ---
+   Va arriba a la izquierda y siempre visible: el usuario tiene que saber QUIÉN está
+   respondiendo antes de creerle la respuesta. */
+.pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px 9px 11px;
+  border: 1px solid var(--linea-viva);
+  border-radius: 999px;
+  background: rgba(8, 9, 11, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--tinta);
+  font-family: var(--fuente-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--dur-rapida) var(--ease-suave),
+              transform var(--dur-rapida) var(--ease-suave);
+
+  &:active { transform: scale(0.96); border-color: var(--acento); }
+
+  .punto {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c0);
+    box-shadow: 0 0 8px var(--c0);
+    animation: latir 2.4s ease-in-out infinite;
+  }
+
+  .chevron {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--tinta-media);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+@keyframes latir {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* --- Medidores ---
+   Alineados a la derecha, en columna, con los números en monoespaciada tabular para que
+   no bailen al actualizarse 12 veces por segundo. */
+.instrumentos {
+  display: flex;
+  gap: 14px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  background: rgba(8, 9, 11, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(56, 68, 79, 0.55);
+}
+
+.medidor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 44px;
+
+  .valor {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--tinta);
+  }
+
+  .estado { font-size: 0.5rem; letter-spacing: 0.1em; }
+
+  &[data-estado='mala'] .valor,
+  &[data-estado='mala'] .estado { color: var(--c2); }
+
+  &[data-estado='media'] .valor,
+  &[data-estado='media'] .estado { color: var(--c1); }
+
+  &[data-estado='buena'] .valor,
+  &[data-estado='buena'] .estado { color: var(--c0); }
+}
+
+/* --- Pista contextual ---
+   Una sola línea que cambia según lo que está pasando. Reemplaza a tres tooltips y a un
+   manual de instrucciones. */
+.pista {
+  text-align: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(8, 9, 11, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  align-self: center;
+  border: 1px solid transparent;
+  transition: border-color var(--dur-media) var(--ease-suave),
+              background var(--dur-media) var(--ease-suave);
+
+  .etiqueta { color: var(--tinta-media); }
+
+  &.enganchada {
+    border-color: rgba(52, 224, 161, 0.45);
+    background: rgba(52, 224, 161, 0.1);
+    .etiqueta { color: var(--c0); }
+  }
+}
+
+/* --- Barra de descarga del modelo --- */
+.progreso {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .riel {
+    height: 2px;
+    background: var(--linea);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .avance {
+    display: block;
+    height: 100%;
+    width: 35%;
+    background: var(--acento);
+    border-radius: 2px;
+    animation: correr 1.3s var(--ease-suave) infinite;
+  }
+}
+
+@keyframes correr {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(400%); }
+}
+
+/* ============================================================================
+   CONTROLES
+   ============================================================================ */
+
+.controles {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
+  gap: 8px;
+}
+
+/* Obturador. 76 px de diámetro: muy por encima de los 44 px mínimos de área táctil, porque
+   se acciona con el pulgar, a una mano, sin mirar el botón. */
+.obturador {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform var(--dur-rapida) var(--ease-encaje);
+
+  .anillo {
+    position: absolute;
+    inset: 0;
+    border: 2.5px solid var(--tinta);
+    border-radius: 50%;
+    transition: border-color var(--dur-media) var(--ease-suave),
+                inset var(--dur-rapida) var(--ease-suave);
+  }
+
+  .nucleo {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--tinta);
+    transition: transform var(--dur-rapida) var(--ease-encaje),
+                background var(--dur-media) var(--ease-suave);
+  }
+
+  &:active:not(:disabled) .nucleo { transform: scale(0.82); }
+
+  &:disabled {
+    cursor: not-allowed;
+    .anillo { border-color: var(--tinta-tenue); }
+    .nucleo { background: var(--tinta-tenue); transform: scale(0.72); }
+  }
+
+  /* Mientras analiza, el núcleo se contrae a un cuadrado y el anillo gira: el mismo
+     control comunica "ocupado" sin agregar un spinner en otro lado de la pantalla. */
+  &.ocupado {
+    .nucleo {
+      transform: scale(0.42);
+      border-radius: var(--r-xs);
+      background: var(--acento);
+    }
+    .anillo {
+      border-color: transparent;
+      border-top-color: var(--acento);
+      animation: girar 900ms linear infinite;
+    }
+  }
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+.aux {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  min-width: 60px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--tinta-media);
+  cursor: pointer;
+  transition: color var(--dur-rapida) var(--ease-suave),
+              transform var(--dur-rapida) var(--ease-suave);
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:active:not(:disabled) { transform: scale(0.92); color: var(--tinta); }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+/* ============================================================================
+   PORTADA
+   ============================================================================ */
+
+.portada {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  /* La marca arriba, el bloque de acción abajo, y el aire acumulado en UN solo lugar
+     (el margin-top:auto de .niveles). Con space-between el aire se repartía entre los
+     cuatro huecos y la composición quedaba flotando sin apoyo. */
+  justify-content: flex-start;
+  gap: 18px;
+  padding: calc(var(--seguro-arriba) + 40px) 26px calc(var(--seguro-abajo) + 34px);
+  background:
+    radial-gradient(120% 70% at 15% 0%, rgba(90, 209, 255, 0.1), transparent 60%),
+    radial-gradient(90% 60% at 90% 100%, rgba(255, 77, 109, 0.08), transparent 65%),
+    var(--sup-0);
+
+  &.centrado {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.marca {
+  /* Entrada escalonada: la etiqueta, después el título, después la bajada. Un solo momento
+     de carga bien orquestado rinde más que micro-animaciones repartidas por toda la app. */
+  > * { animation: entrar 620ms var(--ease-encaje) backwards; }
+  > .etiqueta { animation-delay: 60ms; }
+  > h1        { animation-delay: 140ms; }
+  > .bajada   { animation-delay: 240ms; }
+
+  .etiqueta { display: block; margin-bottom: 18px; }
+
+  h1 {
+    font-size: clamp(3.4rem, 20vw, 6rem);
+    margin: 0 0 20px;
+    color: var(--tinta);
+
+    em {
+      font-style: normal;
+      color: var(--acento);
+      /* El acento del título en cian y no en blanco: es el único elemento de la portada
+         que usa el color de la retícula, así que ata la marca al instrumento. */
+      text-shadow: 0 0 40px rgba(90, 209, 255, 0.35);
+    }
+  }
+
+  .bajada {
+    color: var(--tinta-media);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    max-width: 34ch;
+    margin: 0;
+  }
+}
+
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Los tres niveles, como una leyenda de escala. Refuerza que las clases son un EJE
+   ordinal y no tres categorías sueltas. */
+/* --- Emblema: la retícula, antes de que haya cámara ---
+   Se lleva el espacio sobrante de la portada (margin: auto) en vez de dejar un vacío. */
+.emblema {
+  position: relative;
+  align-self: center;
+  width: min(58vw, 240px);
+  aspect-ratio: 1;
+  margin: auto 0;
+  animation: entrar 700ms var(--ease-encaje) 320ms backwards;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .esq {
+    fill: none;
+    stroke: var(--acento);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.5;
+    filter: drop-shadow(0 0 8px var(--acento));
+    animation: respirar 3.2s ease-in-out infinite;
+  }
+
+  .eje {
+    stroke: var(--acento);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    opacity: 0.35;
+  }
+
+  /* Línea que recorre el emblema: es el mismo barrido del análisis, en reposo. */
+  .rastreo {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    height: 1px;
+    top: 0;
+    background: linear-gradient(90deg, transparent, var(--acento), transparent);
+    box-shadow: 0 0 12px var(--acento);
+    opacity: 0.7;
+    animation: rastrear 4.4s var(--ease-suave) infinite;
+  }
+}
+
+@keyframes rastrear {
+  0%, 100% { top: 8%; opacity: 0; }
+  15%      { opacity: 0.8; }
+  50%      { top: 92%; opacity: 0.8; }
+  65%      { opacity: 0; }
+}
+
+.niveles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 4px;
+  animation: entrar 620ms var(--ease-encaje) 340ms backwards;
+
+  .nivel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--tinta-media);
+    font-size: 0.78rem;
+  }
+
+  .barra {
+    width: 34px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  [data-clase='0'] .barra { background: var(--c0); box-shadow: 0 0 12px var(--c0); }
+  [data-clase='1'] .barra { background: var(--c1); box-shadow: 0 0 12px var(--c1); }
+  [data-clase='2'] .barra { background: var(--c2); box-shadow: 0 0 12px var(--c2); }
+}
+
+.obturador.grande {
   width: 100%;
   height: auto;
-  display: block;
-  border-radius: 10px;
-  background: #000;
-}
-
-.metricas {
+  padding: 18px;
+  border-radius: var(--r-lg);
+  background: var(--tinta);
+  color: var(--sup-0);
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-/* --- Acciones --- */
-.acciones {
-  margin-top: 12px;
-}
-
-.acciones-secundarias {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-/* --- Resultado --- */
-.resultado {
-  border-left: 6px solid var(--ion-color-primary);
-}
-
-.detalle {
-  margin-top: 0;
-}
-
-.barras {
-  margin: 16px 0 8px;
-}
-
-.barra-fila {
-  display: grid;
-  grid-template-columns: 8.5rem 1fr 3.2rem;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
+  justify-content: center;
+  animation: entrar 620ms var(--ease-encaje) 420ms backwards;
+
+  .anillo { display: none; }
+
+  .etiqueta {
+    color: var(--sup-0);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  &:active { transform: scale(0.985); }
 }
 
-.barra-nombre {
-  color: var(--ion-color-medium-shade);
+.portada .nota {
+  color: var(--tinta-tenue);
+  font-size: 0.68rem;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.barra-pista {
-  height: 14px;
-  background: var(--ion-color-light-shade, #e6e6e6);
-  border-radius: 7px;
-  overflow: hidden;
+.pulso {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid var(--acento);
+  margin-bottom: 18px;
+  animation: pulsar 1.4s var(--ease-suave) infinite;
 }
 
-.barra-relleno {
+@keyframes pulsar {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.aviso {
+  max-width: 30rem;
+  padding: 24px;
+  border: 1px solid rgba(255, 77, 109, 0.35);
+  border-radius: var(--r-lg);
+  background: var(--c2-tenue);
+
+  .etiqueta { color: var(--c2); }
+  p { color: var(--tinta); line-height: 1.55; font-size: 0.86rem; }
+}
+
+.boton {
+  padding: 13px 22px;
+  border: 1px solid var(--linea-viva);
+  border-radius: var(--r-md);
+  background: var(--sup-2);
+  color: var(--tinta);
+  font-family: var(--fuente-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background var(--dur-rapida) var(--ease-suave),
+              transform var(--dur-rapida) var(--ease-suave);
+
+  &:active { transform: scale(0.97); background: var(--sup-3); }
+  &.ancho { width: 100%; }
+}
+
+/* ============================================================================
+   HOJA DE RESULTADO
+   ============================================================================ */
+
+.panel {
   height: 100%;
-  border-radius: 7px;
-  transition: width 220ms ease-out;
+  overflow-y: auto;
+  padding: 10px 22px calc(var(--seguro-abajo) + 26px);
+  background: var(--sup-1);
+  border-radius: var(--r-hoja) var(--r-hoja) 0 0;
+  border-top: 1px solid var(--linea);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  /* Mismo motivo que en el selector: los hijos de un flex en columna con altura fija se
+     comprimen (flex-shrink: 1) en vez de desbordar, y el contenido queda cortado. */
+  > * {
+    flex-shrink: 0;
+  }
 }
 
-.barra-valor {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.veredicto {
+  padding-top: 6px;
+
+  > .etiqueta { display: block; margin-bottom: 10px; }
+
+  h2 {
+    font-size: clamp(2rem, 9vw, 2.9rem);
+    margin: 0 0 10px;
+    color: var(--tinta);
+  }
+
+  .detalle {
+    color: var(--tinta-media);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    margin: 0 0 20px;
+  }
+
+  /* El veredicto se tiñe del color de la clase ganadora. Es la señal más rápida de todas:
+     se lee antes que el texto. */
+  &[data-clase='0'] h2 { color: var(--c0); }
+  &[data-clase='1'] h2 { color: var(--c1); }
+  &[data-clase='2'] h2 { color: var(--c2); }
+
+  &.rechazo h2 { color: var(--alerta); }
 }
 
-.pie {
+/* --- Espectro --- */
+.espectro {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--sup-3);
+  margin-bottom: 16px;
+
+  .segmento {
+    flex-basis: 0;
+    min-width: 2px;
+    /* La transición sobre flex-grow hace que las tres franjas se acomoden al aparecer,
+       en vez de saltar a su tamaño final. */
+    transition: flex-grow var(--dur-lenta) var(--ease-encaje);
+
+    &[data-clase='0'] { background: var(--c0); }
+    &[data-clase='1'] { background: var(--c1); }
+    &[data-clase='2'] { background: var(--c2); }
+    &:not(.dominante) { opacity: 0.4; }
+  }
+}
+
+/* --- Desglose numérico --- */
+.desglose {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.5;
+    transition: opacity var(--dur-media) var(--ease-suave);
+
+    &.activa { opacity: 1; }
+  }
+
+  .marca {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  li[data-clase='0'] .marca { background: var(--c0); }
+  li[data-clase='1'] .marca { background: var(--c1); }
+  li[data-clase='2'] .marca { background: var(--c2); }
+
+  .nombre { color: var(--tinta-media); }
+
+  .pct {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--tinta);
+  }
+}
+
+.alerta {
+  padding: 12px 14px;
+  border-left: 3px solid var(--c1);
+  background: var(--c1-tenue);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--tinta);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.sellos {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.tecnico {
-  font-size: 0.8rem;
-  color: var(--ion-color-medium);
-  line-height: 1.4;
-}
-
-.miniatura img {
-  width: 140px;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--ion-color-light-shade, #ddd);
-}
-
-/* --- Comparación de los 3 --- */
-.fila-modelo {
-  display: grid;
-  grid-template-columns: 7.5rem 1fr 3rem 4rem;
-  align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--ion-color-light-shade, #eee);
 }
 
-.fila-clase { font-weight: 600; }
+.sello {
+  padding: 5px 10px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  font-family: var(--fuente-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-tenue);
 
-.fila-conf,
-.fila-ms {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: var(--ion-color-medium);
+  &.ok {
+    border-color: rgba(52, 224, 161, 0.4);
+    color: var(--c0);
+  }
+}
+
+/* --- Métricas del rechazo --- */
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--linea);
+  border-radius: var(--r-md);
+  background: var(--sup-2);
+
+  .valor {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--alerta);
+    line-height: 1.1;
+  }
+}
+
+/* --- Comparación de los tres --- */
+.comparacion {
+  border-top: 1px solid var(--linea);
+  padding-top: 18px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+
+  .acuerdo { color: var(--c1); }
+  .acuerdo.total { color: var(--c0); }
+
+  .fila {
+    display: grid;
+    grid-template-columns: 8px 4.6rem 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--sup-3);
+    font-size: 0.75rem;
+
+    &:last-of-type { border-bottom: 0; }
+
+    .marca { width: 8px; height: 8px; border-radius: 2px; }
+    &[data-clase='0'] .marca { background: var(--c0); }
+    &[data-clase='1'] .marca { background: var(--c1); }
+    &[data-clase='2'] .marca { background: var(--c2); }
+
+    .id { color: var(--tinta-media); }
+    .clase { font-weight: 500; color: var(--tinta); letter-spacing: 0.04em; }
+    .conf { color: var(--tinta); }
+    .ms { color: var(--tinta-tenue); min-width: 3.4rem; text-align: right; }
+  }
+}
+
+/* --- La entrada real del modelo --- */
+.muestra {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-top: 18px;
+  border-top: 1px solid var(--linea);
+
+  .miniatura {
+    flex-shrink: 0;
+    width: 88px;
+    height: 88px;
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    border: 1px solid var(--linea-viva);
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  }
+
+  .etiqueta { display: block; margin-bottom: 6px; }
+}
+
+.nota {
+  color: var(--tinta-tenue);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  margin: 8px 0 0;
+}
+
+/* ============================================================================
+   Pantallas anchas
+   ============================================================================
+   En una tablet o un escritorio, estirar un visor pensado para el pulgar a 1400 px lo
+   arruina. Se le pone un techo y se centra, manteniendo la proporción de un teléfono.
+   ============================================================================ */
+@media (min-width: 760px) {
+  .instrumento {
+    max-width: 460px;
+    margin: 0 auto;
+    border-left: 1px solid var(--linea);
+    border-right: 1px solid var(--linea);
+  }
 }

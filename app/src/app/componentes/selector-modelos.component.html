@@ -1,0 +1,97 @@
+<div class="hoja-modelos">
+
+  <header class="cabecera">
+    <span class="etiqueta">Modelo activo</span>
+    <h2 class="display">Tres opiniones</h2>
+    <p class="bajada">
+      Los tres resuelven el mismo problema pero difieren en framework, arquitectura y forma
+      de entrenar. Elegir uno es elegir un compromiso.
+    </p>
+  </header>
+
+  @if (!hayMetricas()) {
+    <div class="aviso">
+      <span class="etiqueta">Sin catálogo</span>
+      <p>
+        No se encontró <code>assets/modelos/catalogo.json</code>. Se muestra el catálogo por
+        defecto, sin métricas. Generalo con <code>python export/generar_catalogo.py</code>.
+      </p>
+    </div>
+  }
+
+  @for (m of modelos(); track m.id) {
+    <article class="tarjeta" [class.activa]="esActivo(m)" [attr.data-id]="m.id"
+             (click)="seleccionar(m)" tabindex="0" role="button"
+             (keydown.enter)="seleccionar(m)" (keydown.space)="seleccionar(m)">
+
+      <div class="fila-titulo">
+        <span class="distintivo">{{ inicial(m) }}</span>
+        <div class="identidad">
+          <h3>{{ m.arquitectura }}</h3>
+          <span class="etiqueta">{{ m.framework }}</span>
+        </div>
+        @if (esActivo(m)) {
+          <span class="insignia">activo</span>
+        }
+      </div>
+
+      <p class="descripcion">{{ m.descripcion }}</p>
+
+      <!-- El "por qué" es lo que convierte el selector en una decisión informada en vez de
+           una ruleta de tres botones. -->
+      <p class="porque">{{ m.porQue }}</p>
+
+      <!-- Métricas medidas sobre el TEST DE FOTOS de la v9: 207 fotos de cámara, ningún
+           render. Es la accuracy comercial, no la de laboratorio. -->
+      @if (m.metricas; as k) {
+        <div class="cifras">
+          <div class="cifra">
+            <span class="lectura valor">{{ pct(k.accuracy) }}<i>%</i></span>
+            <span class="etiqueta">accuracy</span>
+          </div>
+          <div class="cifra">
+            <span class="lectura valor">{{ pct(k.macroF1) }}<i>%</i></span>
+            <span class="etiqueta">F1 macro</span>
+          </div>
+          <div class="cifra">
+            <span class="lectura valor">{{ pct(k.recallClase2) }}<i>%</i></span>
+            <span class="etiqueta">recall c2</span>
+          </div>
+        </div>
+      }
+
+      <div class="pie">
+        <div class="sellos">
+          <span class="sello">{{ m.backend === 'tfjs' ? 'TF.js · WebGL' : 'ONNX · WASM' }}</span>
+          <span class="sello">{{ m.pesoMB }} MB</span>
+          @if (estaCargado(m)) {
+            <span class="sello listo">en memoria</span>
+          }
+        </div>
+
+        @if (!estaCargado(m)) {
+          <button class="mini" (click)="precargar(m, $event)"
+                  [disabled]="cargando() !== null" type="button">
+            {{ cargando() === m.id ? 'descargando…' : 'precargar' }}
+          </button>
+        } @else {
+          <button class="mini" (click)="liberar(m, $event)" type="button">liberar</button>
+        }
+      </div>
+    </article>
+  }
+
+  <section class="explicacion">
+    <span class="etiqueta">¿Por qué tres?</span>
+    <p>
+      Porque el producto tiene que sobrevivir a que el modelo cambie. La app no sabe cuál
+      está corriendo: le pide una predicción a una interfaz y recibe probabilidades. Sumar un
+      cuarto modelo es sumar un archivo y una entrada en el catálogo — cero líneas de la app.
+    </p>
+    <p>
+      Y porque tres opiniones independientes valen más que una. El botón <strong>los 3</strong>
+      del visor los corre sobre la misma foto: si coinciden, la respuesta es sólida; si
+      discrepan, la diapositiva es ambigua y conviene mirarla a mano.
+    </p>
+  </section>
+</div>
