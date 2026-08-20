@@ -3,6 +3,39 @@
 Guía para publicar `app/` (Ionic 8 + Angular 18) en Vercel, con la URL accesible desde
 cualquier teléfono.
 
+## Desplegado
+
+**https://app-eta-one-19.vercel.app** — producción, sirviendo la **v10**.
+
+| | |
+|---|---|
+| proyecto | `app` (cuenta `vjrodrig2004-3707s-projects`) |
+| deployment | `dpl_7a2tpscfJ34Rd2eiYXpH37xbNKDm` · target `production` · `READY` |
+| desplegado con | `cd app && vercel --prod` (CLI, sin integración de GitHub) |
+
+Verificado sobre la URL publicada:
+
+- `catalogo.json` declara `version: v10`, las **4 clases** y `nOrdinales: 3`.
+- Los tres modelos responden 200 con su peso real: `tfjs_v10/model.json` (195 KB),
+  `modelo_b_v10.onnx` (4.6 MB), `modelo_c_v10.onnx` (16.0 MB).
+- `opencv.js` (10.3 MB) y `ort-wasm-simd-threaded.wasm` (11.2 MB) también responden 200, o
+  sea que el `postinstall` corrió en el build de Vercel.
+- Los assets de la v9 ya no están.
+- Los modelos salen con `Cache-Control: public, max-age=31536000, immutable`.
+
+> **Nota sobre el deploy por CLI.** Se publicó con `vercel --prod` desde `app/` y no con la
+> integración de GitHub. La consecuencia práctica es que **un push a `main` NO redespliega**:
+> hay que volver a correr el comando. Para que cada push publique solo hace falta conectar el
+> repo desde el panel de Vercel (sección 1 de esta guía) con Root Directory = `app`.
+
+> **Detalle conocido, menor.** Una ruta inexistente bajo `/assets/` devuelve `index.html` con
+> **200** en vez de un 404 — la reescritura de SPA la atrapa aunque el patrón excluya
+> `assets/`. No afecta a la app (el catálogo solo apunta a archivos que existen), pero si
+> alguna vez falta un modelo, el error en consola va a ser un fallo de parseo raro en lugar de
+> un 404 claro. Vale tenerlo presente al diagnosticar.
+
+---
+
 **Por qué Vercel y no la red local:** la cámara del navegador (`getUserMedia`) solo funciona
 en *contexto seguro* — HTTPS o `localhost`. Servir desde `http://192.168.x.x:8100` carga la
 app pero **la cámara no arranca**. Vercel da HTTPS automático y resuelve eso sin

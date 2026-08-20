@@ -198,8 +198,9 @@ TensorFlow/.venv/Scripts/python export/verificar_paridad.py    # .keras vs Tenso
 cd app && npm install && npm start        # http://localhost:8100
 ```
 
-Para publicarla en Vercel y poder abrirla desde cualquier teléfono (la cámara necesita
-HTTPS, así que la red local no alcanza): **`documentacion/DESPLIEGUE.md`**.
+**Desplegada en https://app-eta-one-19.vercel.app** (producción, sirviendo la v10). La
+cámara necesita HTTPS, así que la red local no alcanza; el detalle del despliegue y su
+verificación están en **`documentacion/DESPLIEGUE.md`**.
 
 > `export/exportar_onnx.py` **verifica** la exportación comparando PyTorch contra ONNX Runtime
 > sobre fotos reales del test, y aborta si difieren más de 1e-4. Para el modelo A, que va por
