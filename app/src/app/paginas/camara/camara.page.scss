@@ -456,16 +456,43 @@ canvas {
      (el margin-top:auto de .niveles). Con space-between el aire se repartía entre los
      cuatro huecos y la composición quedaba flotando sin apoyo. */
   justify-content: flex-start;
-  gap: 18px;
-  padding: calc(var(--seguro-arriba) + 40px) 26px calc(var(--seguro-abajo) + 34px);
+  /* El aire se mide contra el ALTO del viewport, no en píxeles fijos. Con los 18 px de
+     gap × 4 y los 74 px de padding fijos, la composición pedía ~790 px de alto: en un
+     teléfono de 640 px el botón "Encender cámara" quedaba 150 px por debajo del borde,
+     y como el visor no scrollea, no había forma de llegar a él. Con dvh la portada se
+     aprieta sola en las pantallas cortas en vez de desbordar. */
+  gap: clamp(10px, 2dvh, 18px);
+  padding: calc(var(--seguro-arriba) + clamp(16px, 4dvh, 40px))
+           clamp(18px, 6vw, 26px)
+           calc(var(--seguro-abajo) + clamp(16px, 3.4dvh, 34px));
   background:
     radial-gradient(120% 70% at 15% 0%, rgba(90, 209, 255, 0.1), transparent 60%),
     radial-gradient(90% 60% at 90% 100%, rgba(255, 77, 109, 0.08), transparent 65%),
     var(--sup-0);
 
+  /* Última garantía. Si aun con todo lo anterior el contenido no entra —tipografía
+     grande del sistema, una ventana con proporciones raras, un teléfono más chico que
+     los que se probaron— la PORTADA scrollea por dentro. El visor sigue sin scrollear,
+     que es lo correcto para una cámara; lo que no podía seguir pasando es que la única
+     acción de la app quedara fuera de alcance. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* Rígido todo salvo el emblema (ver abajo): lo que cede cuando falta alto es el
+     adorno, nunca el texto ni el botón. Sin esto, un flex en columna comprime a sus
+     hijos antes que desbordar y el botón se aplasta hasta ser intocable. */
+  > *:not(.emblema) { flex-shrink: 0; }
+
   &.centrado {
     justify-content: center;
     align-items: center;
+    /* `safe` degrada a start cuando el contenido no entra. Con `center` a secas, un
+       aviso de error más alto que el viewport se desborda por ARRIBA, y esa mitad no se
+       alcanza ni scrolleando — el botón "Reintentar" tenía el mismo problema que el de
+       encender la cámara. Si el navegador no soporta `safe`, ignora estas dos líneas y
+       se queda con el `center` de arriba. */
+    justify-content: safe center;
+    align-items: safe center;
     text-align: center;
   }
 }
@@ -478,11 +505,14 @@ canvas {
   > h1        { animation-delay: 140ms; }
   > .bajada   { animation-delay: 240ms; }
 
-  .etiqueta { display: block; margin-bottom: 18px; }
+  .etiqueta { display: block; margin-bottom: clamp(8px, 2dvh, 18px); }
 
   h1 {
-    font-size: clamp(3.4rem, 20vw, 6rem);
-    margin: 0 0 20px;
+    /* El título se mide contra el ancho Y el alto. Con `20vw` a secas, un teléfono
+       angosto pero corto (320×568) pedía 64 px por línea × 2 líneas: el título solo se
+       comía un tercio del viewport. El `min()` deja que mande el eje más apretado. */
+    font-size: clamp(2.6rem, min(20vw, 10dvh), 6rem);
+    margin: 0 0 clamp(10px, 2.4dvh, 20px);
     color: var(--tinta);
 
     em {
@@ -515,7 +545,15 @@ canvas {
 .emblema {
   position: relative;
   align-self: center;
-  width: min(58vw, 240px);
+  /* El emblema es el ÚNICO elemento elástico de la portada, y esa es la pieza central
+     del arreglo: el flex-basis fija su alto ideal y el flex-shrink le da permiso a
+     ceder. En una pantalla corta se achica él —de 240 px a 130, a 50— y el botón entra
+     igual. Antes tenía tamaño fijo, así que el faltante de alto lo pagaba lo último de
+     la columna, que es justo la acción principal.
+     El alto lo pone flex; el ancho sale del aspect-ratio, así sigue siendo cuadrado. */
+  flex: 0 1 min(58vw, 240px);
+  min-height: 40px;
+  width: auto;
   aspect-ratio: 1;
   margin: auto 0;
   animation: entrar 700ms var(--ease-encaje) 320ms backwards;
@@ -568,7 +606,7 @@ canvas {
 .niveles {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(6px, 1.4dvh, 10px);
   padding-bottom: 4px;
   animation: entrar 620ms var(--ease-encaje) 340ms backwards;
 
@@ -596,7 +634,10 @@ canvas {
 .obturador.grande {
   width: 100%;
   height: auto;
-  padding: 18px;
+  /* Se aprieta con la pantalla, pero nunca por debajo de 48 px de alto total: es el
+     mínimo táctil, y este botón es la única puerta de entrada a la app. */
+  padding: clamp(14px, 2.4dvh, 18px);
+  min-height: 48px;
   border-radius: var(--r-lg);
   background: var(--tinta);
   color: var(--sup-0);
@@ -623,6 +664,50 @@ canvas {
   text-align: center;
   margin: 0;
   line-height: 1.5;
+}
+
+/* ----------------------------------------------------------------------------
+   PORTADA EN PANTALLA CORTA (teléfono acostado, ventana baja)
+   ----------------------------------------------------------------------------
+   Acá no alcanza con apretar: una columna de ~470 px de alto no entra en 360 px por
+   más que se recorten gaps. Con el teléfono acostado solo se veía el título — el
+   botón quedaba dos pantallas abajo.
+
+   El alto es el recurso escaso y el ancho sobra, así que la columna se parte en dos:
+   el discurso a la izquierda, la acción a la derecha. El emblema se va, porque es lo
+   único de la portada que no informa ni acciona.
+   ---------------------------------------------------------------------------- */
+@media (max-height: 540px) and (min-width: 480px) {
+  .portada:not(.centrado) {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-rows: auto auto auto;
+    align-content: center;
+    column-gap: clamp(20px, 4vw, 40px);
+    row-gap: clamp(8px, 2dvh, 14px);
+  }
+
+  .marca {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+
+  .emblema { display: none; }
+
+  .niveles         { grid-column: 2; grid-row: 1; align-self: end; }
+  .obturador.grande { grid-column: 2; grid-row: 2; }
+  .portada .nota   { grid-column: 2; grid-row: 3; text-align: left; }
+
+  .marca h1 {
+    font-size: clamp(2rem, 7dvh, 3.4rem);
+    margin-bottom: clamp(8px, 2dvh, 14px);
+  }
+
+  .marca .bajada {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
 }
 
 .pulso {
