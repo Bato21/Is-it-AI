@@ -144,11 +144,11 @@ export class OpenCvService {
 
       let motivo = '';
       if (nitidez < UMBRAL_NITIDEZ) {
-        motivo = 'La foto está movida o desenfocada. Apoyá el teléfono y volvé a intentar.';
+        motivo = 'La foto está movida o desenfocada. Apoya el teléfono y vuelve a intentar.';
       } else if (brillo < UMBRAL_BRILLO_MIN) {
-        motivo = 'Muy oscura. Subí el brillo de la pantalla que estás fotografiando.';
+        motivo = 'Muy oscura. Sube el brillo de la pantalla que estás fotografiando.';
       } else if (brillo > UMBRAL_BRILLO_MAX) {
-        motivo = 'Quemada por el reflejo. Cambiá el ángulo para esquivar la luz.';
+        motivo = 'Quemada por el reflejo. Cambia el ángulo para esquivar la luz.';
       }
 
       return { nitidez, brillo: Math.round(brillo), apta: motivo === '', motivo };

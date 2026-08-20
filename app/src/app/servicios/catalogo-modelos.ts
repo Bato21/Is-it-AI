@@ -94,7 +94,7 @@ export const DESCRIPCION_CLASES: Record<string, { titulo: string; detalle: strin
   '3_no_diapositiva': {
     titulo: 'No es una diapositiva',
     detalle: 'La foto no muestra una diapositiva, así que no corresponde estimar huella de IA. '
-      + 'Reencuadrá sobre la pantalla y volvé a disparar.',
+      + 'Reencuadra sobre la pantalla y vuelve a disparar.',
     color: 'var(--c3)',
   },
 };

@@ -10,8 +10,9 @@ cualquier teléfono.
 | | |
 |---|---|
 | proyecto | `app` (cuenta `vjrodrig2004-3707s-projects`) |
-| deployment | `dpl_7a2tpscfJ34Rd2eiYXpH37xbNKDm` · target `production` · `READY` |
+| deployment | `app-l993qsr85` · target `production` · `READY` |
 | desplegado con | `cd app && vercel --prod` (CLI, sin integración de GitHub) |
+| incluye | modelos v10, arreglos de cámara y responsividad, textos en español neutro |
 
 Verificado sobre la URL publicada:
 
@@ -22,6 +23,32 @@ Verificado sobre la URL publicada:
   sea que el `postinstall` corrió en el build de Vercel.
 - Los assets de la v9 ya no están.
 - Los modelos salen con `Cache-Control: public, max-age=31536000, immutable`.
+- Los 17 chunks de JavaScript servidos no contienen ni una forma de voseo.
+
+## Idioma: español latinoamericano neutro
+
+Todo el texto que ve el usuario usa **tuteo**, no voseo. No es preferencia estética: la app se
+presenta en una asignatura y se puede abrir desde cualquier país de la región, y el voseo la
+marca como rioplatense. El tuteo es la forma que se entiende en toda Latinoamérica sin que
+suene de ningún lado en particular.
+
+Lo que cambió, en los cuatro archivos que contienen texto de usuario:
+
+| antes | ahora | dónde |
+|---|---|---|
+| Apuntá la cámara | **Apunta** la cámara | portada |
+| estabilizá el teléfono | **estabiliza** el teléfono | pista del visor |
+| encuadrá la pantalla | **encuadra** la pantalla | pista del visor |
+| Reencuadrá … volvé a disparar | **Reencuadra** … **vuelve** a disparar | veredicto de rechazo · comparación |
+| Apoyá el teléfono y volvé a intentar | **Apoya** … y **vuelve** a intentar | foto rechazada por nitidez |
+| Subí el brillo | **Sube** el brillo | foto rechazada por oscura |
+| Cambiá el ángulo | **Cambia** el ángulo | foto rechazada por reflejo |
+| Habilitalo en los ajustes | **Habílitalo** en los ajustes | error de permiso de cámara |
+| Generalo con … | **Genéralo** con … | aviso de catálogo faltante |
+
+> Los **comentarios del código** siguen en el registro informal de siempre. Son notas para
+> quien mantiene el repo, no interfaz: unificarlos habría tocado miles de líneas sin cambiar
+> nada de lo que el usuario lee.
 
 > **Nota sobre el deploy por CLI.** Se publicó con `vercel --prod` desde `app/` y no con la
 > integración de GitHub. La consecuencia práctica es que **un push a `main` NO redespliega**:

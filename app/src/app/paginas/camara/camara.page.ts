@@ -647,7 +647,7 @@ export class CamaraPage implements OnInit, OnDestroy {
     switch (err?.name) {
       case 'NotAllowedError':
       case 'PermissionDeniedError':
-        return 'Permiso de cámara denegado. Habilitalo en los ajustes del navegador.';
+        return 'Permiso de cámara denegado. Habilítalo en los ajustes del navegador.';
       case 'NotFoundError':
       case 'DevicesNotFoundError':
         return 'No se encontró ninguna cámara en este dispositivo.';
