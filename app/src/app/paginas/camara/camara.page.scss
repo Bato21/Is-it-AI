@@ -667,6 +667,25 @@ canvas {
 }
 
 /* ----------------------------------------------------------------------------
+   PORTADA EN TELÉFONO CHICO (alto < 620 px, de pie)
+   ----------------------------------------------------------------------------
+   Por debajo de este alto el emblema ya tocó su piso de 40 px, y un emblema de 40 px
+   no comunica nada: es una retícula aplastada que igual ocupa lugar. Sacarlo devuelve
+   ~50 px, que es justo lo que la portada necesitaba después de que la v10 alargara la
+   bajada (le sumó la frase de la compuerta de rechazo). Mismo criterio que en el bloque
+   de abajo para el teléfono acostado: cuando falta alto, lo primero que se va es lo
+   único que ni informa ni acciona.
+   ---------------------------------------------------------------------------- */
+@media (max-height: 620px) {
+  .emblema { display: none; }
+
+  .marca .bajada {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    PORTADA EN PANTALLA CORTA (teléfono acostado, ventana baja)
    ----------------------------------------------------------------------------
    Acá no alcanza con apretar: una columna de ~470 px de alto no entra en 360 px por
