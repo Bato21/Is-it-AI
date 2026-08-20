@@ -1,5 +1,10 @@
 """
-Exportación a ONNX de los modelos PyTorch de la v9 — modelo B y modelo C.
+Exportación a ONNX de los modelos PyTorch de la versión de producción — modelo B y modelo C.
+
+VERSIÓN QUE SE EXPORTA: v10 (4 clases — eje ordinal 0-1-2 + compuerta de rechazo).
+  Está en la constante VERSION de abajo. Es el único lugar donde figura: las rutas de
+  entrada, las de salida y la partición con la que se verifica se derivan de ella. Volver a
+  exportar la v9 es cambiar esa línea.
 
 QUÉ ES ONNX Y POR QUÉ ES EL PASO QUE CONVIERTE UN EXPERIMENTO EN UN PRODUCTO:
   Un .pt de PyTorch es un diccionario de tensores más la clase Python que sabe cómo usarlos.
@@ -18,7 +23,7 @@ CÓMO EXPORTA torch.onnx.export (y por qué importa saberlo):
   Por TRACING: corre el modelo una vez con un tensor de ejemplo y anota las operaciones que
   se ejecutaron. Consecuencia práctica: lo que no se ejecutó en esa pasada, no queda en el
   grafo. Un `if` que dependa del contenido del tensor se congela en la rama que tocó ese día.
-  Los modelos de la v9 no tienen ramas condicionales, así que el tracing los captura enteros
+  Estos modelos no tienen ramas condicionales, así que el tracing los captura enteros
   — pero es la limitación que hay que poder nombrar si preguntan.
 
   Por eso el modelo se pone en .eval() ANTES de exportar. Si quedara en train(), el tracing
@@ -53,28 +58,38 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+VERSION = "v10"       # ver el encabezado: la única mención de la versión en este archivo
+
 RAIZ = Path(__file__).resolve().parents[1]
+ORIGEN = RAIZ / "PyTorch" / VERSION
 sys.path.insert(0, str(RAIZ / "documentacion"))
-sys.path.insert(0, str(RAIZ / "PyTorch" / "v9"))
+sys.path.insert(0, str(ORIGEN))
 
 from imagenes import cargar_para_particion  # noqa: E402
-from modelos_v9 import cargar_modelo_b, cargar_modelo_c  # noqa: E402
-from particion_v9 import cargar_particion, rutas_y_etiquetas  # noqa: E402
+from modelos_v10 import cargar_modelo_b, cargar_modelo_c  # noqa: E402
+from particion_v10 import cargar_particion, rutas_y_etiquetas  # noqa: E402
 
 SALIDA = RAIZ / "app" / "src" / "assets" / "modelos"
+PESOS_B = ORIGEN / f"modelopt_{VERSION}_finetune.pt"
+PESOS_C = ORIGEN / f"modelopt_{VERSION}_modelo_c.pt"
 OPSET = 17            # opset 17 lo soportan onnxruntime-web 1.20 y todos los runtimes actuales
 TOLERANCIA = 1e-4     # diferencia máxima admitida entre PyTorch y ONNX Runtime
 N_VERIFICACION = 12   # imágenes reales con las que se verifica la paridad
 
 
 def construir_modelo_b():
-    """Modelo B (MobileNetV3-Small) con sus pesos entrenados, en eval()."""
-    return cargar_modelo_b(RAIZ / "PyTorch/v9/modelopt_v9_finetune.pt")
+    """Modelo B (MobileNetV3-Small) con sus pesos entrenados, en eval().
+
+    cargar_modelo_b lee la lista de clases del propio checkpoint y arma la cabeza con
+    len(clases), así que reconstruye tanto un modelo de 3 clases (v9) como uno de 4 (v10) sin
+    saber de antemano cuál le toca.
+    """
+    return cargar_modelo_b(PESOS_B)
 
 
 def construir_modelo_c():
     """Modelo C (EfficientNet-B0) con sus pesos entrenados, en eval()."""
-    return cargar_modelo_c(RAIZ / "PyTorch/v9/modelopt_v9_modelo_c.pt")
+    return cargar_modelo_c(PESOS_C)
 
 
 def imagenes_de_verificacion(n: int) -> np.ndarray:
@@ -138,7 +153,8 @@ def verificar_paridad(modelo: nn.Module, destino: Path, lote: np.ndarray) -> flo
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Exporta los modelos PyTorch de la v9 a ONNX.")
+    ap = argparse.ArgumentParser(
+        description=f"Exporta los modelos PyTorch de la {VERSION} a ONNX.")
     ap.add_argument("--solo", choices=["b", "c"], help="exportar solo uno de los dos")
     args = ap.parse_args()
 
@@ -148,15 +164,14 @@ def main() -> None:
     trabajos = []
     if args.solo in (None, "b"):
         trabajos.append(("Modelo B — MobileNetV3-Small", construir_modelo_b,
-                         SALIDA / "modelo_b_v9.onnx"))
+                         SALIDA / f"modelo_b_{VERSION}.onnx"))
     if args.solo in (None, "c"):
         trabajos.append(("Modelo C — EfficientNet-B0", construir_modelo_c,
-                         SALIDA / "modelo_c_v9.onnx"))
+                         SALIDA / f"modelo_c_{VERSION}.onnx"))
 
     resumen = {}
     for nombre, constructor, destino in trabajos:
-        origen = (RAIZ / "PyTorch/v9/modelopt_v9_finetune.pt" if "MobileNet" in nombre
-                  else RAIZ / "PyTorch/v9/modelopt_v9_modelo_c.pt")
+        origen = PESOS_B if "MobileNet" in nombre else PESOS_C
         if not origen.is_file():
             print(f"  [SALTEADO] {nombre}: falta {origen.relative_to(RAIZ)}")
             print(f"             Entrenalo primero.")

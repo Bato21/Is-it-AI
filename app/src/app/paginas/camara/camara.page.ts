@@ -56,7 +56,9 @@ import { Subscription } from 'rxjs';
 import { IonContent, IonModal } from '@ionic/angular/standalone';
 
 import { SelectorModelosComponent } from '../../componentes/selector-modelos.component';
-import { CLASES, DESCRIPCION_CLASES, DefinicionModelo } from '../../servicios/catalogo-modelos';
+import {
+  CLASES, DESCRIPCION_CLASES, DefinicionModelo, NOMBRE_CORTO,
+} from '../../servicios/catalogo-modelos';
 import { InferenciaService, Prediccion } from '../../servicios/inferencia.service';
 import { Calidad, Esquinas, OpenCvService, UMBRAL_NITIDEZ } from '../../servicios/opencv.service';
 
@@ -87,6 +89,20 @@ export class CamaraPage implements OnInit, OnDestroy {
 
   readonly CLASES = CLASES;
   readonly UMBRAL_NITIDEZ = UMBRAL_NITIDEZ;
+
+  /**
+   * Los índices del EJE ORDINAL, para la lista de niveles de la portada.
+   *
+   * La portada anuncia "el modelo estima cuánta huella de IA tiene, en N niveles" y los
+   * lista. La compuerta de rechazo NO es un nivel —es la ausencia de veredicto— así que no va
+   * en esa lista: incluirla prometería una escala de cuatro escalones que no existe.
+   *
+   * Es un campo y no un getter porque la plantilla lo recorre con @for: un getter devolvería
+   * un array nuevo en cada ciclo de detección de cambios y forzaría a Angular a re-diferenciar
+   * la lista sesenta veces por segundo mientras corre el bucle de la cámara. Se llena una vez
+   * en ngOnInit, cuando ya se sabe cuántas clases declaró el catálogo.
+   */
+  indicesOrdinales: number[] = [0, 1, 2];
 
   // --- Cámara ---
   estado = signal<EstadoApp>('inicial');
@@ -144,6 +160,23 @@ export class CamaraPage implements OnInit, OnDestroy {
 
   consenso = computed(() => this.inferencia.consenso(this.predicciones()));
   hayComparacion = computed(() => this.predicciones().length > 1);
+
+  /**
+   * ¿Los modelos discrepan sobre si la imagen es siquiera una diapositiva?
+   *
+   * No es lo mismo que una discrepancia cualquiera, y meterlas en la misma bolsa haría que la
+   * app dijera algo falso. Cuando A dice "rastro de IA" y B dice "saturada", discrepan en el
+   * GRADO: la diapositiva es ambigua y el mensaje "revisala a mano" es correcto.
+   *
+   * Cuando uno rechaza y otro informa un nivel, discrepan en si hay algo que medir. Decirle al
+   * usuario "la diapositiva es ambigua" en ese caso sería afirmar que hay una diapositiva,
+   * que es justamente lo que está en duda. La acción correcta tampoco es la misma: no es
+   * mirarla con más cuidado, es reencuadrar.
+   */
+  discrepanEnTipo = computed(() => {
+    const ps = this.predicciones();
+    return ps.length > 1 && ps.some(p => p.esRechazo) && ps.some(p => !p.esRechazo);
+  });
 
   /** viewBox del SVG de la retícula: sigue el tamaño interno del canvas para que las
    *  coordenadas de OpenCV se puedan dibujar tal cual, sin convertir a píxeles de CSS. */
@@ -207,6 +240,8 @@ export class CamaraPage implements OnInit, OnDestroy {
     });
     await this.inferencia.cargarCatalogo();
     this.modeloActivo.set(this.inferencia.activo);
+    this.indicesOrdinales = Array.from(
+      { length: this.inferencia.cantidadOrdinales }, (_, i) => i);
     this.cdr.markForCheck();
   }
 
@@ -560,17 +595,24 @@ export class CamaraPage implements OnInit, OnDestroy {
   // Presentación
   // ---------------------------------------------------------------------------------------
 
+  /** Nombre de la clase en el índice dado, según lo que declaró el modelo cargado. */
+  private nombreClase(indice: number): string {
+    return this.inferencia.nombresClases[indice] ?? CLASES[indice] ?? '';
+  }
+
   tituloClase(indice: number): string {
-    return DESCRIPCION_CLASES[CLASES[indice]]?.titulo ?? CLASES[indice];
+    const nombre = this.nombreClase(indice);
+    return DESCRIPCION_CLASES[nombre]?.titulo ?? nombre;
   }
 
   detalleClase(indice: number): string {
-    return DESCRIPCION_CLASES[CLASES[indice]]?.detalle ?? '';
+    return DESCRIPCION_CLASES[this.nombreClase(indice)]?.detalle ?? '';
   }
 
   /** Nombre corto para las barras del espectro, donde no entra el título completo. */
   cortoClase(indice: number): string {
-    return ['SIN IA', 'RASTRO', 'SATURADA'][indice] ?? '';
+    const nombre = this.nombreClase(indice);
+    return NOMBRE_CORTO[nombre] ?? nombre.toUpperCase();
   }
 
   nombreModelo(id: string): string {
@@ -580,16 +622,25 @@ export class CamaraPage implements OnInit, OnDestroy {
   /**
    * Aviso de confianza baja.
    *
-   * El umbral 0.60 no es arbitrario: sobre 3 clases el azar es 0.33, y los modelos A y B
-   * tienen un ECE cercano a 0.03, o sea que su confianza declarada es fiel. Por debajo de
-   * 0.60 el modelo está genuinamente dudando y decirlo es más útil que un veredicto tajante.
+   * El umbral es 1.8 veces el azar, y el azar depende de cuántas clases haya: con 3 clases
+   * era 0.33 y el umbral 0.60; con las 4 de la v10 el azar baja a 0.25 y el umbral a 0.45.
+   * Dejarlo clavado en 0.60 al agregar una clase habría convertido el aviso en ruido — una
+   * predicción de 0.55 sobre 4 clases es más del doble del azar y no tiene nada de dudosa.
    *
-   * OJO con el modelo C: su ECE es 0.1373 (Focal Loss + muestreo ponderado degradan la
-   * calibración), así que para C este umbral es menos confiable. Está anotado en el plan
-   * de acción de documentacion/analisis_v9.md.
+   * El factor 1.8 se sostiene porque los modelos A y B tienen un ECE cercano a 0.03, o sea
+   * que su confianza declarada es fiel. OJO con el modelo C: la Focal Loss y el muestreo
+   * ponderado degradan su calibración, así que para C el umbral es menos confiable.
    */
   confianzaBaja(p: Prediccion | null): boolean {
-    return !!p && p.confianza < 0.6;
+    if (!p) return false;
+    const azar = 1 / Math.max(2, p.probabilidades.length);
+    return p.confianza < azar * 1.8;
+  }
+
+  /** El azar para el modelo actual, en porcentaje. Se muestra junto al aviso de confianza
+   *  baja: sin ese número, "confianza 40%" no le dice nada al usuario. */
+  azarPct(p: Prediccion | null): number {
+    return Math.round(100 / Math.max(2, p?.probabilidades.length ?? 4));
   }
 
   private mensajeError(err: any): string {

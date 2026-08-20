@@ -41,8 +41,11 @@
            una ruleta de tres botones. -->
       <p class="porque">{{ m.porQue }}</p>
 
-      <!-- Métricas medidas sobre el TEST DE FOTOS de la v9: 207 fotos de cámara, ningún
-           render. Es la accuracy comercial, no la de laboratorio. -->
+      <!-- Métricas medidas sobre el TEST DE FOTOS: fotos de cámara, ningún render. Es la
+           accuracy comercial, no la de laboratorio.
+           `recall rech.` es de la v10 y se muestra solo si el catálogo la trae: sin ella el
+           usuario no puede comparar lo que de verdad distingue a los modelos entre sí —
+           cuál atajá mejor una foto que no es una diapositiva. -->
       @if (m.metricas; as k) {
         <div class="cifras">
           <div class="cifra">
@@ -57,6 +60,12 @@
             <span class="lectura valor">{{ pct(k.recallClase2) }}<i>%</i></span>
             <span class="etiqueta">recall c2</span>
           </div>
+          @if (k.recallRechazo != null) {
+            <div class="cifra">
+              <span class="lectura valor">{{ pct(k.recallRechazo) }}<i>%</i></span>
+              <span class="etiqueta">recall rech.</span>
+            </div>
+          }
         </div>
       }
 
@@ -92,6 +101,12 @@
       Y porque tres opiniones independientes valen más que una. El botón <strong>los 3</strong>
       del visor los corre sobre la misma foto: si coinciden, la respuesta es sólida; si
       discrepan, la diapositiva es ambigua y conviene mirarla a mano.
+    </p>
+    <p>
+      Los tres tienen además una cuarta clase — <em>no es una diapositiva</em> — para poder
+      abstenerse. Sin ella el modelo repartiría el 100&nbsp;% entre los tres niveles de IA
+      igual, y contestaría con confianza alta sobre la foto de un escritorio.
+      <strong>recall rech.</strong> es qué fracción de esas fotos ataja cada uno.
     </p>
   </section>
 </div>

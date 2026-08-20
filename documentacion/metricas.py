@@ -17,6 +17,33 @@ Convención de matriz (la misma de todo el proyecto):
   cm[i, j] = casos cuya clase REAL es i y fueron PREDICHOS como j.
   Filas = real, columnas = predicho. Clases en orden 0_sin_ia, 1_rastro_ia, 2_saturada_ia.
 
+EL EJE ORDINAL DEJA DE SER TODO EL PROBLEMA (v10)
+-------------------------------------------------
+La v10 agregó una CUARTA clase, `3_no_diapositiva`, que NO pertenece al eje ordinal: no es
+"más saturada que 2", es otra cosa — la compuerta de rechazo del producto. Eso obliga a
+separar las métricas en dos grupos, porque mezclarlas produciría números sin sentido:
+
+  MÉTRICAS ORDINALES (QWK, MAE ordinal, errores 0<->2). Solo tienen sentido sobre el eje
+  0-1-2. Si se calcularan sobre las 4 clases, QWK trataría "no es una diapositiva" como si
+  estuviera un escalón más allá de "saturada" y penalizaría confundir 0 con 3 cuatro veces
+  más que confundir 0 con 1 — cuando conceptualmente ni siquiera están en la misma escala.
+  Por eso, con `n_ordinales=3`, estas métricas se calculan sobre el SUB-BLOQUE cm[:3, :3]:
+  se leen como "de las imágenes que el modelo aceptó como diapositivas, qué tan bien las
+  ordenó". Es una métrica CONDICIONAL, y así hay que reportarla.
+
+  MÉTRICAS DE COMPUERTA (recall/precisión de rechazo, fuga, rechazo indebido). Miden lo otro:
+  si el modelo deja pasar como diapositiva algo que no lo es, y a qué costo. Son las que
+  responden la pregunta que motivó la v10.
+
+  Los dos errores de la compuerta NO son simétricos y por eso se cuentan aparte:
+    fuga_no_diapositiva  una foto que no es diapositiva analizada igual -> el modelo opina
+                         sobre algo que no entiende. Es EL fallo que la v10 vino a cerrar.
+    rechazo_indebido     una diapositiva real descartada como "no es una diapositiva" ->
+                         el usuario no obtiene su respuesta. Molesto, pero honesto.
+
+  Con `n_ordinales = n_clases` (o sin pasarlo) todo se comporta EXACTAMENTE como en la v9:
+  los scripts v1-v9 no cambian de resultado.
+
 Qué métricas hay y por qué cada una:
   - accuracy / precision / recall / f1  : las de siempre.
   - errores_extremos (0<->2)            : el error CARO del proyecto. Una diapo saturada
@@ -99,7 +126,7 @@ def reporte_por_clase(cm: np.ndarray, nombres: list[str], imprimir: bool = True)
 
 
 # --- 3. El error caro del proyecto: la esquina 0<->2 ---
-def errores_extremos(cm: np.ndarray) -> dict:
+def errores_extremos(cm: np.ndarray, n_ordinales: int | None = None) -> dict:
     """Cuenta la confusión entre los EXTREMOS del eje ordinal.
 
     En un eje 0 -> 1 -> 2, confundir vecinos es barato (la frontera 1<->2 es
@@ -109,10 +136,13 @@ def errores_extremos(cm: np.ndarray) -> dict:
       cm[0, 2] = una diapo HUMANA acusada de saturada -> falso positivo.
     Este contador es el instrumento que el proyecto usa desde la v2 para decidir si
     un modelo sirve, por encima de la accuracy.
+
+    `n_ordinales` acota el eje cuando hay clases fuera de él (la de rechazo de la v10).
+    Sin él se usa la matriz entera, que es el comportamiento de v1-v9.
     """
-    n = cm.shape[0]
-    falsos_negativos = int(cm[n - 1, 0])   # 2 -> 0
-    falsos_positivos = int(cm[0, n - 1])   # 0 -> 2
+    k = cm.shape[0] if n_ordinales is None else n_ordinales
+    falsos_negativos = int(cm[k - 1, 0])   # 2 -> 0
+    falsos_positivos = int(cm[0, k - 1])   # 0 -> 2
     return {
         "extremos_total": falsos_negativos + falsos_positivos,
         "saturada_como_sin_ia": falsos_negativos,
@@ -120,8 +150,47 @@ def errores_extremos(cm: np.ndarray) -> dict:
     }
 
 
+# --- 3b. La compuerta de rechazo (nueva en la v10) ---
+def metricas_rechazo(cm: np.ndarray, n_ordinales: int | None = None) -> dict:
+    """Calidad de la compuerta "esto no es una diapositiva".
+
+    Con `n_ordinales = k` y k+1 clases, la fila/columna k es la de rechazo:
+
+      recall_rechazo       cm[k,k] / fila k    de todo lo que NO era diapositiva,
+                                               cuánto atajó el modelo.
+      precision_rechazo    cm[k,k] / col. k    de todo lo que rechazó, cuánto
+                                               efectivamente no era diapositiva.
+      fuga_no_diapositiva  fila k - cm[k,k]    casos que NO eran diapositiva y que el
+                                               modelo analizó igual, inventando un nivel
+                                               de IA. Es el fallo que la v10 vino a cerrar.
+      rechazo_indebido     col. k - cm[k,k]    diapositivas reales descartadas. El costo.
+
+    Se reportan los CONTEOS además de las tasas porque el test es chico (~270 imágenes): una
+    tasa de 0.017 esconde que se trata de una sola imagen, y decidir sobre tasas con esos
+    tamaños de muestra es exactamente lo que el proyecto viene evitando desde la v7.
+
+    Sin clase de rechazo devuelve ceros, así los scripts de v1-v9 pueden llamarla sin
+    cambiar de resultado y las claves existen siempre (agregar entre semillas no rompe).
+    """
+    n = cm.shape[0]
+    k = n if n_ordinales is None else n_ordinales
+    if k >= n:
+        return {"recall_rechazo": 0.0, "precision_rechazo": 0.0,
+                "fuga_no_diapositiva": 0, "rechazo_indebido": 0}
+
+    aciertos = int(cm[k, k])
+    reales = int(cm[k, :].sum())        # imágenes que realmente no eran diapositivas
+    predichos = int(cm[:, k].sum())     # imágenes que el modelo mandó a rechazo
+    return {
+        "recall_rechazo": aciertos / reales if reales else 0.0,
+        "precision_rechazo": aciertos / predichos if predichos else 0.0,
+        "fuga_no_diapositiva": reales - aciertos,
+        "rechazo_indebido": predichos - aciertos,
+    }
+
+
 # --- 4. Métricas ORDINALES (nuevas en la v7) ---
-def qwk(cm: np.ndarray) -> float:
+def qwk(cm: np.ndarray, n_ordinales: int | None = None) -> float:
     """Kappa cuadrático ponderado (Quadratic Weighted Kappa).
 
     Accuracy trata las 3 clases como nominales: confundir 0<->2 le cuesta lo mismo
@@ -138,8 +207,15 @@ def qwk(cm: np.ndarray) -> float:
     ~0 aunque su accuracy parezca decente.
 
     Escala: 1.0 = acuerdo perfecto · 0.0 = como el azar · <0 = peor que el azar.
+
+    `n_ordinales` acota el cálculo al sub-bloque del eje: con la clase de rechazo de la v10
+    adentro, QWK trataría "no es una diapositiva" como un cuarto escalón de saturación, que
+    es falso. Acotado, el número se lee como CONDICIONAL: qué tan bien ordena el modelo las
+    imágenes que aceptó como diapositivas. Los casos que salieron por la compuerta se miden
+    con metricas_rechazo(), no acá.
     """
-    n = cm.shape[0]
+    n = cm.shape[0] if n_ordinales is None else min(n_ordinales, cm.shape[0])
+    cm = np.asarray(cm)[:n, :n]
     total = cm.sum()
     if total == 0 or n < 2:
         return 0.0
@@ -150,15 +226,18 @@ def qwk(cm: np.ndarray) -> float:
     return float(1.0 - (w * cm).sum() / den) if den else 0.0
 
 
-def mae_ordinal(cm: np.ndarray) -> float:
+def mae_ordinal(cm: np.ndarray, n_ordinales: int | None = None) -> float:
     """Error absoluto medio en la escala de clases: media de |real - predicho|.
 
     Complemento directo de QWK, en unidades interpretables: 0.15 significa que, en
     promedio, el modelo se corre 0.15 niveles de saturación. Un modelo con accuracy
     0.90 y MAE 0.10 falla solo entre vecinos; con accuracy 0.90 y MAE 0.20 sus
     errores incluyen saltos de dos niveles.
+
+    Se acota al eje ordinal por la misma razón que QWK (ver arriba).
     """
-    n = cm.shape[0]
+    n = cm.shape[0] if n_ordinales is None else min(n_ordinales, cm.shape[0])
+    cm = np.asarray(cm)[:n, :n]
     total = cm.sum()
     if total == 0:
         return 0.0
@@ -241,9 +320,16 @@ def ece(y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
 
 
 # --- 7. Resumen completo ---
-def resumen_completo(y_true: np.ndarray, y_prob: np.ndarray, nombres: list[str]) -> dict:
-    """Todas las métricas del proyecto en un dict, listo para promediar entre semillas."""
+def resumen_completo(y_true: np.ndarray, y_prob: np.ndarray, nombres: list[str],
+                     n_ordinales: int | None = None) -> dict:
+    """Todas las métricas del proyecto en un dict, listo para promediar entre semillas.
+
+    `n_ordinales` = cuántas de las clases forman el eje ordinal. Con 3 clases (v1-v9) son
+    las tres y el parámetro sobra. Con las 4 de la v10 hay que pasar 3, y entonces las
+    métricas ordinales se acotan al sub-bloque y se agregan las de la compuerta de rechazo.
+    """
     n_clases = len(nombres)
+    k = n_clases if n_ordinales is None else n_ordinales
     y_true = np.asarray(y_true).astype(int)
     y_prob = np.asarray(y_prob)
     y_pred = y_prob.argmax(axis=1)
@@ -253,10 +339,16 @@ def resumen_completo(y_true: np.ndarray, y_prob: np.ndarray, nombres: list[str])
     return {
         "accuracy": rep["accuracy"],
         "macro_f1": rep["macro_f1"],
-        "recall_saturada": rep["por_clase"][n_clases - 1]["recall"],
-        **errores_extremos(cm),
-        "qwk": qwk(cm),
-        "mae_ordinal": mae_ordinal(cm),
+        # Recall de 2_saturada_ia, SIEMPRE el índice k-1 del eje ordinal y no "la última
+        # clase": con la clase de rechazo al final, "la última" pasó a ser otra cosa. Se
+        # calcula sobre la fila completa, así que una diapositiva saturada que el modelo
+        # mandó a rechazo cuenta como fallo — que es lo correcto: el usuario no obtuvo su
+        # alerta, y el motivo de por qué no la obtuvo es irrelevante para él.
+        "recall_saturada": rep["por_clase"][k - 1]["recall"],
+        **errores_extremos(cm, k),
+        **metricas_rechazo(cm, k),
+        "qwk": qwk(cm, k),
+        "mae_ordinal": mae_ordinal(cm, k),
         "auc_macro": macro,
         "auc_micro": micro[2],
         "ece": ece(y_true, y_prob),
@@ -272,11 +364,23 @@ CLAVES_ESCALARES = [
     "auc_macro", "auc_micro", "ece",
 ]
 
+# Métricas de la compuerta de rechazo (v10). Van en una lista APARTE y no dentro de
+# CLAVES_ESCALARES a propósito: así los scripts de v1-v9 siguen imprimiendo y guardando
+# exactamente las mismas 11 métricas de siempre, y sus resultados no dejan de ser
+# comparables por un cambio en este módulo. Los scripts de la v10 usan la suma de las dos.
+CLAVES_RECHAZO = [
+    "recall_rechazo", "precision_rechazo", "fuga_no_diapositiva", "rechazo_indebido",
+]
+
+CLAVES_V10 = CLAVES_ESCALARES + CLAVES_RECHAZO
+
 # Cómo se lee cada métrica: True = más alto es mejor.
 MAS_ES_MEJOR = {
     "accuracy": True, "macro_f1": True, "recall_saturada": True,
     "extremos_total": False, "saturada_como_sin_ia": False, "sin_ia_como_saturada": False,
     "qwk": True, "mae_ordinal": False, "auc_macro": True, "auc_micro": True, "ece": False,
+    "recall_rechazo": True, "precision_rechazo": True,
+    "fuga_no_diapositiva": False, "rechazo_indebido": False,
 }
 
 ETIQUETAS = {
@@ -291,10 +395,14 @@ ETIQUETAS = {
     "auc_macro": "AUC macro (OvR)",
     "auc_micro": "AUC micro (OvR)",
     "ece": "ECE (calibración)",
+    "recall_rechazo": "recall de rechazo",
+    "precision_rechazo": "precisión de rechazo",
+    "fuga_no_diapositiva": "fugas (no-diapo analizada)",
+    "rechazo_indebido": "rechazos indebidos",
 }
 
 
-def agregar_semillas(resumenes: list[dict]) -> dict:
+def agregar_semillas(resumenes: list[dict], claves: list[str] | None = None) -> dict:
     """Media, desvío, mínimo y máximo de cada métrica a lo largo de N semillas.
 
     Esta función es la respuesta al límite más grande del proyecto: con 60 imágenes
@@ -306,9 +414,12 @@ def agregar_semillas(resumenes: list[dict]) -> dict:
     Devuelve además 'cm_sumada': la matriz de confusión acumulada sobre todas las
     semillas. Sumarlas (en vez de promediarlas) da una matriz de enteros con N veces
     más casos, mucho más estable para leer el patrón de errores.
+
+    `claves` permite pedir otro juego de métricas (la v10 pasa CLAVES_V10, que suma las de
+    la compuerta de rechazo). Por defecto son las 11 de siempre.
     """
     agregado = {}
-    for clave in CLAVES_ESCALARES:
+    for clave in claves or CLAVES_ESCALARES:
         vals = np.array([r[clave] for r in resumenes], dtype=float)
         agregado[clave] = {
             "media": float(vals.mean()), "std": float(vals.std()),
@@ -320,15 +431,18 @@ def agregar_semillas(resumenes: list[dict]) -> dict:
     return agregado
 
 
-def imprimir_agregado(agregado: dict, titulo: str = "RESULTADOS SOBRE TEST") -> None:
+def imprimir_agregado(agregado: dict, titulo: str = "RESULTADOS SOBRE TEST",
+                      claves: list[str] | None = None) -> None:
     n = agregado["n_semillas"]
     print("=" * 66)
     print(f"  {titulo}  ·  {n} semillas  ·  media ± desvío")
     print("=" * 66)
     print(f"  {'métrica':<24}{'media':>10}{'±std':>9}{'mín':>9}{'máx':>9}")
     print("  " + "-" * 61)
-    for clave in CLAVES_ESCALARES:
-        a = agregado[clave]
+    for clave in claves or CLAVES_ESCALARES:
+        a = agregado.get(clave)
+        if a is None:
+            continue
         flecha = "↑" if MAS_ES_MEJOR[clave] else "↓"
         print(f"  {ETIQUETAS[clave]:<22}{flecha:<2}{a['media']:>10.4f}{a['std']:>9.4f}"
               f"{a['min']:>9.4f}{a['max']:>9.4f}")

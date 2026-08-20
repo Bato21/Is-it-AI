@@ -1,14 +1,26 @@
 {
   "tolerancia": 0.0001,
   "modelos": {
-    "modelo_c_v9.onnx": {
+    "modelo_b_v10.onnx": {
       "clases": [
         "0_sin_ia",
         "1_rastro_ia",
-        "2_saturada_ia"
+        "2_saturada_ia",
+        "3_no_diapositiva"
+      ],
+      "mb": 4.58,
+      "max_diferencia": 2.6702880859375e-05,
+      "opset": 17
+    },
+    "modelo_c_v10.onnx": {
+      "clases": [
+        "0_sin_ia",
+        "1_rastro_ia",
+        "2_saturada_ia",
+        "3_no_diapositiva"
       ],
       "mb": 16.04,
-      "max_diferencia": 6.556510925292969e-06,
+      "max_diferencia": 9.119510650634766e-06,
       "opset": 17
     }
   }

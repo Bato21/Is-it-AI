@@ -123,9 +123,10 @@ Abrir la URL que da Vercel y comprobar, en orden:
 | 2 | Tipografías | Si se ve una monoespaciada genérica del sistema, no cargaron las fuentes |
 | 3 | Cámara | *Encender cámara* → el navegador pide permiso → se ve el video a pantalla completa |
 | 4 | OpenCV | El medidor **NITIDEZ** deja de estar en 0 y la retícula cambia de color al mover el teléfono |
-| 5 | Modelo A | Disparar sobre una diapositiva → veredicto con las tres barras |
-| 6 | Modelos B y C | Chip del modelo (arriba a la izquierda) → *Precargar* en B y en C → sin errores |
-| 7 | Los tres | Botón **los 3** → tres filas con clase, confianza y milisegundos |
+| 5 | Modelo A | Disparar sobre una diapositiva → veredicto con las cuatro barras |
+| 6 | **Compuerta (v10)** | Disparar sobre algo que NO sea una diapositiva (un escritorio, una pared, una web abierta) → *Sin veredicto · No es una diapositiva*, en gris. Si en cambio devuelve un nivel de IA, el modelo desplegado no es el de la v10 |
+| 7 | Modelos B y C | Chip del modelo (arriba a la izquierda) → *Precargar* en B y en C → sin errores |
+| 8 | Los tres | Botón **los 3** → tres filas con clase, confianza y milisegundos |
 
 Comprobación rápida por URL (reemplazar `<URL>`):
 

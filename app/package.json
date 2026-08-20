@@ -1,7 +1,7 @@
 {
   "name": "is-it-ai-app",
-  "version": "9.0.0",
-  "description": "Detector de huella de IA en diapositivas — Ionic 8 + Angular 18 + TensorFlow.js + ONNX Runtime Web + OpenCV.js",
+  "version": "10.0.0",
+  "description": "Detector de huella de IA en diapositivas (4 clases, con compuerta de rechazo) — Ionic 8 + Angular 18 + TensorFlow.js + ONNX Runtime Web + OpenCV.js",
   "author": "Frameworks de IA — UDD",
   "private": true,
   "scripts": {

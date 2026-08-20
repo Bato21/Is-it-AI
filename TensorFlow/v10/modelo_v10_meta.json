@@ -1,0 +1,27 @@
+{
+  "version": "v10",
+  "framework": "tensorflow",
+  "arquitectura": "MobileNetV3-Small",
+  "clases": [
+    "0_sin_ia",
+    "1_rastro_ia",
+    "2_saturada_ia",
+    "3_no_diapositiva"
+  ],
+  "n_ordinales": 3,
+  "clase_rechazo": "3_no_diapositiva",
+  "entrada": {
+    "alto": 224,
+    "ancho": 224,
+    "canales": 3,
+    "rango": "0-255",
+    "orden": "NHWC"
+  },
+  "preprocesamiento": "ninguno en el cliente: la normalización ImageNet viaja dentro del grafo (include_preprocessing=True)",
+  "salida": "softmax de 4 clases, en el orden de 'clases'",
+  "semilla": 7,
+  "criterio_seleccion": "macro F1 sobre el test de fotos",
+  "accuracy_test_fotos": 0.9700374531835206,
+  "macro_f1_test_fotos": 0.9708486056507958,
+  "recall_rechazo_test_fotos": 1.0
+}

@@ -1,15 +1,19 @@
 """
-exportar_tfjs.py — Exporta el modelo A de la v9 (.keras) a TensorFlow.js para la app Ionic.
+exportar_tfjs.py — Exporta el modelo A (.keras) a TensorFlow.js para la app Ionic.
+
+VERSIÓN QUE SE EXPORTA: v10 (4 clases — eje ordinal 0-1-2 + compuerta de rechazo).
+  Está en la constante VERSION de abajo, y es el único lugar donde figura: la ruta del .keras
+  de entrada y la carpeta de salida se derivan de ella.
 
 Pipeline:
-    TensorFlow/v9/modelotf_v9_finetune.keras
+    TensorFlow/v10/modelotf_v10_finetune.keras
         -> tf.saved_model.save con firma de serving explícita
         -> tensorflowjs (convert_tf_saved_model)
-        -> app/src/assets/modelos/tfjs_v9/   (model.json + shards de pesos)
+        -> app/src/assets/modelos/tfjs_v10/   (model.json + shards de pesos)
 
 IMPORTANTE: tensorflowjs fija sus PROPIAS versiones de TensorFlow. Correr este script en un
 venv APARTE, NUNCA en TensorFlow/.venv — instalarlo ahí cambiaría la versión de TF del
-entorno de entrenamiento y los resultados de la v9 dejarían de ser reproducibles.
+entorno de entrenamiento y los resultados publicados dejarían de ser reproducibles.
 
     python -m venv TensorFlow/export_tfjs/.venv
     TensorFlow/export_tfjs/.venv/Scripts/activate      # Linux/Mac: source .../bin/activate
@@ -67,9 +71,11 @@ RAIZ = AQUI.parents[1]
 MODULOS_STUB = ("jax", "jaxlib", "flax", "tensorflow_decision_forests", "tensorflow_hub",
                 "orbax", "optax", "chex")
 
-KERAS = RAIZ / "TensorFlow" / "v9" / "modelotf_v9_finetune.keras"
-SAVED = AQUI / "saved_model_v9"
-DESTINO = RAIZ / "app" / "src" / "assets" / "modelos" / "tfjs_v9"
+VERSION = "v10"       # ver el encabezado: la única mención de la versión en este archivo
+
+KERAS = RAIZ / "TensorFlow" / VERSION / f"modelotf_{VERSION}_finetune.keras"
+SAVED = AQUI / f"saved_model_{VERSION}"
+DESTINO = RAIZ / "app" / "src" / "assets" / "modelos" / f"tfjs_{VERSION}"
 LADO = 224
 
 
@@ -118,7 +124,8 @@ def main() -> None:
     if not KERAS.exists():
         raise SystemExit(
             f"Falta el modelo {KERAS.relative_to(RAIZ)}.\n"
-            "Entrenalo primero:  TensorFlow/.venv/Scripts/python TensorFlow/v9/09_scripts.py"
+            f"Entrenalo primero:  TensorFlow/.venv/Scripts/python "
+            f"TensorFlow/{VERSION}/{VERSION[1:]}_scripts.py"
         )
 
     import tensorflow as tf
@@ -126,8 +133,8 @@ def main() -> None:
     print(f"TensorFlow {tf.__version__} — cargando {KERAS.name} ...")
     modelo = tf.keras.models.load_model(KERAS)
 
-    # A diferencia de la v4, el modelo de la v9 NO tiene capas de data augmentation adentro
-    # (la augmentation de la v9 es numpy puro y vive en documentacion/aug_pantalla.py, fuera
+    # A diferencia de la v4, desde la v9 el modelo NO tiene capas de data augmentation adentro
+    # (la augmentation es numpy puro y vive en documentacion/aug_pantalla.py, fuera
     # del grafo). Así que no hay que reconstruir nada: el modelo guardado ya es exactamente
     # la ruta de inferencia, entrada 0-255 -> softmax. Es un beneficio no obvio de haber
     # sacado la augmentation del grafo: la exportación se simplifica y deja de ser un paso

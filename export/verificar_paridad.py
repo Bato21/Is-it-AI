@@ -1,8 +1,9 @@
 """
 verificar_paridad.py — ¿Los modelos desplegados dicen lo MISMO que los originales?
 
-Es el último control antes de dar la v9 por entregada, y cierra el bucle que abrieron los
-scripts de exportación:
+Es el último control antes de dar la versión por entregada, y cierra el bucle que abrieron
+los scripts de exportación. La versión verificada está en la constante VERSION de abajo
+(hoy: v10, con la compuerta de rechazo como cuarta clase).
 
     modelo A:  .keras  ->  TensorFlow.js   (se verifica ACÁ, con Node)
     modelo B:  .pt     ->  ONNX            (se verifica en export/exportar_onnx.py)
@@ -44,12 +45,14 @@ from pathlib import Path
 
 import numpy as np
 
+VERSION = "v10"
+
 RAIZ = Path(__file__).resolve().parents[1]
-MODELO_TFJS = RAIZ / "app" / "src" / "assets" / "modelos" / "tfjs_v9"
-MODELO_KERAS = RAIZ / "TensorFlow" / "v9" / "modelotf_v9_finetune.keras"
+MODELO_TFJS = RAIZ / "app" / "src" / "assets" / "modelos" / f"tfjs_{VERSION}"
+MODELO_KERAS = RAIZ / "TensorFlow" / VERSION / f"modelotf_{VERSION}_finetune.keras"
 SCRIPT_NODE = RAIZ / "app" / "scripts" / "paridad-tfjs.mjs"
 APP = RAIZ / "app"
-SALIDA = RAIZ / "export" / "paridad_v9.txt"
+SALIDA = RAIZ / "export" / f"paridad_{VERSION}.txt"
 
 LADO = 224
 PUERTO = 8123
@@ -135,7 +138,7 @@ def main() -> None:
     print(f"  {'OK: el modelo desplegado es fiel al entrenado.' if ok else 'FALLA'}")
 
     reporte = (
-        "Paridad Python <-> navegador (TensorFlow.js) — modelo A v9\n"
+        f"Paridad Python <-> navegador (TensorFlow.js) — modelo A {VERSION}\n"
         "=" * 62 + "\n"
         "Entrada: patron sintetico x[i,j,c] = (i*7 + j*13 + c*29) % 256, 224x224x3.\n"
         "Se usa un patron generado y no una imagen para que la diferencia medida sea\n"

@@ -16,7 +16,7 @@
  * Elegir un modelo es una decisión de ingeniería, no una preferencia estética: cada uno
  * tiene un compromiso distinto entre velocidad, peso y comportamiento frente a las clases.
  * Para que la elección sea informada hay que mostrar los números — y los REALES, los que
- * salieron del test de fotos de la v9, no adjetivos.
+ * salieron del test de fotos, no adjetivos.
  *
  * Vienen de assets/modelos/catalogo.json, que genera export/generar_catalogo.py leyendo los
  * resultados_*.json de los entrenamientos. Si un modelo se reentrena, esta pantalla muestra

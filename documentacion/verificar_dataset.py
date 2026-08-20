@@ -32,20 +32,39 @@ except Exception:
     pass
 
 ROOT = Path(__file__).resolve().parents[1]
-CLASES = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]
+
+# Clases MÍNIMAS que tienen que existir sí o sí: son el eje ordinal, sin ellas no hay
+# problema que resolver. La lista real se descubre leyendo las subcarpetas del disco (ver
+# `clases_de`), así que agregar una clase al dataset —como hizo la v10 con la compuerta
+# `3_no_diapositiva`— no requiere tocar este archivo.
+#
+# Tenerlas hardcodeadas era un error silencioso: el verificador informaba "OK, 3 clases
+# presentes" sobre un dataset de 4, y el conteo que imprimía no era el del dataset que los
+# scripts de entrenamiento iban a leer.
+CLASES_REQUERIDAS = ["0_sin_ia", "1_rastro_ia", "2_saturada_ia"]
 EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 MIN_POR_CLASE = 30          # umbral de "pocas imágenes" por clase
 TOLERANCIA_DESBALANCE = 0.10  # 10%: gap relativo aceptable entre la mayor y la menor
 
 
-def contar(carpeta: Path) -> list[int]:
+def clases_de(carpeta: Path) -> list[str]:
+    """Las clases que hay en el disco, en orden alfabético — el mismo de Keras/ImageFolder.
+
+    Se unen con las requeridas para que una clase ausente aparezca igual en la tabla como
+    AUSENTE, en vez de desaparecer del reporte.
+    """
+    presentes = sorted(p.name for p in carpeta.iterdir() if p.is_dir()) if carpeta.is_dir() else []
+    return sorted(set(presentes) | set(CLASES_REQUERIDAS))
+
+
+def contar(carpeta: Path, clases: list[str]) -> list[int]:
     """Imágenes válidas por clase (misma extensión que usan los loaders)."""
     return [
         len([p for p in (carpeta / c).iterdir() if p.suffix.lower() in EXTS])
         if (carpeta / c).is_dir()
         else -1  # -1 marca "carpeta ausente"
-        for c in CLASES
+        for c in clases
     ]
 
 
@@ -68,24 +87,26 @@ def main() -> None:
         print("    python documentacion/crear_datos_prueba.py --por-clase 30")
         sys.exit(1)
 
-    conteos = contar(data)
+    clases = clases_de(data)
+    conteos = contar(data, clases)
     total = sum(n for n in conteos if n > 0)
 
     # --- Tabla ---
-    print(f"{'clase':<16}{'imágenes':>10}{'porcentaje':>13}")
-    print("-" * 39)
-    for clase, n in zip(CLASES, conteos):
+    ancho = max(18, max(len(c) for c in clases) + 2)
+    print(f"{'clase':<{ancho}}{'imágenes':>10}{'porcentaje':>13}")
+    print("-" * (ancho + 23))
+    for clase, n in zip(clases, conteos):
         if n < 0:
-            print(f"{clase:<16}{'AUSENTE':>10}{'—':>13}")
+            print(f"{clase:<{ancho}}{'AUSENTE':>10}{'—':>13}")
         else:
             pct = (n / total * 100) if total else 0.0
-            print(f"{clase:<16}{n:>10}{pct:>12.1f}%")
-    print("-" * 39)
-    print(f"{'TOTAL':<16}{total:>10}\n")
+            print(f"{clase:<{ancho}}{n:>10}{pct:>12.1f}%")
+    print("-" * (ancho + 23))
+    print(f"{'TOTAL':<{ancho}}{total:>10}\n")
 
     # --- Validación dura: carpetas ausentes o vacías cortan el pipeline ---
-    faltantes = [c for c, n in zip(CLASES, conteos) if n < 0]
-    vacias = [c for c, n in zip(CLASES, conteos) if n == 0]
+    faltantes = [c for c, n in zip(clases, conteos) if n < 0]
+    vacias = [c for c, n in zip(clases, conteos) if n == 0]
     if faltantes or vacias:
         if faltantes:
             print(f"ERROR: faltan carpetas de clase: {', '.join(faltantes)}")
@@ -102,7 +123,7 @@ def main() -> None:
             f"desbalance {(mx - mn) / mx * 100:.0f}% entre la clase mayor ({mx}) y la "
             f"menor ({mn}); supera el {TOLERANCIA_DESBALANCE * 100:.0f}% de tolerancia."
         )
-    pocas = [f"{c} ({n})" for c, n in zip(CLASES, conteos) if n < MIN_POR_CLASE]
+    pocas = [f"{c} ({n})" for c, n in zip(clases, conteos) if n < MIN_POR_CLASE]
     if pocas:
         avisos.append(f"clases con menos de {MIN_POR_CLASE} imágenes: {', '.join(pocas)}.")
 
@@ -111,7 +132,7 @@ def main() -> None:
         for a in avisos:
             print(f"  - {a}")
     else:
-        print("OK: 3 clases presentes, balance dentro de tolerancia.")
+        print(f"OK: {len(clases)} clases presentes, balance dentro de tolerancia.")
 
     sys.exit(0)
 

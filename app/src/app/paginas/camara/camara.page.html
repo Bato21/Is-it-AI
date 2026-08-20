@@ -54,14 +54,15 @@
     @if (estado() === 'inicial') {
       <div class="portada">
         <div class="marca">
-          <span class="etiqueta">Frameworks de IA · v9</span>
+          <span class="etiqueta">Frameworks de IA · v10</span>
           <h1 class="display">
             Is it<br />
             <em>AI?</em>
           </h1>
           <p class="bajada">
             Apuntá la cámara a una diapositiva en pantalla. El modelo estima cuánta huella
-            de generación automática tiene, en tres niveles.
+            de generación automática tiene, en tres niveles — y si lo que ve no es una
+            diapositiva, lo dice en vez de inventar un nivel.
           </p>
         </div>
 
@@ -81,8 +82,11 @@
           <span class="rastreo"></span>
         </div>
 
+        <!-- Solo los niveles del EJE ORDINAL. La compuerta de rechazo no es un nivel —es la
+             ausencia de veredicto— así que listarla acá prometería una escala de cuatro
+             escalones que no existe. -->
         <div class="niveles">
-          @for (c of CLASES; track c; let i = $index) {
+          @for (i of indicesOrdinales; track i) {
             <div class="nivel" [attr.data-clase]="i">
               <span class="barra"></span>
               <span class="lectura">{{ tituloClase(i) }}</span>
@@ -213,17 +217,27 @@
           </div>
         }
 
-        <!-- ── Veredicto ── -->
+        <!-- ── Veredicto ──
+             Dos encabezados posibles y no uno con el texto cambiado. Cuando gana la compuerta
+             de rechazo, la respuesta correcta NO es "nivel de IA: no es una diapositiva" —
+             es la ausencia de veredicto. Presentarla con la misma plantilla que un nivel
+             sugeriría una escala de cuatro escalones que no existe. -->
         @if (prediccion(); as p) {
           <div class="veredicto" [attr.data-clase]="p.indice">
-            <span class="etiqueta">Veredicto</span>
-            <h2 class="display">{{ tituloClase(p.indice) }}</h2>
-            <p class="detalle">{{ detalleClase(p.indice) }}</p>
+            @if (p.esRechazo) {
+              <span class="etiqueta">Sin veredicto</span>
+              <h2 class="display">{{ tituloClase(p.indice) }}</h2>
+              <p class="detalle">{{ detalleClase(p.indice) }}</p>
+            } @else {
+              <span class="etiqueta">Veredicto</span>
+              <h2 class="display">{{ tituloClase(p.indice) }}</h2>
+              <p class="detalle">{{ detalleClase(p.indice) }}</p>
+            }
 
-            <!-- Espectro: una sola barra partida en tres, no tres barras sueltas. Se lee
-                 como una distribución (que es lo que es) y no como tres números aislados. -->
+            <!-- Espectro: una sola barra partida, no barras sueltas. Se lee como una
+                 distribución (que es lo que es) y no como números aislados. -->
             <div class="espectro" role="img"
-                 [attr.aria-label]="'Distribución de probabilidad entre las tres clases'">
+                 [attr.aria-label]="'Distribución de probabilidad entre las clases'">
               @for (prob of p.probabilidades; track $index) {
                 <span class="segmento" [attr.data-clase]="$index"
                       [style.flex-grow]="prob"
@@ -241,10 +255,18 @@
               }
             </ul>
 
+            @if (p.esRechazo) {
+              <p class="nota">
+                El modelo tiene una clase para esto justamente para no inventar una respuesta.
+                Sin ella repartiría el 100% entre los tres niveles de IA igual, y lo haría con
+                confianza alta: un veredicto seguro sobre algo que no es una diapositiva.
+              </p>
+            }
+
             @if (confianzaBaja(p)) {
               <p class="alerta">
-                Confianza baja. Sobre tres clases el azar es 33%: el modelo está dudando.
-                Conviene revisarla a mano.
+                Confianza baja. Sobre {{ p.probabilidades.length }} clases el azar es
+                {{ azarPct(p) }}%: el modelo está dudando. Conviene revisarla a mano.
               </p>
             }
 
@@ -282,9 +304,17 @@
                   Los tres coinciden. Son dos frameworks, dos arquitecturas y dos regímenes
                   de entrenamiento distintos: que converjan es mucha más evidencia que un
                   solo softmax alto.
+                } @else if (discrepanEnTipo()) {
+                  <!-- Discrepancia de TIPO, no de grado: unos rechazan y otros miden. Decir
+                       "la diapositiva es ambigua" acá afirmaría que hay una diapositiva, que
+                       es justamente lo que está en duda. -->
+                  No discrepan en el grado: discrepan en <strong>si hay una diapositiva</strong>.
+                  Unos modelos la rechazan y otros le asignan un nivel, así que el veredicto no
+                  es confiable en ninguna de las dos direcciones. Reencuadrá sobre la pantalla
+                  y volvé a disparar.
                 } @else {
-                  Discrepan. La diapositiva es genuinamente ambigua — eso es información
-                  útil, no un error a esconder.
+                  Discrepan en el grado. La diapositiva es genuinamente ambigua — eso es
+                  información útil, no un error a esconder.
                 }
               </p>
             </section>

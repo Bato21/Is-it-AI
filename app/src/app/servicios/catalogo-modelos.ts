@@ -14,7 +14,7 @@
  *
  * POR QUÉ ESTOS TRES Y NO OTROS
  * -----------------------------
- * Los tres resuelven el MISMO problema (3 clases, 224x224) pero difieren en las tres cosas
+ * Los tres resuelven el MISMO problema (4 clases, 224x224) pero difieren en las tres cosas
  * que un ingeniero elige al desplegar: framework, arquitectura y régimen de entrenamiento.
  * Así el selector no es cosmético — cada opción cambia un compromiso real:
  *
@@ -36,33 +36,75 @@
  *       el precio, y el usuario lo ve declarado antes de elegirlo.
  *
  * Las métricas de cada entrada NO están inventadas ni redondeadas a mano: salen de los JSON
- * que generan los scripts de entrenamiento (TensorFlow/v9/resultados_v9.json,
- * PyTorch/v9/resultados_v9.json y PyTorch/v9/resultados_modelo_c_v9.json) y las copia
+ * que generan los scripts de entrenamiento (TensorFlow/v10/resultados_v10.json,
+ * PyTorch/v10/resultados_v10.json y PyTorch/v10/resultados_modelo_c_v10.json) y las copia
  * export/generar_catalogo.py al generar assets/modelos/catalogo.json. Si se reentrena un
  * modelo, sus números en la app se actualizan solos.
  */
 
-/** Las 3 clases, EN EL ORDEN EXACTO en que las ordenaron Keras e ImageFolder al entrenar.
- *  Cambiar este orden rompe silenciosamente todas las predicciones. */
-export const CLASES = ['0_sin_ia', '1_rastro_ia', '2_saturada_ia'] as const;
+/** Las clases, EN EL ORDEN EXACTO en que las ordenaron Keras e ImageFolder al entrenar.
+ *  Cambiar este orden rompe silenciosamente todas las predicciones.
+ *
+ *  Es el fallback: en ejecución las clases llegan dentro de catalogo.json, que las copia de
+ *  los resultados del entrenamiento. Así, agregar una clase al dataset y reentrenar actualiza
+ *  la app sin recompilar — la misma propiedad que ya tenían las métricas. */
+export const CLASES = ['0_sin_ia', '1_rastro_ia', '2_saturada_ia', '3_no_diapositiva'] as const;
+
+/**
+ * Cuántas de las clases forman el EJE ORDINAL de saturación (0 → 1 → 2).
+ *
+ * Las que quedan por encima de este índice NO son un escalón más del eje: son COMPUERTAS.
+ * `3_no_diapositiva` no significa "todavía más generada por IA que la 2", significa "la foto
+ * ni siquiera es una diapositiva y no corresponde darle un nivel".
+ *
+ * La distinción no es cosmética: manda cómo se dibuja el resultado. Si la app tratara a la
+ * compuerta como un cuarto nivel, mostraría un veredicto de huella de IA sobre la foto de un
+ * escritorio — que es exactamente el fallo que la v10 vino a cerrar en el modelo. Sería
+ * arreglarlo en la red y volver a introducirlo en la interfaz.
+ */
+export const N_ORDINALES = 3;
+
+/** Nombre de la clase de rechazo. Se compara por NOMBRE y no por índice: el índice depende
+ *  del orden alfabético de las carpetas del dataset y podría moverse si se agregara otra
+ *  clase, mientras que el nombre es estable. */
+export const CLASE_RECHAZO = '3_no_diapositiva';
+
+/** ¿Esta clase es una compuerta (está fuera del eje ordinal)? */
+export function esCompuerta(indice: number, nOrdinales = N_ORDINALES): boolean {
+  return indice >= nOrdinales;
+}
 
 /** Nombres legibles y explicación de cada clase, para la UI. */
 export const DESCRIPCION_CLASES: Record<string, { titulo: string; detalle: string; color: string }> = {
   '0_sin_ia': {
     titulo: 'Sin rastro de IA',
     detalle: 'No se detectan artefactos de generación automática. Diapositiva humana.',
-    color: 'var(--clase-0)',
+    color: 'var(--c0)',
   },
   '1_rastro_ia': {
     titulo: 'Rastro de IA',
     detalle: 'Hay señales de asistencia por IA: plantillas genéricas, imágenes sintéticas puntuales.',
-    color: 'var(--clase-1)',
+    color: 'var(--c1)',
   },
   '2_saturada_ia': {
     titulo: 'Saturada de IA',
     detalle: 'Artefactos de generación densos y sistemáticos en toda la diapositiva.',
-    color: 'var(--clase-2)',
+    color: 'var(--c2)',
   },
+  '3_no_diapositiva': {
+    titulo: 'No es una diapositiva',
+    detalle: 'La foto no muestra una diapositiva, así que no corresponde estimar huella de IA. '
+      + 'Reencuadrá sobre la pantalla y volvé a disparar.',
+    color: 'var(--c3)',
+  },
+};
+
+/** Etiqueta corta para las barras del espectro, donde no entra el título completo. */
+export const NOMBRE_CORTO: Record<string, string> = {
+  '0_sin_ia': 'SIN IA',
+  '1_rastro_ia': 'RASTRO',
+  '2_saturada_ia': 'SATURADA',
+  '3_no_diapositiva': 'NO DIAPO',
 };
 
 /** Motor de inferencia que consume el modelo. */
@@ -75,13 +117,18 @@ export type OrdenEjes = 'NHWC' | 'NCHW';
 export type TipoSalida = 'softmax' | 'logits';
 
 export interface MetricasModelo {
-  /** Accuracy sobre el test de FOTOS (la accuracy comercial de la v9). */
+  /** Accuracy sobre el test de FOTOS (la accuracy comercial). */
   accuracy: number;
   macroF1: number;
   /** Recall de 2_saturada_ia: la métrica de negocio (no dejar pasar lo que hay que detectar). */
   recallClase2: number;
   /** Errores 0<->2 acumulados: el error caro del proyecto. */
   errores02: number;
+  /** v10 — de todo lo que NO era una diapositiva, qué fracción atajó la compuerta. */
+  recallRechazo?: number | null;
+  /** v10 — cuántas no-diapositivas se analizaron igual (media por semilla). El fallo que la
+   *  compuerta existe para evitar; cuanto más bajo, mejor. */
+  fugas?: number | null;
 }
 
 export interface DefinicionModelo {
@@ -124,12 +171,12 @@ export const CATALOGO_FALLBACK: DefinicionModelo[] = [
     framework: 'TensorFlow / Keras',
     arquitectura: 'MobileNetV3-Small',
     backend: 'tfjs',
-    ruta: 'assets/modelos/tfjs_v9/model.json',
+    ruta: 'assets/modelos/tfjs_v10/model.json',
     ordenEjes: 'NHWC',
     salida: 'softmax',
     tamano: 224,
     pesoMB: 4,
-    descripcion: 'Fine-tuning en dos fases sobre fotos de pantalla. El más rápido.',
+    descripcion: 'Fine-tuning en dos fases sobre fotos de pantalla, con compuerta de rechazo.',
     porQue: 'Default del producto: menor latencia y único que aprovecha WebGL.',
     metricas: null,
   },
@@ -140,7 +187,7 @@ export const CATALOGO_FALLBACK: DefinicionModelo[] = [
     framework: 'PyTorch',
     arquitectura: 'MobileNetV3-Small',
     backend: 'onnx',
-    ruta: 'assets/modelos/modelo_b_v9.onnx',
+    ruta: 'assets/modelos/modelo_b_v10.onnx',
     ordenEjes: 'NCHW',
     salida: 'logits',
     tamano: 224,
@@ -156,7 +203,7 @@ export const CATALOGO_FALLBACK: DefinicionModelo[] = [
     framework: 'PyTorch',
     arquitectura: 'EfficientNet-B0',
     backend: 'onnx',
-    ruta: 'assets/modelos/modelo_c_v9.onnx',
+    ruta: 'assets/modelos/modelo_c_v10.onnx',
     ordenEjes: 'NCHW',
     salida: 'logits',
     tamano: 224,

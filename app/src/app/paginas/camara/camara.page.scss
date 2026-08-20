@@ -590,6 +590,7 @@ canvas {
   [data-clase='0'] .barra { background: var(--c0); box-shadow: 0 0 12px var(--c0); }
   [data-clase='1'] .barra { background: var(--c1); box-shadow: 0 0 12px var(--c1); }
   [data-clase='2'] .barra { background: var(--c2); box-shadow: 0 0 12px var(--c2); }
+  [data-clase='3'] .barra { background: var(--c3); box-shadow: 0 0 12px var(--c3); }
 }
 
 .obturador.grande {
@@ -712,6 +713,7 @@ canvas {
   &[data-clase='0'] h2 { color: var(--c0); }
   &[data-clase='1'] h2 { color: var(--c1); }
   &[data-clase='2'] h2 { color: var(--c2); }
+  &[data-clase='3'] h2 { color: var(--c3); }
 
   &.rechazo h2 { color: var(--alerta); }
 }
@@ -735,6 +737,7 @@ canvas {
     &[data-clase='0'] { background: var(--c0); }
     &[data-clase='1'] { background: var(--c1); }
     &[data-clase='2'] { background: var(--c2); }
+    &[data-clase='3'] { background: var(--c3); }
     &:not(.dominante) { opacity: 0.4; }
   }
 }
@@ -768,6 +771,7 @@ canvas {
   li[data-clase='0'] .marca { background: var(--c0); }
   li[data-clase='1'] .marca { background: var(--c1); }
   li[data-clase='2'] .marca { background: var(--c2); }
+  li[data-clase='3'] .marca { background: var(--c3); }
 
   .nombre { color: var(--tinta-media); }
 
@@ -866,6 +870,7 @@ canvas {
     &[data-clase='0'] .marca { background: var(--c0); }
     &[data-clase='1'] .marca { background: var(--c1); }
     &[data-clase='2'] .marca { background: var(--c2); }
+    &[data-clase='3'] .marca { background: var(--c3); }
 
     .id { color: var(--tinta-media); }
     .clase { font-weight: 500; color: var(--tinta); letter-spacing: 0.04em; }

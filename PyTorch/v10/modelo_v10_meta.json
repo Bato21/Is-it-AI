@@ -1,0 +1,27 @@
+{
+  "version": "v10",
+  "framework": "pytorch",
+  "arquitectura": "MobileNetV3-Small",
+  "clases": [
+    "0_sin_ia",
+    "1_rastro_ia",
+    "2_saturada_ia",
+    "3_no_diapositiva"
+  ],
+  "n_ordinales": 3,
+  "clase_rechazo": "3_no_diapositiva",
+  "entrada": {
+    "alto": 224,
+    "ancho": 224,
+    "canales": 3,
+    "rango": "0-255",
+    "orden": "NCHW"
+  },
+  "preprocesamiento": "ninguno en el cliente: la capa Normalizador viaja dentro del modelo (y por lo tanto dentro del .onnx)",
+  "salida": "logits de 4 clases; aplicar softmax en el cliente",
+  "semilla": 42,
+  "criterio_seleccion": "macro F1 sobre el test de fotos",
+  "accuracy_test_fotos": 0.9438202247191011,
+  "macro_f1_test_fotos": 0.9450813891990363,
+  "recall_rechazo_test_fotos": 0.9833333333333333
+}

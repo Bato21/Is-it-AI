@@ -38,9 +38,9 @@ vacío, la app abre igual pero el selector los muestra como no disponibles.
 
 ```bash
 # 1) Entrenar (desde la raíz del repo)
-TensorFlow/.venv/Scripts/python  TensorFlow/v9/09_scripts.py
-PyTorch/.venv/Scripts/python     PyTorch/v9/09_scripts.py
-PyTorch/.venv/Scripts/python     PyTorch/v9/09_modelo_c_desequilibrado.py
+TensorFlow/.venv/Scripts/python  TensorFlow/v10/10_scripts.py
+PyTorch/.venv/Scripts/python     PyTorch/v10/10_scripts.py
+PyTorch/.venv/Scripts/python     PyTorch/v10/10_modelo_c_desequilibrado.py
 
 # 2) Exportar
 TensorFlow/export_tfjs/.venv/Scripts/python TensorFlow/export_tfjs/exportar_tfjs.py

@@ -37,7 +37,7 @@
 import { Injectable } from '@angular/core';
 
 import {
-  CATALOGO_FALLBACK, CLASES, DefinicionModelo, ID_MODELO_POR_DEFECTO,
+  CATALOGO_FALLBACK, CLASES, DefinicionModelo, ID_MODELO_POR_DEFECTO, N_ORDINALES,
 } from './catalogo-modelos';
 
 /** Resultado de una predicción. */
@@ -54,6 +54,14 @@ export interface Prediccion {
   ms: number;
   /** Id del modelo que la produjo. */
   modeloId: string;
+  /**
+   * true cuando la clase ganadora es la COMPUERTA de rechazo: la foto no es una diapositiva.
+   *
+   * Se resuelve acá y no en la vista para que la regla ("¿el índice cae fuera del eje
+   * ordinal?") viva junto al lugar que conoce cuántas clases ordinales declaró el modelo.
+   * Quien consume la predicción solo pregunta el booleano.
+   */
+  esRechazo: boolean;
 }
 
 /** Una sesión ya cargada, con su motor concreto adentro. */
@@ -70,6 +78,11 @@ interface SesionCargada {
 export class InferenciaService {
   private catalogo: DefinicionModelo[] = CATALOGO_FALLBACK;
   private catalogoCargado = false;
+  /** Clases y tamaño del eje ordinal. Se sobrescriben con lo que declare catalogo.json, que
+   *  los copia de los resultados del entrenamiento: reentrenar con otra cantidad de clases no
+   *  necesita recompilar la app. Las constantes importadas son el fallback. */
+  private clases: readonly string[] = CLASES;
+  private nOrdinales = N_ORDINALES;
   private sesiones = new Map<string, SesionCargada>();
   private cargasEnCurso = new Map<string, Promise<SesionCargada>>();
   private activoId = ID_MODELO_POR_DEFECTO;
@@ -95,6 +108,16 @@ export class InferenciaService {
         if (Array.isArray(datos?.modelos) && datos.modelos.length) {
           this.catalogo = datos.modelos as DefinicionModelo[];
         }
+        if (Array.isArray(datos?.clases) && datos.clases.length) {
+          this.clases = datos.clases as string[];
+          // Si el catálogo no declara nOrdinales, se asume que TODAS las clases son
+          // ordinales: es el comportamiento de la v9 y lo correcto ante un catálogo viejo.
+          // Suponer lo contrario haría que la app tratara la última clase como compuerta sin
+          // que nadie lo haya dicho.
+          this.nOrdinales = typeof datos.nOrdinales === 'number'
+            ? datos.nOrdinales
+            : this.clases.length;
+        }
       }
     } catch {
       // Sin catálogo.json se sigue con el fallback: la app tiene que abrir igual.
@@ -108,6 +131,16 @@ export class InferenciaService {
 
   get modelos(): DefinicionModelo[] {
     return this.catalogo;
+  }
+
+  /** Las clases del modelo cargado, en el orden en que salen del softmax. */
+  get nombresClases(): readonly string[] {
+    return this.clases;
+  }
+
+  /** Cuántas clases forman el eje ordinal. Las de índice >= son compuertas de rechazo. */
+  get cantidadOrdinales(): number {
+    return this.nOrdinales;
   }
 
   get activo(): DefinicionModelo {
@@ -316,11 +349,12 @@ export class InferenciaService {
 
     return {
       indice,
-      clase: CLASES[indice],
+      clase: this.clases[indice] ?? `clase_${indice}`,
       confianza: probabilidades[indice],
       probabilidades,
       ms: Math.round(ms),
       modeloId,
+      esRechazo: indice >= this.nOrdinales,
     };
   }
 

@@ -28,10 +28,14 @@ es ese clasificador — y a propósito NO es un modelo de ML, es un conjunto de 
 verificables. Un heurístico que se puede auditar leyendo 30 líneas vale más que una red
 que acierta el 99% y no se puede explicar en la interrogación oral.
 
-Las tres señales, en orden de confianza:
+Las señales, en orden de confianza:
 
+  0. PROCEDENCIA DECLARADA (v10) -> lo que diga el manifiesto. Cuando una imagen se obtuvo
+     con un script del proyecto, su origen no hay que inferirlo: está registrado. Es la
+     señal más fuerte de todas porque no es evidencia indirecta, es el acta de obtención.
+     Ver el bloque "El manifiesto de procedencia" más abajo.
   1. EXIF con marca/modelo de cámara  -> FOTO (evidencia dura: el archivo declara que salió
-     de un sensor). Es la señal más fuerte y la primera que se consulta.
+     de un sensor). Es la señal más fuerte de las inferidas.
   2. Nombre de archivo con patrón de cámara -> FOTO. Las galerías de Android/iOS nombran
      por timestamp (20260815_143534.jpg, IMG_20260815_143534.jpg, PXL_20260815_143534.jpg).
      Sirve cuando el EXIF se perdió (típico al pasar fotos por WhatsApp/Telegram, que las
@@ -44,15 +48,42 @@ Las tres señales, en orden de confianza:
   como foto lo metería en el TEST de fotos y CONTAMINARÍA la métrica comercial, que es
   justamente el número que la v9 vino a hacer creíble.
 
+EL MANIFIESTO DE PROCEDENCIA (agregado en la v10)
+-------------------------------------------------
+La v10 sumó la clase de rechazo `3_no_diapositiva`, que no se fotografió: se bajó de datasets
+públicos con `documentacion/negativos_v10.py`. Esas imágenes rompen las tres señales de
+arriba: los datasets académicos ya perdieron el EXIF y sus nombres no son de galería, así que
+el heurístico las mandaría TODAS a RENDER por su caso conservador. La consecuencia sería
+grave y silenciosa: la clase de rechazo quedaría sin fotos, su test se armaría con renders y
+su accuracy dejaría de ser comparable con la de las otras tres.
+
+Pero acá no hay nada que inferir. Una foto de SUN397 ES una fotografía de cámara; una captura
+de pantalla de wave-ui ES un render. El script de obtención lo sabe y lo escribe en
+`<clase>/_procedencia.json`. Este módulo lo lee y lo respeta por encima de todo lo demás.
+
+  Formato mínimo esperado:
+      {"imagenes": [{"archivo": "neg_escena_sun397_000413.jpg", "dominio": "foto"}, ...]}
+
+  Si el archivo no existe, o una imagen no figura en él, se cae a las señales 1-3 de siempre:
+  el manifiesto AGREGA información, nunca es un requisito. Las 1337 imágenes de las clases
+  0-2 no tienen manifiesto y se siguen resolviendo exactamente igual que en la v9.
+
 numpy/PIL/stdlib puro, sin torch ni tf, para poder importarse desde los dos venvs — misma
 regla que particion_datos.py y metricas.py.
 """
 
+import json
 import re
 from pathlib import Path
 
 FOTO = "foto"
 RENDER = "render"
+
+# Nombre del manifiesto que deja el script de obtención dentro de la carpeta de una clase.
+# Empieza con "_" para que ordene antes que las imágenes y se distinga de un dato a simple
+# vista; y es .json, extensión que NO figura en EXTENSIONES de particion_v9/v10, así que los
+# listadores de imágenes lo ignoran solos.
+ARCHIVO_PROCEDENCIA = "_procedencia.json"
 
 # --- 1. Patrones de nombre de archivo ---
 # Galerías de cámara: 20260815_143534.jpg · IMG_20260815_143534.jpg · PXL_20260815_143534.jpg
@@ -111,6 +142,41 @@ def _exif_de_camara(ruta: Path) -> bool:
         return False
 
 
+# --- 2b. Procedencia declarada (señal 0, la de máxima confianza) ---
+def cargar_procedencias(data_dir: Path) -> dict[str, str]:
+    """{ruta_relativa: dominio} leído de los `_procedencia.json` de cada clase.
+
+    Recorre las carpetas de clase y junta lo que declare cada manifiesto. Devuelve un dict
+    vacío si no hay ninguno, que es el caso de las clases 0-2 (fotografiadas y clasificadas a
+    mano, sin script de obtención de por medio).
+
+    Un manifiesto ilegible se ignora en silencio A PROPÓSITO: la alternativa —abortar— haría
+    que un JSON a medio escribir dejara el proyecto entero sin poder entrenar, cuando la
+    degradación correcta es volver a las señales heurísticas de siempre. Lo que sí se valida
+    es el VALOR: solo se aceptan "foto" y "render", porque un dominio inventado se propagaría
+    a la partición y rompería la política de test sin que nada avise.
+    """
+    data_dir = Path(data_dir)
+    if not data_dir.is_dir():
+        return {}
+    fuera: dict[str, str] = {}
+    for carpeta in sorted(p for p in data_dir.iterdir() if p.is_dir()):
+        manifiesto = carpeta / ARCHIVO_PROCEDENCIA
+        if not manifiesto.is_file():
+            continue
+        try:
+            with open(manifiesto, encoding="utf-8") as f:
+                datos = json.load(f)
+        except Exception:                                          # noqa: BLE001
+            continue
+        for img in datos.get("imagenes", []):
+            nombre = img.get("archivo")
+            dom = img.get("dominio")
+            if nombre and dom in (FOTO, RENDER):
+                fuera[f"{carpeta.name}/{nombre}"] = dom
+    return fuera
+
+
 # --- 3. La regla completa ---
 def dominio_de(ruta: Path, usar_exif: bool = True) -> str:
     """Devuelve FOTO o RENDER para una imagen del dataset.
@@ -131,11 +197,17 @@ def dominio_de(ruta: Path, usar_exif: bool = True) -> str:
     return RENDER
 
 
-def mapa_dominios(data_dir: Path, rutas_relativas: list[str], usar_exif: bool = True
-                  ) -> dict[str, str]:
-    """{ruta_relativa: dominio} para una lista de rutas relativas a data_dir."""
+def mapa_dominios(data_dir: Path, rutas_relativas: list[str], usar_exif: bool = True,
+                  usar_procedencia: bool = True) -> dict[str, str]:
+    """{ruta_relativa: dominio} para una lista de rutas relativas a data_dir.
+
+    La procedencia declarada (señal 0) gana sobre el heurístico; para todo lo que no figure
+    en ningún manifiesto se aplican las señales 1-3 exactamente como en la v9.
+    """
     data_dir = Path(data_dir)
-    return {r: dominio_de(data_dir / r, usar_exif) for r in rutas_relativas}
+    declarados = cargar_procedencias(data_dir) if usar_procedencia else {}
+    return {r: declarados.get(r) or dominio_de(data_dir / r, usar_exif)
+            for r in rutas_relativas}
 
 
 def conteo_dominios(dominios: dict[str, str], clases: list[str]) -> dict[str, dict[str, int]]:

@@ -1,27 +1,31 @@
 {
-  "version": "v9",
+  "version": "v10",
   "generado": "export/generar_catalogo.py",
   "clases": [
     "0_sin_ia",
     "1_rastro_ia",
-    "2_saturada_ia"
+    "2_saturada_ia",
+    "3_no_diapositiva"
   ],
+  "nOrdinales": 3,
   "particion": {
-    "creado": "2026-08-15T15:08:41",
-    "version": "v9",
-    "politica": "TEST y VALIDACION son 100% fotos; los renders solo entrenan",
+    "creado": "2026-08-19T23:58:24",
+    "version": "v10",
+    "politica": "TEST y VALIDACION son 100% fotos; los renders solo entrenan. 4 clases: eje ordinal 0-1-2 + compuerta de rechazo 3.",
     "seed": 123,
     "n_folds": 5,
     "prop_test": 0.2,
     "usar_exif": true,
     "dataset_dir": "dataset",
-    "huella_dataset": "19fe41da5b383a8c",
-    "total": 1337,
-    "total_fotos": 1037,
-    "total_renders": 300,
-    "avisos": []
+    "huella_dataset": "e7c6c5a3f1f5a383",
+    "total": 1786,
+    "total_fotos": 1337,
+    "total_renders": 449,
+    "avisos": [],
+    "n_ordinales": 3,
+    "clase_rechazo": "3_no_diapositiva"
   },
-  "nota": "Las métricas son la media entre semillas sobre el TEST DE FOTOS de la v9 (207 fotos de pantalla, ningún render): la accuracy comercial.",
+  "nota": "Las métricas son la media entre semillas sobre el TEST DE FOTOS de la v10 (267 fotos, ningún render): la accuracy comercial.",
   "modelos": [
     {
       "id": "a-tfjs",
@@ -30,19 +34,21 @@
       "framework": "TensorFlow / Keras",
       "arquitectura": "MobileNetV3-Small",
       "backend": "tfjs",
-      "ruta": "assets/modelos/tfjs_v9/model.json",
+      "ruta": "assets/modelos/tfjs_v10/model.json",
       "ordenEjes": "NHWC",
       "salida": "softmax",
       "tamano": 224,
       "pesoMB": 4.1,
       "disponible": true,
-      "descripcion": "Fine-tuning en dos fases sobre fotos de pantalla. El más rápido de los tres y el único que corre sobre la GPU del teléfono.",
+      "descripcion": "Fine-tuning en dos fases sobre fotos de pantalla, con compuerta de rechazo. El más rápido de los tres y el único sobre WebGL.",
       "porQue": "Default del producto: menor latencia por foto y backend WebGL.",
       "metricas": {
-        "accuracy": 0.9478,
-        "macroF1": 0.9475,
+        "accuracy": 0.9558,
+        "macroF1": 0.9567,
         "recallClase2": 0.973,
-        "errores02": 6.2
+        "errores02": 6.0,
+        "recallRechazo": 0.9967,
+        "fugas": 0.2
       }
     },
     {
@@ -52,7 +58,7 @@
       "framework": "PyTorch",
       "arquitectura": "MobileNetV3-Small",
       "backend": "onnx",
-      "ruta": "assets/modelos/modelo_b_v9.onnx",
+      "ruta": "assets/modelos/modelo_b_v10.onnx",
       "ordenEjes": "NCHW",
       "salida": "logits",
       "tamano": 224,
@@ -61,10 +67,12 @@
       "descripcion": "El espejo de A entrenado en PyTorch: misma partición, mismas vistas aumentadas, misma arquitectura.",
       "porQue": "Verifica en producción la paridad entre frameworks y sirve de respaldo donde WebGL falla (ONNX corre sobre WASM).",
       "metricas": {
-        "accuracy": 0.9372,
-        "macroF1": 0.9374,
-        "recallClase2": 0.9378,
-        "errores02": 5.0
+        "accuracy": 0.9393,
+        "macroF1": 0.9407,
+        "recallClase2": 0.9432,
+        "errores02": 4.8,
+        "recallRechazo": 0.97,
+        "fugas": 1.8
       }
     },
     {
@@ -74,7 +82,7 @@
       "framework": "PyTorch",
       "arquitectura": "EfficientNet-B0",
       "backend": "onnx",
-      "ruta": "assets/modelos/modelo_c_v9.onnx",
+      "ruta": "assets/modelos/modelo_c_v10.onnx",
       "ordenEjes": "NCHW",
       "salida": "logits",
       "tamano": 224,
@@ -83,10 +91,12 @@
       "descripcion": "Otra familia de arquitectura, entrenada con dataset desequilibrado 9:1 · C2_focal_sampler.",
       "porQue": "Tercer voto de una arquitectura no emparentada: rompe los empates cuando A y B discrepan.",
       "metricas": {
-        "accuracy": 0.8647,
-        "macroF1": 0.8649,
-        "recallClase2": 0.8198,
-        "errores02": 13.3
+        "accuracy": 0.8989,
+        "macroF1": 0.9024,
+        "recallClase2": 0.8333,
+        "errores02": 12.0,
+        "recallRechazo": 0.9778,
+        "fugas": 1.3
       }
     }
   ]

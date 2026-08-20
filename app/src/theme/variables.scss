@@ -44,6 +44,15 @@
   --c1-tenue: rgba(255, 178, 63, 0.14);
   --c2-tenue: rgba(255, 77, 109, 0.14);
 
+  /* --- La compuerta de rechazo (v10): FUERA de la escala, no un cuarto escalón ---
+     3_no_diapositiva no es "más saturada que la 2": es otra cosa. Si se le diera el
+     siguiente color caliente de la rampa, la interfaz estaría afirmando visualmente que hay
+     un cuarto nivel de huella de IA, que es exactamente lo contrario de lo que la clase
+     significa. Por eso es un gris azulado sin croma: se lee como "no aplica / fuera de
+     escala" antes de leer el texto, que es como se lee una interfaz. */
+  --c3: #8fa0b3;
+  --c3-tenue: rgba(143, 160, 179, 0.14);
+
   /* --- Cromo de la interfaz --- */
   --acento: #5ad1ff;              /* cian: retícula, foco, elementos activos */
   --acento-tenue: rgba(90, 209, 255, 0.12);
